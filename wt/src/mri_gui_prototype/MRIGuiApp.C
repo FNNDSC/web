@@ -4,7 +4,12 @@
 //
 //	Author: Dan Ginsburg
 //
+//  Children's Hospital Boston
+//
+//	GPL v2
+//
 
+#define BOOST_PROCESS_HEADER_ONLY
 #include <fstream>
 
 #include <Wt/WApplication>
@@ -38,7 +43,6 @@
 #include <Wt/WTimer>
 #include <Wt/WScrollArea>
 
-#define BOOST_PROCESS_HEADER_ONLY
 #include <boost/process/process.hpp>
 #include <boost/process/child.hpp>
 #include <boost/process/launch_shell.hpp>
@@ -58,33 +62,33 @@ using namespace Wt;
 using namespace std;
 using namespace boost::processes;
 
-//@TEMP - hackiness to prove that I can do threaded process wait
-bool procRunning = false;
-child *procChild;
+//@TEMP - hackiness to prove that I can do threaded process wait.
+//		  This code should of course not be using global variables
+//		  and be moved into an appropriate class.
+static bool procRunning = false;
+static child *procChild = NULL;
 
 void procRunningThread()
 {
-	procRunning = true;
-	status s = procChild->wait();
-	procRunning = false;
+    procRunning = true;
+    status s = procChild->wait();
+    procRunning = false;
 
 }
 //@TEMP
 
-/*! \class MRIGuiApp
- *  \brief Main application class.
- */
+/// \class MRIGuiApp
+/// \brief Main application class.
+///
 class MRIGuiApp : public WApplication
 {
 public:
-    /*! \brief Constructor.
-     */
+    /// \brief Constructor.
+    ///
     MRIGuiApp(const WEnvironment &env)
             : WApplication(env)
     {
-        /*
-         * Create the data models.
-         */
+        // Create the data models
         mriModel_ = new WStandardItemModel(0, 1, this);
 
         //@TEMP - these should all be read from a configuration file
@@ -92,25 +96,27 @@ public:
         dicomDir_ = "/chb/osx1927/1/users/dicom/files/";
         archBaseDir_ = "/home/danginsburg/dan_laptop/arch/Linux";
         scriptBaseDir_ = "/home/danginsburg/dan_laptop/Documents/workspace/trunk/scripts";
-
         //@TEMP
+
         populateMRIDs(dicomDir_ + "/dcm_MRID.log");
 
 
         mriTocLabel_ = new WLabel("");
         mriScansLabel_ = new WLabel("");
 
-        /*
-         * Setup the user interface.
-         */
+        // Setup the User interface
         createUI();
 
+        // Create timer for polling log
         runTimer_ = new WTimer();
         runTimer_->setInterval(1000);
         runTimer_->timeout().connect(SLOT(this, MRIGuiApp::timeout));
 
     }
 
+    ///
+    ///	Destructor
+    ///
     virtual ~MRIGuiApp()
     {
         delete mriTocLabel_;
@@ -143,13 +149,16 @@ private:
 
     /// The contents of the toc.txt file
     WLabel *mriTocLabel_;
+
+    /// The scan info
     WLabel *mriScansLabel_;
 
+    /// Group boxes for holding widgets
     WGroupBox *patientInfoBox_;
     WGroupBox *scanBox_;
     WGroupBox *selectedScanBox_;
 
-    WScrollArea *logScrollArea_;
+    /// Log text area
     WTextArea *logTextArea_;
 
     /// Radio button (tract)
@@ -168,16 +177,15 @@ private:
     WTimer *runTimer_;
 
 
-    /*! \brief Setup the user interface.
-     */
+    ///
+    /// \brief Setup the user interface.
+    ///
     void createUI()
     {
         WContainerWidget *w = root();
         w->setStyleClass("maindiv");
 
-        /*
-         * The main layout is a 3x2 grid layout.
-         */
+        /// Create primary layout
         WGridLayout *layout = new WGridLayout();
         layout->addWidget(createTitle("MRIDs"), 0, 0, Wt::AlignBottom);
         layout->addWidget(createTitle("Info"), 0, 1, Wt::AlignBottom);
@@ -185,11 +193,12 @@ private:
 
         layout->addWidget(mriView(), 1, 0);
 
+        // Create group boxes
         patientInfoBox_ = new WGroupBox("Patient / Scanner");
         scanBox_ = new WGroupBox("Scans");
         selectedScanBox_ = new WGroupBox("Selected Scan");
 
-
+        // Set CSS classes
         patientInfoBox_->setStyleClass("testdiv");
         scanBox_->setStyleClass("testdiv");
         selectedScanBox_->setStyleClass("testdiv");
@@ -208,12 +217,11 @@ private:
         hBox->addWidget(execButton_);
         hBox->addWidget(progressImage_);
 
-       // logScrollArea_ = new WScrollArea(selectedScanBox_);
+        // logScrollArea_ = new WScrollArea(selectedScanBox_);
         logTextArea_ = new WTextArea("", selectedScanBox_);
         logTextArea_->setStyleClass("logdiv");
         logTextArea_->setRows(15);
         logTextArea_->decorationStyle().font().setFamily(WFont::Monospace);
-        //logScrollArea_->setWidget(logTextArea_);
 
         logTextArea_->hide();
         hBox->addStretch(200);
@@ -233,7 +241,6 @@ private:
         patientInfoBox_->addWidget(mriTocLabel_);
         scansComboBox_ = new WSelectionBox(scanBox_);
         scansComboBox_->setVerticalSize(15);
-        //scansComboBox_->setSelectionMode(Wt::ExtendedSelection);
         scansComboBox_->activated().connect(SLOT(this, MRIGuiApp::scanChanged));
 
 
@@ -250,10 +257,7 @@ private:
         selectedScanBox_->hide();
         progressImage_->hide();
 
-
-        /*
-         * Let row 1 and column 1 take the excess space.
-         */
+        // Let row 1 and column 1 take the excess space.
         layout->setRowStretch(1, 1);
         layout->setColumnStretch(2, 1);
 
@@ -271,19 +275,20 @@ private:
         return result;
     }
 
-    /*! \brief Creates the MRID WTreeView
-     */
+    ///
+    /// \brief Creates the MRID WTreeView
+    ///
     WTreeView *mriView()
     {
         WTreeView *treeView = new WTreeView();
 
-        /*
-         * To support right-click, we need to disable the built-in browser
-         * context menu.
-         *
-         * Note that disabling the context menu and catching the
-         * right-click does not work reliably on all browsers.
-         */
+        //
+        // To support right-click, we need to disable the built-in browser
+        // context menu.
+        //
+        // Note that disabling the context menu and catching the
+        // right-click does not work reliably on all browsers.
+        //
         treeView->setAttributeValue
         ("oncontextmenu",
          "event.cancelBubble = true; event.returnValue = false; return false;");
@@ -294,17 +299,15 @@ private:
         treeView->selectionChanged().connect(SLOT(this,
                                              MRIGuiApp::mriChanged));
 
-        //treeView->mouseWentDown().connect(SLOT(this, MRIGuiApp::showPopup));
-
         mriView_ = treeView;
 
         return treeView;
     }
 
 
-    /*! \brief Change the filter on the MRI view when the selected MRI
-     *         changes.
-     */
+    /// \brief Change the filter on the MRI view when the selected MRI
+    ///         changes.
+    ///
     void mriChanged()
     {
         if (mriView_->selectedIndexes().empty())
@@ -319,9 +322,9 @@ private:
 
             tocURL << scanDir << "/toc.txt";
 
+            // Parse table-of-contents file
             std::ifstream tocFile(tocURL.str().c_str());
             ostringstream oss;
-            //ostringstream ossScans;
 
 
             scansComboBox_->clear();
@@ -353,8 +356,6 @@ private:
                             scanName += tmp + " ";
                         }
 
-                        //ossScans << scanName << "<br/>";
-
                         scansComboBox_->addItem(scanName);
                         scansDicomFiles_.push_back(dicomFile);
 
@@ -366,7 +367,6 @@ private:
                 }
 
                 mriTocLabel_->setText(oss.str());
-                //mriScansLabel_->setText(ossScans.str());
 
                 tocFile.close();
                 scanBox_->show();
@@ -375,9 +375,8 @@ private:
         }
     }
 
-    /*! \brief Change the filter on the file view when the selected folder
-      *         changes.
-      */
+    /// \brief Change the filter on the file view when the selected folder
+    ///         changes.
     void scanChanged()
     {
         if (scansComboBox_->currentIndex() >= 0)
@@ -386,12 +385,9 @@ private:
         }
     }
 
-
-
-
-    /*! \brief Create an MRI item.
-     *
-     */
+    ///
+    /// \brief Create an MRI item.
+    ///
     WStandardItem *createMRIItem(const std::string& MRID,
                                  const std::string& scanDir)
     {
@@ -405,8 +401,9 @@ private:
 
 
 
-    /*! \brief Populate the MRIDs model.
-     */
+    ///
+    /// \brief Populate the MRIDs model.
+    ///
     void populateMRIDs(const std::string& mridLogFile)
     {
         std::ifstream inFile(mridLogFile.c_str());
@@ -439,96 +436,97 @@ private:
         }
     }
 
+    ///
+    ///	\brief Run button clicked, execute fs_meta
+    ///
     void runClicked()
     {
-    	stringstream cmdToExecute;
+        stringstream cmdToExecute;
 
-    	if (mriView_->selectedIndexes().empty())
-    		return;
+        if (mriView_->selectedIndexes().empty())
+            return;
 
-    	if(scansComboBox_->currentIndex() < 0)
-    		return;
+        if (scansComboBox_->currentIndex() < 0)
+            return;
 
-    	execButton_->disable();
-    	progressImage_->show();
-
-
-		WModelIndex selected = *mriView_->selectedIndexes().begin();
-		boost::any d = selected.data(UserRole);
-		if (!d.empty())
-		{
-			std::string scanDir = boost::any_cast<std::string>(d);
-			logTextArea_->show();
-
-			//@TEMP - temporarily hard-coded paths.  These should be read from a configuration file
-			//	      or some other method, should not require recompilation
-			cmdToExecute << scriptBaseDir_ << "/fs_meta_web.bash " <<
-							archBaseDir_ << "/packages " <<
-							scriptBaseDir_  <<
-							" \"-D " << scanDir <<
-							" -d " << scansDicomFiles_[scansComboBox_->currentIndex()] <<
-							" -v 10 -f\"";
+        execButton_->disable();
+        progressImage_->show();
 
 
-			//system(cmdToExecute.str().c_str());
+        WModelIndex selected = *mriView_->selectedIndexes().begin();
+        boost::any d = selected.data(UserRole);
+        if (!d.empty())
+        {
+            std::string scanDir = boost::any_cast<std::string>(d);
+            logTextArea_->show();
 
-			context ctx;
-			child c = launch_shell(cmdToExecute.str().c_str(), ctx);
-			procChild = new child(c);
-			boost::thread waitThread(&procRunningThread);
+            //@TEMP - temporarily hard-coded paths.  These should be read from a configuration file
+            //	      or some other method, should not require recompilation
+            cmdToExecute << scriptBaseDir_ << "/fs_meta_web.bash " <<
+            archBaseDir_ << "/packages " <<
+            scriptBaseDir_  <<
+            " \"-D " << scanDir <<
+            " -d " << scansDicomFiles_[scansComboBox_->currentIndex()] <<
+            " -v 10 -f\"";
 
-			logTextArea_->setText(cmdToExecute.str());
+            // Execute in a separate process using boost
+            context ctx;
+            child c = launch_shell(cmdToExecute.str().c_str(), ctx);
+            procChild = new child(c);
+            boost::thread waitThread(&procRunningThread);
 
-			runTimer_->start();
-		}
+            logTextArea_->setText(cmdToExecute.str());
+
+            runTimer_->start();
+        }
 
     }
 
+    ///
+    ///	\brief Timer timeout to scan log
+    ///
     void timeout()
     {
-    	if (!procRunning)
-    	{
-    		execButton_->enable();
-    		progressImage_->hide();
-    		runTimer_->stop();
-    	}
+        if (!procRunning)
+        {
+            execButton_->enable();
+            progressImage_->hide();
+            runTimer_->stop();
+        }
 
-    	//@TEMP
+        //@TEMP - log file would need to be in specific location, this was
+        //		  done as a test
         std::ifstream logFile("/home/danginsburg/fs_meta.bash.std", ios::in);
         if (logFile.is_open())
         {
-        	ostringstream oss;
+            ostringstream oss;
 
-        	oss << logFile.rdbuf();
+            oss << logFile.rdbuf();
 
-        	stringstream logText;
-        	logText << oss.str();
-        	logTextArea_->setText(logText.str().c_str());
-        	logFile.close();
+            stringstream logText;
+            logText << oss.str();
+            logTextArea_->setText(logText.str().c_str());
+            logFile.close();
 
-        	/*
-			  * First, take the lock to safely manipulate the UI outside of the
-			   * normal event loop, by having exclusive access to the session.
-			   */
-			WApplication::UpdateLock lock = getUpdateLock();
+            // First, take the lock to safely manipulate the UI outside of the
+            // normal event loop, by having exclusive access to the session.
+            WApplication::UpdateLock lock = getUpdateLock();
 
-        	  /*
-        	   * Little javascript trick to make sure we scroll along with new content
-        	   */
-			doJavaScript(logTextArea_->jsRef() + ".scrollTop += "
-        			     + logTextArea_->jsRef() + ".scrollHeight;");
+            //
+            // Little javascript trick to make sure we scroll along with new content
+            //
+            doJavaScript(logTextArea_->jsRef() + ".scrollTop += "
+                         + logTextArea_->jsRef() + ".scrollHeight;");
 
-			triggerUpdate();
+            triggerUpdate();
 
 
         }
         else
         {
-        	logTextArea_->setText("Couldn't open log!");
+            logTextArea_->setText("Couldn't open log!");
         }
-
     }
-
 
 };
 
