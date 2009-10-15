@@ -12,4 +12,5 @@ ADD_DEFINITIONS(-DWT_DEPRECATED_3_0_0)
 
 SUBDIRS(
   mri_gui_prototype
+  pl_gui
 )
