@@ -12,8 +12,11 @@
 //  GPL v2
 //
 #include "PipelineApp.h"
-#include "MRIBrowser.h"
+#include "SubjectPage.h"
 #include "ConfigOptions.h"
+//@TEMP
+#include "MRIBrowser.h"
+//@TEMP
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
@@ -58,25 +61,38 @@ void PipelineApp::createUI()
     WContainerWidget *w = root();
     w->setStyleClass("maindiv");
 
-    /// Create primary layout
-    WContainerWidget *topContainer = new WContainerWidget(w);
-    WGridLayout *topLayout = new WGridLayout(topContainer);
+    WGridLayout *layout = new WGridLayout();
+
+    /// Create top container holding logo and title
+    WContainerWidget *topContainer = new WContainerWidget();
+    WGridLayout *topLayout = new WGridLayout();
     topContainer->setStyleClass("topdiv");
-    topLayout->addWidget(new WImage("icons/chbIntranet.gif", topContainer), 0, 0, Wt::AlignLeft);
-    WLabel *titleLabel = new WLabel("Neuroimaging Pipeline", topContainer);
+    WImage *chbLogo = new WImage("icons/chbIntranet.gif");
+    chbLogo->setStyleClass("titlediv");
+    topLayout->addWidget(chbLogo, 0, 0, Wt::AlignLeft);
+    WLabel *titleLabel = new WLabel("Neuroimaging Pipeline");
     titleLabel->setStyleClass("titlediv");
     topLayout->addWidget(titleLabel, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
-
+    topContainer->setLayout(topLayout);
 
     // Create the top tab
-    WContainerWidget *bottomContainer = new WContainerWidget(w);
-    WTabWidget *topTab = new WTabWidget(bottomContainer);
-    topTab->addTab(new MRIBrowser(), "Subjects");
+    WTabWidget *topTab = new WTabWidget();
+    SubjectPage *subjectPage = new SubjectPage();
+    topTab->addTab(subjectPage, "Subjects");
     topTab->addTab(new WText("Monitor cluster"), "Monitor");
     topTab->addTab(new WText("Results browser"), "Results");
 
-  //  layout->addWidget(topContainer, 0, 0);
-    //layout->addWidget(bottomContainer, 1, 0);
+    layout->addWidget(topContainer, 0, 0);
+    layout->addWidget(topTab, 1, 0);
+    layout->setRowStretch(1, 1);
+
+    // All items in the tabbed widget need to be resized to 100% to
+    // fill the contents.  This trick came from the Wt WTabWidget
+    // documentation and took me a good half a day to figure out.
+    subjectPage->resize(WLength(100.0, WLength::Percentage),
+                        WLength(100.0, WLength::Percentage));
+
+    w->setLayout(layout);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

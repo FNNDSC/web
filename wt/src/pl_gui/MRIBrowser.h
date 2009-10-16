@@ -12,8 +12,10 @@
 #ifndef MRIBROWSER_H
 #define MRIBROWSER_H
 
+#include <Wt/WContainerWidget>
 #include <Wt/WTreeView>
 #include <Wt/WStandardItemModel>
+
 #include <string>
 
 using namespace Wt;
@@ -22,7 +24,7 @@ using namespace Wt;
 /// \class MRIBrowser
 /// \brief Provides a browser for all of the MRIDs
 ///
-class MRIBrowser : public WTreeView
+class MRIBrowser : public WContainerWidget
 {
 public:
     ///
@@ -34,6 +36,11 @@ public:
     /// Destructor
     ///
     virtual ~MRIBrowser();
+
+    ///
+    /// Signal accessor for MRI selection
+    ///
+    Wt::Signal<std::string>& mriSelected() { return mMRISelected; }
 
 private:
 
@@ -48,10 +55,18 @@ private:
     void mriChanged();
 
     ///
-    //  Create an MRI item.
-    //
+    ///  Create an MRI item.
+    ///
     WStandardItem *createMRIItem(const std::string& MRID,
                                  const std::string& scanDir);
+
+private:
+
+    /// Signal for when an MRI is selected
+    Wt::Signal<std::string> mMRISelected;
+
+    /// MRID Tree view
+    WTreeView *mMRITreeView;
 
     /// MRID Model
     WStandardItemModel *mMRIModel;

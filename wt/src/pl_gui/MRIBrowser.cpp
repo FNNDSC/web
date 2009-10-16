@@ -18,6 +18,7 @@
 #include <Wt/WText>
 #include <Wt/WLabel>
 #include <Wt/WStandardItem>
+#include <Wt/WVBoxLayout>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -38,20 +39,26 @@ using namespace std;
 //  Constructor
 //
 MRIBrowser::MRIBrowser(WContainerWidget *parent) :
-    WTreeView(parent)
+    WContainerWidget(parent)
 {
     // Populate the list of MRIDs
+    mMRITreeView = new WTreeView();
     mMRIModel = new WStandardItemModel();
     populateMRIDs(ConfigOptions::GetPtr()->GetDicomDir() + + "/dcm_MRID.log");
 
-    setAttributeValue
+    mMRITreeView->setAttributeValue
             ("oncontextmenu",
              "event.cancelBubble = true; event.returnValue = false; return false;");
-    setModel(mMRIModel);
-    resize(200, WLength::Auto);
-    setSelectionMode(SingleSelection);
-    expandToDepth(1);
-    selectionChanged().connect(SLOT(this, MRIBrowser::mriChanged));
+    mMRITreeView->setModel(mMRIModel);
+    mMRITreeView->resize(200, WLength::Auto);
+    mMRITreeView->setSelectionMode(SingleSelection);
+    mMRITreeView->expandToDepth(1);
+    mMRITreeView->selectionChanged().connect(SLOT(this, MRIBrowser::mriChanged));
+
+
+    WVBoxLayout *layout = new WVBoxLayout();
+    layout->addWidget(mMRITreeView);
+    setLayout(layout);
 }
 
 ///
@@ -125,6 +132,17 @@ WStandardItem *MRIBrowser::createMRIItem(const std::string& MRID,
 //
 void MRIBrowser::mriChanged()
 {
+    if (mMRITreeView->selectedIndexes().empty())
+        return;
+
+    WModelIndex selected = *mMRITreeView->selectedIndexes().begin();
+    boost::any d = selected.data(UserRole);
+    if (!d.empty())
+    {
+        std::string scanDir = boost::any_cast<std::string>(d);
+
+        mMRISelected.emit(scanDir);
+    }
 }
 
 

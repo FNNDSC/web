@@ -1,5 +1,6 @@
 body, html {
-    height: 100%; margin: 0px;
+    height: 100%;
+    margin: 0px;
     font-family: verdana,helvetica,tahoma,sans-serif;
     font-size: 10pt;
 }
@@ -29,10 +30,19 @@ div.Wt-popupmenu .separator {
 
 .maindiv {
     background-color: #e0ecff
+   
 }
 
 .topdiv {
     background-color: #00539b
+}
+
+.bottomdiv {
+    background-color: #e0ecff
+}
+
+.tabdiv {
+    background-color: #e0ecff
 }
 
 .titlediv {
@@ -47,9 +57,14 @@ div.Wt-popupmenu .separator {
     border: 1px solid #C3D9FF;
 }
 
-.testdiv {
+.groupdiv {
     background-color: white;
     border: 1px solid #C3D9FF;
+}
+
+.whitelabeldiv {
+    background-color: white;
+    border: none;
 }
 
 .logdiv {

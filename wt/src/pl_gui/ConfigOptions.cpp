@@ -101,6 +101,8 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mDicomDir = vm["dicomDir"].as<string>();
         }
 
+        cout << "[DICOM Dir:] " << mDicomDir << endl;
+
         configFile.close();
     }
     catch(...)
