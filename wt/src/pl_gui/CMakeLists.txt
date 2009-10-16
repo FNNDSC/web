@@ -2,7 +2,9 @@ ADD_EXECUTABLE(pl_gui.wt
   ConfigOptions.cpp
   MRIBrowser.cpp
   PipelineApp.cpp
+  PipelineConfigure.cpp
   ScanBrowser.cpp
+  SelectScans.cpp
   SubjectPage.cpp
 )
 TARGET_LINK_LIBRARIES(pl_gui.wt ${EXAMPLES_CONNECTOR})

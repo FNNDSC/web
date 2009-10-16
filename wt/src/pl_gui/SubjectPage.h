@@ -19,10 +19,15 @@
 #include <Wt/WText>
 #include <string>
 
+namespace Wt
+{
+    class WPushButton;
+    class WStackedWidget;
+}
+
 using namespace Wt;
 
-class MRIBrowser;
-class ScanBrowser;
+class SelectScans;
 
 ///
 /// \class SubjectPage
@@ -31,6 +36,17 @@ class ScanBrowser;
 class SubjectPage : public WContainerWidget
 {
 public:
+
+    // State of subject page
+    typedef enum
+    {
+        SCAN_SELECT = 0,
+        PIPELINE_CONFIGURE,
+
+        NUM_STATES
+
+    } SubjectState;
+
     ///
     /// Constructor
     ///
@@ -47,17 +63,38 @@ private:
     ///
     WText *createTitle(const WString& title);
 
+
     ///
-    /// \brief Slot for when the MRI selection changes
+    /// \brief  Slot for when the scan is added to the queue
     ///
-    void mriChanged(std::string scanDir);
+    void scanAdded(bool added);
+
+    ///
+    /// \brief  Slot for when the next button is clicked
+    ///
+    void nextClicked();
+
+    ///
+    /// \brief  Slot for when the back button is clicked
+    ///
+    void backClicked();
 
 private:
-    /// MRI Browser widget
-    MRIBrowser *mMRIBrowser;
 
-    /// Scan browser widget
-    ScanBrowser *mScanBrowser;
+    /// Current state of widget
+    SubjectState mSubjectState;
+
+    /// Stacked widget that holds the various stages
+    WStackedWidget *mStackedStage;
+
+    /// Select scans widget
+    SelectScans *mSelectScans;
+
+    /// Next button (navigation)
+    WPushButton *mNextButton;
+
+    /// Back button (navigation)
+    WPushButton *mBackButton;
 
 };
 

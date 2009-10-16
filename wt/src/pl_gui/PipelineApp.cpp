@@ -14,9 +14,6 @@
 #include "PipelineApp.h"
 #include "SubjectPage.h"
 #include "ConfigOptions.h"
-//@TEMP
-#include "MRIBrowser.h"
-//@TEMP
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>

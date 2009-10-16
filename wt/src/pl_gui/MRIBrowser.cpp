@@ -136,12 +136,14 @@ void MRIBrowser::mriChanged()
         return;
 
     WModelIndex selected = *mMRITreeView->selectedIndexes().begin();
+    boost::any displayData = selected.data(DisplayRole);
     boost::any d = selected.data(UserRole);
-    if (!d.empty())
+    if (!displayData.empty() && !d.empty())
     {
+        WString mrid = boost::any_cast<WString>(displayData);
         std::string scanDir = boost::any_cast<std::string>(d);
 
-        mMRISelected.emit(scanDir);
+        mMRISelected.emit(mrid.toUTF8(), scanDir);
     }
 }
 

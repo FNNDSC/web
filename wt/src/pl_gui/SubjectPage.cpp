@@ -12,11 +12,13 @@
 //  GPL v2
 //
 #include "SubjectPage.h"
-#include "MRIBrowser.h"
-#include "ScanBrowser.h"
+#include "SelectScans.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
+#include <Wt/WHBoxLayout>
 #include <Wt/WLabel>
+#include <Wt/WPushButton>
+#include <Wt/WStackedWidget>
 
 ///
 //  Namespaces
@@ -39,24 +41,35 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
     setStyleClass("tabdiv");
 
     WGridLayout *layout = new WGridLayout();
-    layout->addWidget(createTitle("MRIDs"), 0, 0);
-    layout->addWidget(createTitle("Info"), 0, 1);
+    mSelectScans = new SelectScans();
 
-    mMRIBrowser = new MRIBrowser();
-    mScanBrowser = new ScanBrowser();
+    mStackedStage = new WStackedWidget();
+    mStackedStage->addWidget(mSelectScans);
 
-    layout->addWidget(mMRIBrowser, 1, 0);
-    layout->addWidget(mScanBrowser, 1, 1);
+    layout->addWidget(mStackedStage, 0, 0);
 
-    // Let row 1 and column 2 take the excess space.
-    layout->setRowStretch(1, 1);
-    layout->setColumnStretch(2, 1);
+    mNextButton = new WPushButton("Next ->");
+    mBackButton = new WPushButton("<- Back");
+    mNextButton->disable();
+    mBackButton->disable();
 
-    mScanBrowser->hide();
+    WHBoxLayout *navLayout = new WHBoxLayout();
+    navLayout->addStretch(100);
+    navLayout->addWidget(mBackButton, Wt::AlignRight);
+    navLayout->addWidget(mNextButton, Wt::AlignRight);
+    layout->addLayout(navLayout, 1, 0);
+
+    // Let row 0 take the excess space
+    layout->setRowStretch(0, 1);
+
 
     setLayout(layout);
 
-    mMRIBrowser->mriSelected().connect(SLOT(this, SubjectPage::mriChanged));
+
+    // Signal/slot connections
+    mSelectScans->getScanAdded().connect(SLOT(this, SubjectPage::scanAdded));
+    mNextButton->clicked().connect(SLOT(this, SubjectPage::nextClicked));
+    mBackButton->clicked().connect(SLOT(this, SubjectPage::backClicked));
 }
 
 ///
@@ -93,10 +106,61 @@ WText* SubjectPage::createTitle(const WString& title)
 }
 
 ///
-//  Slot for when the MRI selection changes
+//  Slot for when the scan is added to the queue
 //
-void SubjectPage::mriChanged(std::string scanDir)
+void SubjectPage::scanAdded(bool added)
 {
-    mScanBrowser->setScanDir(scanDir);
-    mScanBrowser->show();
+    if (mSubjectState == SCAN_SELECT)
+    {
+        if (added)
+        {
+            mNextButton->enable();
+        }
+        else
+        {
+            mNextButton->disable();
+        }
+
+    }
 }
+
+///
+//  Slot for when the next button is clicked
+//
+void SubjectPage::nextClicked()
+{
+    switch(mSubjectState)
+    {
+    // Go to config state
+    case SCAN_SELECT:
+        mBackButton->enable();
+        mStackedStage->setCurrentIndex((int)PIPELINE_CONFIGURE);
+        mSubjectState = PIPELINE_CONFIGURE;
+        break;
+
+    case PIPELINE_CONFIGURE:
+    default:
+        break;
+    }
+}
+
+
+///
+//  Slot for when the back button is clicked
+//
+void SubjectPage::backClicked()
+{
+    switch(mSubjectState)
+    {
+    case SCAN_SELECT:
+        break;
+
+    case PIPELINE_CONFIGURE:
+    default:
+        mStackedStage->setCurrentIndex((int)SCAN_SELECT);
+        mSubjectState = SCAN_SELECT;
+        break;
+    }
+
+}
+

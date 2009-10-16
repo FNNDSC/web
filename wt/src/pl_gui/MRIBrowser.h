@@ -40,7 +40,7 @@ public:
     ///
     /// Signal accessor for MRI selection
     ///
-    Wt::Signal<std::string>& mriSelected() { return mMRISelected; }
+    Wt::Signal<std::string, std::string>& mriSelected() { return mMRISelected; }
 
 private:
 
@@ -63,7 +63,7 @@ private:
 private:
 
     /// Signal for when an MRI is selected
-    Wt::Signal<std::string> mMRISelected;
+    Wt::Signal<std::string, std::string> mMRISelected;
 
     /// MRID Tree view
     WTreeView *mMRITreeView;
