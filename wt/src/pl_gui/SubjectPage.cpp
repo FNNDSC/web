@@ -153,12 +153,14 @@ void SubjectPage::backClicked()
     switch(mSubjectState)
     {
     case SCAN_SELECT:
+        // There is no back on scan select
         break;
 
     case PIPELINE_CONFIGURE:
     default:
         mStackedStage->setCurrentIndex((int)SCAN_SELECT);
         mSubjectState = SCAN_SELECT;
+        mBackButton->disable();
         break;
     }
 

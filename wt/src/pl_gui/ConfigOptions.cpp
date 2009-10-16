@@ -41,7 +41,9 @@ ConfigOptions::ConfigOptions() :
 {
     mOptionDesc = new options_description("Allowable options");
     mOptionDesc->add_options()
-        ("dicomDir", value<string>(), "Base DICOM directory")
+        ("dicomDir",        value<string>(), "Base DICOM directory")
+        ("seriesListTract", value<string>(), "Series list tractography (comma separated)")
+        ("seriesListFS",    value<string>(), "Series list freesurfer (comma separated)")
         ;
 }
 
@@ -101,7 +103,19 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mDicomDir = vm["dicomDir"].as<string>();
         }
 
+        if (vm.count("seriesListTract"))
+        {
+            mSeriesListTract = vm["seriesListTract"].as<string>();
+        }
+
+        if (vm.count("seriesListFS"))
+        {
+            mSeriesListFS = vm["seriesListFS"].as<string>();
+        }
+
         cout << "[DICOM Dir:] " << mDicomDir << endl;
+        cout << "[SeriesListTract:] " << mSeriesListTract << endl;
+        cout << "[SeriesListFS:]" << mSeriesListFS << endl;
 
         configFile.close();
     }

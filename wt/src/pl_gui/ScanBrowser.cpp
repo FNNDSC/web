@@ -44,7 +44,8 @@ using namespace std;
 //  Constructor
 //
 ScanBrowser::ScanBrowser(WContainerWidget *parent) :
-    WContainerWidget(parent)
+    WContainerWidget(parent),
+    mPipelineType(Enums::PIPELINE_UNKNOWN)
 {
     mPatientInfoBox = new WGroupBox("Patient / Scanner");
     mScanBox = new WGroupBox("Scans");
@@ -63,6 +64,10 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     mScansToProcessList->setStyleClass("groupdiv");
     mScansToProcessList->setSelectionMode(Wt::ExtendedSelection);
 
+    mPipelineModeLabel = new WLabel("");
+    setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
+
+
     mAddScanButton = new WPushButton("Add");
     mRemoveScanButton = new WPushButton("Remove");
 
@@ -79,6 +84,7 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     WGridLayout *scansToProcessLayout = new WGridLayout();
     scansToProcessLayout->addWidget(mScansToProcessList, 0, 0);
     scansToProcessLayout->addWidget(mRemoveScanButton, 1, 0, Wt::AlignCenter);
+    scansToProcessLayout->addWidget(mPipelineModeLabel, 2, 0, Wt::AlignCenter);
     scansToProcessLayout->setRowStretch(0, 1);
     mScansToProcessBox->setLayout(scansToProcessLayout);
 
@@ -234,15 +240,56 @@ void ScanBrowser::addScanClicked()
 
         if (addScan)
         {
-            mScansToProcessList->addItem("[MRID:] " + mCurMRID + " [Scan:] " + curScanText);
-            mScansToProcessData.push_back(newScanData);
+            Enums::PipelineType pipelineType = Enums::PIPELINE_UNKNOWN;
+
+            if (findSeriesMatch(ConfigOptions::GetPtr()->GetSeriesListTract(), curScanText.toUTF8()))
+            {
+                pipelineType = Enums::PIPELINE_TYPE_TRACT;
+            }
+            else if(findSeriesMatch(ConfigOptions::GetPtr()->GetSeriesListFS(), curScanText.toUTF8()))
+            {
+                pipelineType = Enums::PIPELINE_TYPE_FS;
+            }
+
+            if (pipelineType != Enums::PIPELINE_UNKNOWN)
+            {
+                if (mPipelineType == Enums::PIPELINE_UNKNOWN)
+                {
+                    setCurrentPipeline(pipelineType);
+                }
+                else
+                {
+                    StandardButton result =
+                            WMessageBox::show("Pipeline Mismatch",
+                                              "[MRID:] " + newScanData.mMRID +
+                                              " [Scan:] " + newScanData.mScanName + " does not match current pipeline type." +
+                                              "\nAre you sure you want to add it?",
+                                              Wt::Yes | Wt::No);
+
+                    if (result == Wt::No)
+                    {
+                        addScan = false;
+                    }
+                }
+            }
+
+            if (addScan)
+            {
+                mScansToProcessList->addItem("[MRID:] " + mCurMRID + " [Scan:] " + curScanText);
+                mScansToProcessData.push_back(newScanData);
+            }
         }
 
         iter++;
     }
 
-    // Emit a signal with whehter a scan is selected
+    // Emit a signal with whether a scan is selected
     mScanAdded.emit(!mScansToProcessData.empty());
+
+    if (mScansToProcessData.empty())
+    {
+        setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
+    }
 }
 
 
@@ -266,6 +313,50 @@ void ScanBrowser::removeScanClicked()
 
     // Emit a signal with whehter a scan is selected
     mScanAdded.emit(!mScansToProcessData.empty());
+
+    if (mScansToProcessData.empty())
+    {
+        setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
+    }
 }
 
+///
+// Set the current pipeline type
+//
+void ScanBrowser::setCurrentPipeline(Enums::PipelineType pipelineType)
+{
+    mPipelineType = pipelineType;
+    switch(mPipelineType)
+    {
+    case Enums::PIPELINE_UNKNOWN:
+        mPipelineModeLabel->setText("Pipeline Type: UNKNOWN");
+        break;
+    case Enums::PIPELINE_TYPE_TRACT:
+        mPipelineModeLabel->setText("Pipeline Type: Tractography");
+        break;
+    case Enums::PIPELINE_TYPE_FS:
+        mPipelineModeLabel->setText("Pipeline Type: Structural Reconstruction");
+        break;
+    }
+}
+
+///
+//  Find a match between a string a comma separated list of strings
+//
+bool ScanBrowser::findSeriesMatch(const std::string& seriesList,
+                                  const std::string& seriesName) const
+{
+    std::string token;
+    std::istringstream iss(seriesList);
+
+    while (getline(iss, token, ','))
+    {
+        if(seriesName.find(token) != string::npos)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 

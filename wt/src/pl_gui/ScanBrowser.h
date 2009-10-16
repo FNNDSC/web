@@ -15,6 +15,7 @@
 #include <Wt/WContainerWidget>
 #include <vector>
 #include <string>
+#include "GlobalEnums.h"
 
 namespace Wt
 {
@@ -58,9 +59,20 @@ public:
     ///
     Wt::Signal<bool>& scanAdded() { return mScanAdded; }
 
-
-
 private:
+
+    ///
+    /// Set the current pipeline type
+    ///
+    void setCurrentPipeline(Enums::PipelineType pipelineType);
+
+    ///
+    /// Find a match between a string a comma separated list of strings
+    /// \param seriesList Comma separated list of series to search for
+    /// \param serisName Series name on which to match
+    ///
+    bool findSeriesMatch(const std::string& seriesList,
+                         const std::string& seriesName) const;
 
     ///
     ///  Add scan clicked [slot]
@@ -109,7 +121,6 @@ private:
     /// Push button to remove scans
     WPushButton *mRemoveScanButton;
 
-
     /// Patient info label
     WLabel *mPatientInfoLabel;
 
@@ -118,6 +129,12 @@ private:
 
     /// Currently selected scans
     WSelectionBox *mScansToProcessList;
+
+    /// Current pipeline mode
+    WLabel *mPipelineModeLabel;
+
+    /// Current pipeline type
+    Enums::PipelineType mPipelineType;
 
     /// List of scans to process
     std::vector<ScanData> mScansToProcessData;

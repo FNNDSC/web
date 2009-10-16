@@ -46,7 +46,9 @@ public:
     ///
     bool LoadFromFile(const std::string& configFile);
 
-    const std::string& GetDicomDir() const { return mDicomDir; }
+    const std::string& GetDicomDir()        const { return mDicomDir; }
+    const std::string& GetSeriesListTract() const { return mSeriesListTract; }
+    const std::string& GetSeriesListFS()    const { return mSeriesListFS; }
 private:
 
     // Singleton instance
@@ -57,6 +59,12 @@ private:
 
     /// Dicom directory
     std::string mDicomDir;
+
+    /// Series list (tract)
+    std::string mSeriesListTract;
+
+    /// Series list (FS)
+    std::string mSeriesListFS;
 };
 
 #endif // CONFIGOPTIONS_H
