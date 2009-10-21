@@ -28,6 +28,7 @@ namespace Wt
 using namespace Wt;
 
 class SelectScans;
+class PipelineConfigure;
 
 ///
 /// \class SubjectPage
@@ -89,6 +90,9 @@ private:
 
     /// Select scans widget
     SelectScans *mSelectScans;
+
+    /// Pipeline configure widget
+    PipelineConfigure *mPipelineConfigure;
 
     /// Next button (navigation)
     WPushButton *mNextButton;

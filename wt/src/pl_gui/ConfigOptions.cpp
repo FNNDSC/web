@@ -73,7 +73,7 @@ ConfigOptions* ConfigOptions::GetPtr()
     return mInstance;
 }
 
-///
+///-+
 //  Load configuration from file
 //
 bool ConfigOptions::LoadFromFile(const std::string& configPath)

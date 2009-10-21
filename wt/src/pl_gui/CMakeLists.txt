@@ -3,6 +3,10 @@ ADD_EXECUTABLE(pl_gui.wt
   MRIBrowser.cpp
   PipelineApp.cpp
   PipelineConfigure.cpp
+  PipelineOptions.cpp
+  PipelineOptionsFS.cpp
+  PipelineOptionsTract.cpp
+  PipelineStatus.cpp
   ScanBrowser.cpp
   SelectScans.cpp
   SubjectPage.cpp
@@ -25,4 +29,3 @@ SET(APPRESOURCES "${CMAKE_CURRENT_SOURCE_DIR}/icons ${CMAKE_CURRENT_SOURCE_DIR}/
 #)
 
 ADD_DEPENDENCIES(pl_gui.wt wt ${EXAMPLES_CONNECTOR})
-

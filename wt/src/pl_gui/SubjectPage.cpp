@@ -13,6 +13,7 @@
 //
 #include "SubjectPage.h"
 #include "SelectScans.h"
+#include "PipelineConfigure.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
@@ -42,9 +43,12 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
 
     WGridLayout *layout = new WGridLayout();
     mSelectScans = new SelectScans();
+    mPipelineConfigure = new PipelineConfigure(mSelectScans->getScansToProcess(),
+                                               mSelectScans->getCurrentPipeline());
 
     mStackedStage = new WStackedWidget();
     mStackedStage->addWidget(mSelectScans);
+    mStackedStage->addWidget(mPipelineConfigure);
 
     layout->addWidget(mStackedStage, 0, 0);
 
@@ -135,6 +139,7 @@ void SubjectPage::nextClicked()
     case SCAN_SELECT:
         mBackButton->enable();
         mStackedStage->setCurrentIndex((int)PIPELINE_CONFIGURE);
+        mPipelineConfigure->updateAll();
         mSubjectState = PIPELINE_CONFIGURE;
         break;
 

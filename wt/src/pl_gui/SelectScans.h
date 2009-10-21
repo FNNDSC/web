@@ -13,11 +13,13 @@
 #define SELECTSCANS_H
 
 #include <Wt/WContainerWidget>
+#include <vector>
+#include "GlobalEnums.h"
+#include "ScanBrowser.h"
 
 using namespace Wt;
 
 class MRIBrowser;
-class ScanBrowser;
 
 ///
 /// \class SelectScans
@@ -41,6 +43,15 @@ public:
     ///
     Wt::Signal<bool>& getScanAdded() { return mScanAdded; }
 
+    ///
+    ///	Get the currently selected pipeline type
+    ///
+    const Enums::PipelineType& getCurrentPipeline() const { return mScanBrowser->getCurrentPipeline();	}
+
+    ///
+    /// Get the list of currently selected scans
+    ///
+    const std::vector<ScanBrowser::ScanData>& getScansToProcess() const { return mScanBrowser->getScansToProcess(); }
 
 private:
     ///

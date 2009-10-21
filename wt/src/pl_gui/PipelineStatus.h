@@ -1,7 +1,7 @@
 //
 //
 //  Description:
-//      This is the container widget for the pipeline configuration
+//      This is the the left pane of the pipeline configuration screen
 //
 //  Author:
 //      Dan Ginsburg
@@ -9,35 +9,39 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
-#ifndef PIPELINECONFIGURE_H
-#define PIPELINECONFIGURE_H
+#ifndef PIPELINESTATUS_H
+#define PIPELINESTATUS_H
 
 #include <Wt/WContainerWidget>
-#include <vector>
-#include "GlobalEnums.h"
 #include "ScanBrowser.h"
-#include "PipelineStatus.h"
+#include "GlobalEnums.h"
+
+namespace Wt
+{
+    class WLabel;
+    class WSelectionBox;
+}
 
 using namespace Wt;
 
 ///
-/// \class PipelineConfigure
-/// \brief Container widget for the contents of the pipeline configuration stage
+/// \class PipelineStatus
+/// \brief Left pane of the pipeline configuration screen
 ///
-class PipelineConfigure : public WContainerWidget
+class PipelineStatus : public WContainerWidget
 {
 public:
     ///
     /// Constructor
     ///
-    PipelineConfigure(const std::vector<ScanBrowser::ScanData> &scansToProcess,
-                      const Enums::PipelineType &pipelineType,
-                      WContainerWidget *parent = 0);
+    PipelineStatus(const std::vector<ScanBrowser::ScanData> &scansToProcess,
+                   const Enums::PipelineType &pipelineType,
+                   WContainerWidget *parent = 0);
 
     ///
     /// Destructor
     ///
-    virtual ~PipelineConfigure();
+    virtual ~PipelineStatus();
 
     ///
     ///  Update all elements of widget to current values (on next clicked)
@@ -53,8 +57,11 @@ private:
 
 private:
 
-    /// Pipeline status
-    PipelineStatus *mPipelineStatus;
+    /// Pipeline type label
+    WLabel *mPipelineTypeLabel;
+
+    /// Currently selected scans
+    WSelectionBox *mScansToProcessList;
 
     /// Scans to process (passed in from SubjectPage)
     const std::vector<ScanBrowser::ScanData>& mScansToProcessData;
@@ -64,5 +71,5 @@ private:
 
 };
 
-#endif // PIPELINECONFIGURE_H
+#endif // PIPELINESTATUS_H
 

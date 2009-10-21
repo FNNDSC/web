@@ -34,6 +34,23 @@ using namespace Wt;
 class ScanBrowser : public WContainerWidget
 {
 public:
+    /// Storage of scan data
+    typedef struct
+    {
+        /// MRID
+        std::string mMRID;
+
+        /// Scan DICOM file
+        std::string mDicomFile;
+
+        /// Scan name
+        std::string mScanName;
+
+        /// Scan directory
+        std::string mScanDir;
+
+    } ScanData;
+
     ///
     /// Constructor
     ///
@@ -58,6 +75,16 @@ public:
     /// Signal accessor for scan added
     ///
     Wt::Signal<bool>& scanAdded() { return mScanAdded; }
+
+    ///
+    ///	Get the currently selected pipeline type
+    ///
+    const Enums::PipelineType& getCurrentPipeline() const { return mPipelineType;	}
+
+    ///
+    /// Get the list of currently selected scans
+    ///
+    const std::vector<ScanData>& getScansToProcess() const { return mScansToProcessData; }
 
 private:
 
@@ -88,23 +115,6 @@ private:
 
     /// Signal for when scan is add
     Wt::Signal<bool> mScanAdded;
-
-    /// Storage of scan data
-    typedef struct
-    {
-        /// MRID
-        std::string mMRID;
-
-        /// Scan DICOM file
-        std::string mDicomFile;
-
-        /// Scan name
-        std::string mScanName;
-
-        /// Scan directory
-        std::string mScanDir;
-
-    } ScanData;
 
     /// Patient info group box
     WGroupBox *mPatientInfoBox;

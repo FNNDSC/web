@@ -32,10 +32,21 @@ using namespace std;
 ///
 //  Constructor
 //
-PipelineConfigure::PipelineConfigure(WContainerWidget *parent) :
-    WContainerWidget(parent)
+PipelineConfigure::PipelineConfigure(const vector<ScanBrowser::ScanData>& scansToProcess,
+                                     const Enums::PipelineType& pipelineType,
+                                     WContainerWidget *parent) :
+    WContainerWidget(parent),
+    mScansToProcessData(scansToProcess),
+    mPipelineType(pipelineType)
 {
     setStyleClass("tabdiv");
+
+    mPipelineStatus = new PipelineStatus(scansToProcess, pipelineType);
+
+    WGridLayout *layout = new WGridLayout();
+    layout->addWidget(mPipelineStatus, 0, 0);
+
+    setLayout(layout);
 }
 
 ///
@@ -52,12 +63,21 @@ PipelineConfigure::~PipelineConfigure()
 //
 //
 
+
+///
+///  Update all elements of widget to current values (on next clicked)
+///
+void PipelineConfigure::updateAll()
+{
+    mPipelineStatus->updateAll();
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Private Members
 //
 //
-
 
 ///
 //  Creates a title widget.
