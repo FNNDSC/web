@@ -143,6 +143,7 @@ void ScanBrowser::setScanDir(std::string scanDir)
 
     mScansSelectionBox->clear();
     mScansDicomFiles.clear();
+    mScansDate = "";
     mScansSelectionBox->setCurrentIndex(0);
 
     if (tocFile.is_open())
@@ -172,18 +173,32 @@ void ScanBrowser::setScanDir(std::string scanDir)
 
                 mScansSelectionBox->addItem(scanName);
                 mScansDicomFiles.push_back(dicomFile);
+            }
+            else if (firstToken == "Image")
+            {
+                string secondToken;
+                istr >> secondToken;
 
+                if (secondToken == "Scan-Date")
+                {
+                    string scanDate;
+
+                    istr >> scanDate;
+                    mScansDate = scanDate;
+                }
+
+                oss << string(buf) << "<br/>";
             }
             else
             {
-               oss << string(buf) << "<br/>";
+                oss << string(buf) << "<br/>";
             }
         }
 
         mPatientInfoLabel->setText(oss.str());
 
         tocFile.close();
-    }
+   }
 }
 
 
@@ -193,6 +208,15 @@ void ScanBrowser::setScanDir(std::string scanDir)
 void ScanBrowser::setCurMRID(std::string mrid)
 {
     mCurMRID = mrid;
+}
+
+
+///
+//  Set the curreng age
+//
+void ScanBrowser::setCurAge(std::string age)
+{
+    mCurAge = age;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -217,8 +241,10 @@ void ScanBrowser::addScanClicked()
 
         newScanData.mMRID = mCurMRID;
         newScanData.mDicomFile = mScansDicomFiles[*iter];
+        newScanData.mScanDate = mScansDate;
         newScanData.mScanName = curScanText.toUTF8();
         newScanData.mScanDir = mCurScanDir;
+        newScanData.mAge = mCurAge;
 
         bool addScan = true;
         for (int i = 0; i < mScansToProcessData.size(); i++)
@@ -259,16 +285,19 @@ void ScanBrowser::addScanClicked()
                 }
                 else
                 {
-                    StandardButton result =
-                            WMessageBox::show("Pipeline Mismatch",
-                                              "[MRID:] " + newScanData.mMRID +
-                                              " [Scan:] " + newScanData.mScanName + " does not match current pipeline type." +
-                                              "\nAre you sure you want to add it?",
-                                              Wt::Yes | Wt::No);
-
-                    if (result == Wt::No)
+                    if (pipelineType != mPipelineType)
                     {
-                        addScan = false;
+                        StandardButton result =
+                                WMessageBox::show("Pipeline Mismatch",
+                                                  "[MRID:] " + newScanData.mMRID +
+                                                  " [Scan:] " + newScanData.mScanName + " does not match current pipeline type." +
+                                                  "\nAre you sure you want to add it?",
+                                                  Wt::Yes | Wt::No);
+
+                        if (result == Wt::No)
+                        {
+                            addScan = false;
+                        }
                     }
                 }
             }

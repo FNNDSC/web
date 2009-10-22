@@ -49,6 +49,11 @@ public:
         /// Scan directory
         std::string mScanDir;
 
+        /// Age
+        std::string mAge;
+
+        /// Scan date
+        std::string mScanDate;
     } ScanData;
 
     ///
@@ -70,6 +75,11 @@ public:
     /// \brief Set the current MRID
     ///
     void setCurMRID(std::string mrid);
+
+    ///
+    /// \brief Set the curreng age
+    ///
+    void setCurAge(std::string age);
 
     ///
     /// Signal accessor for scan added
@@ -152,11 +162,17 @@ private:
     /// List of DICOM files for currently selected scans
     std::vector<std::string> mScansDicomFiles;
 
+    /// List of scan dates for currently selected scans
+    std::string mScansDate;
+
     /// Current MRID
     std::string mCurMRID;
 
     /// Current scan directory
     std::string mCurScanDir;
+
+    /// Current age
+    std::string mCurAge;
 
 };
 

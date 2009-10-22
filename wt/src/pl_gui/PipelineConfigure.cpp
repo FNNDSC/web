@@ -10,12 +10,15 @@
 //  GPL v2
 //
 #include "PipelineConfigure.h"
+#include "PipelineOptionsFS.h"
+#include "PipelineOptionsTract.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
 #include <Wt/WLabel>
 #include <Wt/WPushButton>
 #include <Wt/WText>
+#include <Wt/WStackedWidget>
 
 ///
 //  Namespaces
@@ -42,9 +45,20 @@ PipelineConfigure::PipelineConfigure(const vector<ScanBrowser::ScanData>& scansT
     setStyleClass("tabdiv");
 
     mPipelineStatus = new PipelineStatus(scansToProcess, pipelineType);
+    mStackedPipelineOptions = new WStackedWidget();
+
+    mPipelineOptionsTract = new PipelineOptionsTract();
+    mPipelineOptionsFS = new PipelineOptionsFS();
+    mStackedPipelineOptions->addWidget(mPipelineOptionsTract);
+    mStackedPipelineOptions->addWidget(mPipelineOptionsFS);
+    mStackedPipelineOptions->setCurrentIndex(0);
+
 
     WGridLayout *layout = new WGridLayout();
     layout->addWidget(mPipelineStatus, 0, 0);
+    layout->addWidget(mStackedPipelineOptions, 0, 1);
+    layout->setColumnStretch(1, 1);
+
 
     setLayout(layout);
 }
@@ -70,6 +84,61 @@ PipelineConfigure::~PipelineConfigure()
 void PipelineConfigure::updateAll()
 {
     mPipelineStatus->updateAll();
+
+    switch(mPipelineType)
+    {
+    case Enums::PIPELINE_TYPE_TRACT:
+        mStackedPipelineOptions->setCurrentIndex(0);
+        break;
+    case Enums::PIPELINE_TYPE_FS:
+        mStackedPipelineOptions->setCurrentIndex(1);
+        break;
+    }
+}
+
+///
+//  Generate command-line options string based on user choices
+//
+std::string PipelineConfigure::getCommandLineString() const
+{
+    if (mPipelineType == Enums::PIPELINE_TYPE_TRACT)
+    {
+        return mPipelineOptionsTract->getCommandLineString();
+    }
+    else
+    {
+        return mPipelineOptionsFS->getCommandLineString();
+    }
+}
+
+///
+//  Get the current directory suffix
+//
+std::string PipelineConfigure::getOutputDirSuffix() const
+{
+    if (mPipelineType == Enums::PIPELINE_TYPE_TRACT)
+    {
+        return mPipelineOptionsTract->getOutputDirSuffix();
+    }
+    else
+    {
+        return mPipelineOptionsFS->getOutputDirSuffix();
+    }
+}
+
+///
+//  Get the current file suffix
+//
+std::string PipelineConfigure::getOutputFileSuffix() const
+{
+    if (mPipelineType == Enums::PIPELINE_TYPE_TRACT)
+    {
+        return mPipelineOptionsTract->getOutputFileSuffix();
+    }
+    else
+    {
+        return mPipelineOptionsFS->getOutputFileSuffix();
+    }
 }
 
 

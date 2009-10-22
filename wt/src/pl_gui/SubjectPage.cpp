@@ -14,18 +14,27 @@
 #include "SubjectPage.h"
 #include "SelectScans.h"
 #include "PipelineConfigure.h"
+#include "ConfigOptions.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
 #include <Wt/WLabel>
 #include <Wt/WPushButton>
 #include <Wt/WStackedWidget>
+#include <Wt/WMessageBox>
+#include <boost/filesystem.hpp>
+#include <stdlib.h>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <stdlib.h>
 
 ///
 //  Namespaces
 //
 using namespace Wt;
 using namespace std;
+using namespace boost::filesystem;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -141,10 +150,19 @@ void SubjectPage::nextClicked()
         mStackedStage->setCurrentIndex((int)PIPELINE_CONFIGURE);
         mPipelineConfigure->updateAll();
         mSubjectState = PIPELINE_CONFIGURE;
+        mNextButton->setText("Finish");
         break;
 
     case PIPELINE_CONFIGURE:
     default:
+        StandardButton result = WMessageBox::show("Submit Scans",
+                                                  "Are you sure that you want to submit for processing?",
+                                                  Wt::Yes | Wt::No);
+
+        if (result == Wt::Yes)
+        {
+            submitForProcessing();
+        }
         break;
     }
 }
@@ -166,8 +184,82 @@ void SubjectPage::backClicked()
         mStackedStage->setCurrentIndex((int)SCAN_SELECT);
         mSubjectState = SCAN_SELECT;
         mBackButton->disable();
+        mNextButton->setText("Next ->");
         break;
     }
 
 }
 
+///
+//  Submit scans for processing.  This function will generate the file and
+//  execute pl_batch.bash on it to put it into the processing queue.
+//
+void SubjectPage::submitForProcessing()
+{
+    char *tmpName = strdup("/tmp/pl_gui_tmpXXXXXX");
+
+    if (mkstemp(tmpName) == -1)
+    {
+        StandardButton result = WMessageBox::show("ERROR",
+                                                  string("Error creating file on server: ") + string(tmpName),
+                                                  Wt::Ok);
+
+        return;
+    }
+
+    // Open temporary file for writing
+    ofstream tmpFile(tmpName, ios::out);
+
+    if (!tmpFile.is_open())
+    {
+        StandardButton result = WMessageBox::show("ERROR",
+                                                  string("Error creating file on server: ") + string(tmpName),
+                                                  Wt::Ok);
+
+        // TODO: Need to do server logging here
+        return;
+    }
+
+    // plBatch_create outputs command line options and then a list
+    // of files to process
+    tmpFile << "DEFAULTCOM = " << mPipelineConfigure->getCommandLineString() << endl;
+    tmpFile << "DEFAULTDIR = " << ConfigOptions::GetPtr()->GetDicomDir() << endl;
+
+    const std::vector<ScanBrowser::ScanData>& scansToProcess = mSelectScans->getScansToProcess();
+    int dirCount = 1; // TODO: Correct the computation of these to match plBatch_create.bash
+    int seriesCount = 1;
+    for (int i = 0; i < scansToProcess.size(); i++)
+    {
+        // This table defines a batch run geared towards processing
+        // several file sets concurrently on the 'launchpad' cluster
+        //
+        // The format of each run specification is:
+        //
+        //       <DICOMDIR>;<dcmSeriesFile>;<outputSuffix>;<DIRsuffix>
+        //
+        // where:
+        //
+        //       <DICOMDIR>      : The directory containing the study.
+        //       <dcmSeriesFile> : A single file in the target series.
+        //       <outputSuffix>  : Some output suffix describing the
+        //                         processing run. This is appended to
+        //                         actual processed *filenames*.
+        //       <DIRsuffix>     : An output suffix that is appended
+        //                         to processed *dirnames*.
+        //
+
+        std::string age = scansToProcess[i].mAge;
+        std::string date = scansToProcess[i].mScanDate;
+
+        tmpFile << path(scansToProcess[i].mScanDir).leaf() << ";"
+                << scansToProcess[i].mDicomFile << ";"
+                << "-" << date << "_" << age << "-D" << dirCount << "-S"  << seriesCount << mPipelineConfigure->getOutputFileSuffix() << ";"
+                << "-" << date << "_" << age << "-D" << dirCount << "-S"  << seriesCount << mPipelineConfigure->getOutputDirSuffix() << endl;
+
+        // TODO: Correct the computation of these to match plBatch_create.bash
+        dirCount++;
+        seriesCount++;
+    }
+    tmpFile.close();
+
+}

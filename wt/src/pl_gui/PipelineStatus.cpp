@@ -62,13 +62,14 @@ PipelineStatus::PipelineStatus(const std::vector<ScanBrowser::ScanData> &scansTo
     WVBoxLayout *selectedScansBoxLayout = new WVBoxLayout();
     mScansToProcessList = new WSelectionBox();
     mScansToProcessList->setStyleClass("groupdiv");
+    mScansToProcessList->setMinimumSize(WLength(250, WLength::Pixel), WLength::Auto);
     mScansToProcessList->setSelectionMode(Wt::NoSelection);
     selectedScansBoxLayout->addWidget(mScansToProcessList);
     selectedScansBox->setLayout(selectedScansBoxLayout);
 
     layout->addWidget(pipelineTypeBox);
     layout->addWidget(selectedScansBox);
-    layout->addStretch(100);
+    //layout->addStretch(100);
     setLayout(layout);
 }
 

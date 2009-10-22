@@ -62,7 +62,7 @@ private:
     ///
     /// \brief Slot for when the MRI selection changes
     ///
-    void mriChanged(std::string mrid, std::string scanDir);
+    void mriChanged(std::string mrid, std::string scanDir, std::string age);
 
     ///
     /// \brief  Slot for when the scan is added to the queue

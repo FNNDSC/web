@@ -15,6 +15,16 @@
 #include "PipelineOptions.h"
 
 ///
+//  Constants
+//
+const int NUM_TRACT_STAGES = 5;
+
+namespace Wt
+{
+    class WCheckBox;
+};
+
+///
 /// \class PipelineOptionsTract
 /// \brief Class for options to configure tractography pipeline
 ///
@@ -31,11 +41,18 @@ public:
     ///
     virtual ~PipelineOptionsTract();
 
+    ///
+    /// Generate command-line options string based on user choices
+    ///
+    std::string getCommandLineString() const;
 
 private:
 
 
 private:
+
+    /// Buttons for pipeline stages
+    WCheckBox *mStageBoxes[NUM_TRACT_STAGES];
 
 
 };

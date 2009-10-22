@@ -80,6 +80,12 @@ private:
     ///
     void backClicked();
 
+    ///
+    ///  Submit scans for processing.  This function will generate the file and
+    ///  execute pl_batch.bash on it to put it into the processing queue.
+    ///
+    void submitForProcessing();
+
 private:
 
     /// Current state of widget

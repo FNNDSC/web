@@ -44,7 +44,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     // Populate the list of MRIDs
     mMRITreeView = new WTreeView();
     mMRIModel = new WStandardItemModel();
-    populateMRIDs(ConfigOptions::GetPtr()->GetDicomDir() + + "/dcm_MRID.log");
+    populateMRIDs(ConfigOptions::GetPtr()->GetDicomDir() + + "/dcm_MRID_age.log");
 
     mMRITreeView->setAttributeValue
             ("oncontextmenu",
@@ -86,13 +86,14 @@ void MRIBrowser::populateMRIDs(const std::string& mridLogFile)
     while (!inFile.eof())
     {
         string scanName,
-        MRID;
+               MRID,
+               age;
 
         char buf[1024] = {0};
         inFile.getline( buf, sizeof(buf));
 
         istringstream istr( string(buf), ios_base::out);
-        istr >> scanName >> MRID;
+        istr >> scanName >> MRID >> age;
 
         stringstream scanDir;
         scanDir << ConfigOptions::GetPtr()->GetDicomDir() << "/" << scanName;
@@ -105,7 +106,7 @@ void MRIBrowser::populateMRIDs(const std::string& mridLogFile)
         std::ifstream tocFile(tocURL.str().c_str());
         if (tocFile.is_open())
         {
-            mMRIModel->appendRow(createMRIItem(MRID, scanDir.str()));
+            mMRIModel->appendRow(createMRIItem(MRID, scanDir.str(), age));
         }
     }
 }
@@ -115,11 +116,13 @@ void MRIBrowser::populateMRIDs(const std::string& mridLogFile)
 //  Create an MRI item.
 //
 WStandardItem *MRIBrowser::createMRIItem(const std::string& MRID,
-                                         const std::string& scanDir)
+                                         const std::string& scanDir,
+                                         const std::string& age)
 {
     WStandardItem *result = new WStandardItem(MRID);
 
-    result->setData(scanDir);
+    result->setData(scanDir, UserRole);
+    result->setData(age, UserRole + 1);
     result->setIcon("icons/folder.gif");
 
     return result;
@@ -138,12 +141,14 @@ void MRIBrowser::mriChanged()
     WModelIndex selected = *mMRITreeView->selectedIndexes().begin();
     boost::any displayData = selected.data(DisplayRole);
     boost::any d = selected.data(UserRole);
-    if (!displayData.empty() && !d.empty())
+    boost::any d1 = selected.data(UserRole + 1);
+    if (!displayData.empty() && !d.empty() && !d1.empty())
     {
         WString mrid = boost::any_cast<WString>(displayData);
         std::string scanDir = boost::any_cast<std::string>(d);
+        std::string age = boost::any_cast<std::string>(d1);
 
-        mMRISelected.emit(mrid.toUTF8(), scanDir);
+        mMRISelected.emit(mrid.toUTF8(), scanDir, age);
     }
 }
 

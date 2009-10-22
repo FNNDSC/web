@@ -20,6 +20,8 @@
 #include <Wt/WGroupBox>
 #include <Wt/WVBoxLayout>
 #include <Wt/WSelectionBox>
+#include <Wt/WButtonGroup>
+#include <Wt/WCheckBox>
 #include <vector>
 
 ///
@@ -42,7 +44,18 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 {
     setStyleClass("tabdiv");
 
- }
+    mStageBoxes[0] = new WCheckBox("1 - Collect DICOM from repository");
+    mStageBoxes[1] = new WCheckBox("2 - Construct tractograpy");
+    mStageBoxes[2] = new WCheckBox("3 - Slice 3D model along anatomical planes");
+    mStageBoxes[3] = new WCheckBox("4 - Convert slices to DICOM");
+    mStageBoxes[4] = new WCheckBox("5 - Transmit slices to PACS");
+
+    for (int i = 0; i < NUM_TRACT_STAGES; i++)
+    {
+        mStageBoxes[i]->setChecked(true);
+        mStageButtonGroupLayout->addWidget(mStageBoxes[i]);
+    }
+}
 
 ///
 //  Destructor
@@ -58,6 +71,30 @@ PipelineOptionsTract::~PipelineOptionsTract()
 //
 //
 
+
+///
+//  Generate command-line options string based on user choices
+//
+std::string PipelineOptionsTract::getCommandLineString() const
+{
+    std::string stageStr = "";
+    std::string args;
+
+    for (int i = 0; i < NUM_TRACT_STAGES; i++)
+    {
+        if (mStageBoxes[i]->isChecked())
+        {
+            ostringstream oss;
+
+            oss << (i + 1);
+            stageStr += oss.str();
+        }
+    }
+
+    args = "-t " + stageStr;
+
+    return args + " " + PipelineOptions::getCommandLineString();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //

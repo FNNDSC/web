@@ -14,9 +14,18 @@
 
 #include <Wt/WContainerWidget>
 #include <vector>
+#include <string>
 #include "GlobalEnums.h"
 #include "ScanBrowser.h"
 #include "PipelineStatus.h"
+
+class PipelineOptionsTract;
+class PipelineOptionsFS;
+namespace Wt
+{
+    class WStackedWidget;
+    class WButtonGroup;
+}
 
 using namespace Wt;
 
@@ -44,6 +53,21 @@ public:
     ///
     void updateAll();
 
+    ///
+    ///  Generate command-line options string based on user choices
+    ///
+    virtual std::string getCommandLineString() const;
+
+    ///
+    ///  Get the current directory suffix
+    ///
+    virtual std::string getOutputDirSuffix() const;
+
+    ///
+    ///  Get the current file suffix
+    ///
+    virtual std::string getOutputFileSuffix() const;
+
 private:
     ///
     /// \brief Creates a title widget.
@@ -55,6 +79,15 @@ private:
 
     /// Pipeline status
     PipelineStatus *mPipelineStatus;
+
+    /// Stacked widget for pipeline options box
+    WStackedWidget *mStackedPipelineOptions;
+
+    /// Tractography pipeline options
+    PipelineOptionsTract *mPipelineOptionsTract;
+
+    /// Freesurfer pipeline options
+    PipelineOptionsFS *mPipelineOptionsFS;
 
     /// Scans to process (passed in from SubjectPage)
     const std::vector<ScanBrowser::ScanData>& mScansToProcessData;

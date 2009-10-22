@@ -98,10 +98,11 @@ WText* SelectScans::createTitle(const WString& title)
 ///
 //  Slot for when the MRI selection changes
 //
-void SelectScans::mriChanged(std::string mrid, std::string scanDir)
+void SelectScans::mriChanged(std::string mrid, std::string scanDir, std::string age)
 {
-    mScanBrowser->setCurMRID(mrid);;
+    mScanBrowser->setCurMRID(mrid);
     mScanBrowser->setScanDir(scanDir);
+    mScanBrowser->setCurAge(age);
     mScanBrowser->show();
 }
 
