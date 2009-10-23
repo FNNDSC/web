@@ -42,8 +42,12 @@ ConfigOptions::ConfigOptions() :
     mOptionDesc = new options_description("Allowable options");
     mOptionDesc->add_options()
         ("dicomDir",        value<string>(), "Base DICOM directory")
+        ("outDir",          value<string>(), "Base output directory")
+        ("scriptDir",       value<string>(), "Base scripts directory")
         ("seriesListTract", value<string>(), "Series list tractography (comma separated)")
         ("seriesListFS",    value<string>(), "Series list freesurfer (comma separated)")
+        ("clusterName",     value<string>(), "Cluster name")
+        ("packageDir",      value<string>(), "Package directory")
         ;
 }
 
@@ -103,6 +107,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mDicomDir = vm["dicomDir"].as<string>();
         }
 
+        if (vm.count("outDir"))
+        {
+            mOutDir = vm["outDir"].as<string>();
+        }
+
         if (vm.count("seriesListTract"))
         {
             mSeriesListTract = vm["seriesListTract"].as<string>();
@@ -113,9 +122,28 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mSeriesListFS = vm["seriesListFS"].as<string>();
         }
 
+        if (vm.count("scriptDir"))
+        {
+            mScriptDir = vm["scriptDir"].as<string>();
+        }
+
+        if (vm.count("clusterName"))
+        {
+            mClusterName = vm["clusterName"].as<string>();
+        }
+
+        if (vm.count("packageDir"))
+        {
+            mPackageDir = vm["packageDir"].as<string>();
+        }
+
         cout << "[DICOM Dir:] " << mDicomDir << endl;
+        cout << "[Output Dir:] " << mOutDir << endl;
+        cout << "[Script Dir:] " << mScriptDir << endl;
         cout << "[SeriesListTract:] " << mSeriesListTract << endl;
-        cout << "[SeriesListFS:]" << mSeriesListFS << endl;
+        cout << "[SeriesListFS:] " << mSeriesListFS << endl;
+        cout << "[Cluster Name:] " << mClusterName << endl;
+        cout << "[Package Dir:] " << mPackageDir << endl;
 
         configFile.close();
     }

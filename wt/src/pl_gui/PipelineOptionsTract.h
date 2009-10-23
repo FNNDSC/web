@@ -42,6 +42,11 @@ public:
     virtual ~PipelineOptionsTract();
 
     ///
+    ///  Reset to default state
+    ///
+    void resetAll();
+
+    ///
     /// Generate command-line options string based on user choices
     ///
     std::string getCommandLineString() const;

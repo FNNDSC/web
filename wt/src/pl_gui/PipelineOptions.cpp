@@ -12,6 +12,7 @@
 //  GPL v2
 //
 #include "PipelineOptions.h"
+#include "ConfigOptions.h"
 #include "GlobalEnums.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
@@ -93,6 +94,8 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
 
     layout->addWidget(mPipelineOptionsBox);
     setLayout(layout);
+
+    resetAll();
 }
 
 ///
@@ -111,11 +114,30 @@ PipelineOptions::~PipelineOptions()
 
 
 ///
+//  Reset to default state
+//
+void PipelineOptions::resetAll()
+{
+    mEmailUser->setText("");
+    mOutputDirSuffix->setText("");
+    mOutputFileSuffix->setText("");
+}
+
+
+///
 //  Generate command-line options string based on user choices
 //
 std::string PipelineOptions::getCommandLineString() const
 {
-    std::string args = "-v 10";
+    // Default args: -v 10 (verbosity: 10)
+    //               -c    (run on cluster)
+    //               -C <clusterName> (cluster name from config file)
+    //               -O <outputDir>   (output directory from config file)
+    //
+    std::string args = "-v 10 -c -C ";
+
+    args += ConfigOptions::GetPtr()->GetClusterName();
+    args += " -O " + ConfigOptions::GetPtr()->GetOutDir();
 
     if (!mEmailUser->text().empty())
     {

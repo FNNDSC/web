@@ -59,6 +59,8 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     WVBoxLayout *layout = new WVBoxLayout();
     layout->addWidget(mMRITreeView);
     setLayout(layout);
+
+    resetAll();
 }
 
 ///
@@ -69,6 +71,15 @@ MRIBrowser::~MRIBrowser()
     delete mMRIModel;
 }
 
+///
+//  Reset to default state
+//
+void MRIBrowser::resetAll()
+{
+    WModelIndexSet noSelection;
+    mMRITreeView->setSelectedIndexes(noSelection);
+
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //

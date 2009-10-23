@@ -58,6 +58,11 @@ public:
     ///
     virtual ~SubjectPage();
 
+    ///
+    /// Reset all widgets to the default state
+    ///
+    void resetAll();
+
 private:
     ///
     /// \brief Creates a title widget.
@@ -84,7 +89,13 @@ private:
     ///  Submit scans for processing.  This function will generate the file and
     ///  execute pl_batch.bash on it to put it into the processing queue.
     ///
-    void submitForProcessing();
+    bool submitForProcessing();
+
+    ///
+    ///  Return the number of lines in a file
+    ///
+    int getNumberOfLines(const char *fileName);
+
 
 private:
 

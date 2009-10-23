@@ -22,6 +22,9 @@
 #include <Wt/WPushButton>
 #include <Wt/WStackedWidget>
 #include <Wt/WMessageBox>
+#include <boost/process/process.hpp>
+#include <boost/process/child.hpp>
+#include <boost/process/launch_shell.hpp>
 #include <boost/filesystem.hpp>
 #include <stdlib.h>
 #include <fstream>
@@ -35,6 +38,7 @@
 using namespace Wt;
 using namespace std;
 using namespace boost::filesystem;
+using namespace boost::processes;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -63,8 +67,6 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
 
     mNextButton = new WPushButton("Next ->");
     mBackButton = new WPushButton("<- Back");
-    mNextButton->disable();
-    mBackButton->disable();
 
     WHBoxLayout *navLayout = new WHBoxLayout();
     navLayout->addStretch(100);
@@ -83,6 +85,8 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
     mSelectScans->getScanAdded().connect(SLOT(this, SubjectPage::scanAdded));
     mNextButton->clicked().connect(SLOT(this, SubjectPage::nextClicked));
     mBackButton->clicked().connect(SLOT(this, SubjectPage::backClicked));
+
+    resetAll();
 }
 
 ///
@@ -98,6 +102,22 @@ SubjectPage::~SubjectPage()
 //  Public Members
 //
 //
+
+
+///
+// Reset all widgets to the default state
+//
+void SubjectPage::resetAll()
+{
+    mSubjectState = SCAN_SELECT;
+    mStackedStage->setCurrentIndex(0);
+    mNextButton->disable();
+    mBackButton->disable();
+    mNextButton->setText("Next ->");
+
+    mSelectScans->resetAll();
+    mPipelineConfigure->resetAll();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -161,7 +181,43 @@ void SubjectPage::nextClicked()
 
         if (result == Wt::Yes)
         {
-            submitForProcessing();
+            if(submitForProcessing())
+            {
+                std::string logEntriesToDisplay;
+                std::string scheduleFileName = ConfigOptions::GetPtr()->GetOutDir() +
+                                               "/" +  ConfigOptions::GetPtr()->GetClusterName() +
+                                               "/schedule.log";
+
+                ifstream ifs(scheduleFileName.c_str(), ios::in);
+
+                int linesInFile = getNumberOfLines(scheduleFileName.c_str());
+                int linesToRead = mSelectScans->getScansToProcess().size();
+                int startLine = linesInFile - linesToRead;
+                int line = 0;
+
+                while (!ifs.eof())
+                {
+                    char buf[1024] = {0};
+                    ifs.getline( buf, sizeof(buf));
+                    line++;
+                    if (line >= startLine)
+                    {
+                        logEntriesToDisplay += string(buf) + "<br/>";
+                    }
+                }
+                ifs.close();
+
+
+                StandardButton result = WMessageBox::show("Success",
+                                                          "The following jobs were submitted successfully:<br/>" +
+                                                          logEntriesToDisplay,
+                                                          Wt::Ok);
+
+                // Reset everything to the default state
+                resetAll();
+
+
+            }
         }
         break;
     }
@@ -194,7 +250,7 @@ void SubjectPage::backClicked()
 //  Submit scans for processing.  This function will generate the file and
 //  execute pl_batch.bash on it to put it into the processing queue.
 //
-void SubjectPage::submitForProcessing()
+bool SubjectPage::submitForProcessing()
 {
     char *tmpName = strdup("/tmp/pl_gui_tmpXXXXXX");
 
@@ -204,7 +260,7 @@ void SubjectPage::submitForProcessing()
                                                   string("Error creating file on server: ") + string(tmpName),
                                                   Wt::Ok);
 
-        return;
+        return false;
     }
 
     // Open temporary file for writing
@@ -217,7 +273,7 @@ void SubjectPage::submitForProcessing()
                                                   Wt::Ok);
 
         // TODO: Need to do server logging here
-        return;
+        return false;
     }
 
     // plBatch_create outputs command line options and then a list
@@ -262,4 +318,66 @@ void SubjectPage::submitForProcessing()
     }
     tmpFile.close();
 
+    // Get the number of lines in the current log file
+    std::string scheduleFileName;
+    scheduleFileName = ConfigOptions::GetPtr()->GetOutDir() +
+                       "/" +  ConfigOptions::GetPtr()->GetClusterName() +
+                       "/schedule.log";
+    int scheduleLines = getNumberOfLines(scheduleFileName.c_str());
+
+    // Now run pl_batch.bash to queue up into the schedule
+    std::string packageDir = ConfigOptions::GetPtr()->GetPackageDir();
+    std::string scriptDir = ConfigOptions::GetPtr()->GetScriptDir();
+    std::string commandArgs;
+
+    // Create the following command line args for running pl_batch
+    //  -v 10 -t <tmpfile> -T <pipelineType>
+    commandArgs = "\"-v 10 -t " + path(string(tmpName)).leaf() + " -T ";
+    commandArgs += mSelectScans->getCurrentPipelineAsString();
+    commandArgs += "\"";
+
+    std::string cmdToExecute;
+    cmdToExecute = scriptDir + "/pl_batch_web.bash " + packageDir + " " + scriptDir + " ";
+    cmdToExecute += commandArgs + " /tmp";
+
+    cout << "EXEC: " << cmdToExecute << endl;
+
+    context ctx;
+    child c = launch_shell(cmdToExecute.c_str(), ctx);
+    boost::processes::status s = c.wait();
+    cout << "EXIT STATUS: " << s.exit_status() << endl;
+
+    int newScheduleLines = getNumberOfLines(scheduleFileName.c_str());
+
+    if ((newScheduleLines - scheduleLines) != scansToProcess.size())
+    {
+        StandardButton result = WMessageBox::show("ERROR",
+                                                  string("Error occurred in adding files to cluster schedule."),
+                                                  Wt::Ok);
+
+        // TODO: Need to do server logging here
+        return false;
+    }
+
+    return true;
+}
+
+///
+//  Return the number of lines in a file
+//
+int SubjectPage::getNumberOfLines(const char *fileName)
+{
+    int lineCount = 0;
+    ifstream ifs(fileName, ios::in);
+    while (!ifs.eof())
+    {
+        char buf[1024] = {0};
+        ifs.getline( buf, sizeof(buf));
+
+        lineCount++;
+    }
+
+    ifs.close();
+
+    return lineCount;
 }

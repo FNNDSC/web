@@ -31,6 +31,11 @@ public:
     ///
     virtual ~PipelineOptionsFS();
 
+    ///
+    /// Reset to default state
+    ///
+    void resetAll();
+
 
 private:
 

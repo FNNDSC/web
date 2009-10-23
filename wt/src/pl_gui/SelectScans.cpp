@@ -53,13 +53,14 @@ SelectScans::SelectScans(WContainerWidget *parent) :
     layout->setRowStretch(1, 1);
     layout->setColumnStretch(1, 1);
 
-    mScanBrowser->hide();
 
     setLayout(layout);
 
     // Signal/slot connections
     mMRIBrowser->mriSelected().connect(SLOT(this, SelectScans::mriChanged));
     mScanBrowser->scanAdded().connect(SLOT(this, SelectScans::scanAdded));
+
+    resetAll();
 }
 
 ///
@@ -75,6 +76,31 @@ SelectScans::~SelectScans()
 //  Public Members
 //
 //
+
+///
+// Reset all widgets to the default state
+//
+void SelectScans::resetAll()
+{
+    mScanBrowser->hide();
+    mScanBrowser->resetAll();
+    mMRIBrowser->resetAll();
+}
+
+///
+//  Get pipeline type as string (for command line arg)
+//
+const std::string SelectScans::getCurrentPipelineAsString() const
+{
+    if (getCurrentPipeline() == Enums::PIPELINE_TYPE_TRACT)
+    {
+        return std::string("tract");
+    }
+    else
+    {
+        return std::string("FS");
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //

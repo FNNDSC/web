@@ -44,8 +44,7 @@ using namespace std;
 //  Constructor
 //
 ScanBrowser::ScanBrowser(WContainerWidget *parent) :
-    WContainerWidget(parent),
-    mPipelineType(Enums::PIPELINE_UNKNOWN)
+    WContainerWidget(parent)
 {
     mPatientInfoBox = new WGroupBox("Patient / Scanner");
     mScanBox = new WGroupBox("Scans");
@@ -65,8 +64,6 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     mScansToProcessList->setSelectionMode(Wt::ExtendedSelection);
 
     mPipelineModeLabel = new WLabel("");
-    setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
-
 
     mAddScanButton = new WPushButton("Add");
     mRemoveScanButton = new WPushButton("Remove");
@@ -108,6 +105,7 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
 
     setLayout(layout);
 
+    resetAll();
 }
 
 ///
@@ -123,6 +121,21 @@ ScanBrowser::~ScanBrowser()
 //  Public Members
 //
 //
+
+///
+//  Reset all widgets to the default state
+//
+void ScanBrowser::resetAll()
+{
+    mPipelineType = Enums::PIPELINE_UNKNOWN;
+    mScansSelectionBox->clear();
+    mScansDicomFiles.clear();
+    mScansDate = "";
+    mScansSelectionBox->setCurrentIndex(0);
+    setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
+    mScansToProcessList->clear();
+    mScansToProcessData.clear();
+}
 
 ///
 //  Set the scan directory

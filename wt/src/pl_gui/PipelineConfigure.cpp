@@ -51,7 +51,6 @@ PipelineConfigure::PipelineConfigure(const vector<ScanBrowser::ScanData>& scansT
     mPipelineOptionsFS = new PipelineOptionsFS();
     mStackedPipelineOptions->addWidget(mPipelineOptionsTract);
     mStackedPipelineOptions->addWidget(mPipelineOptionsFS);
-    mStackedPipelineOptions->setCurrentIndex(0);
 
 
     WGridLayout *layout = new WGridLayout();
@@ -61,6 +60,8 @@ PipelineConfigure::PipelineConfigure(const vector<ScanBrowser::ScanData>& scansT
 
 
     setLayout(layout);
+
+    resetAll();
 }
 
 ///
@@ -68,6 +69,7 @@ PipelineConfigure::PipelineConfigure(const vector<ScanBrowser::ScanData>& scansT
 //
 PipelineConfigure::~PipelineConfigure()
 {
+
 }
 
 
@@ -77,6 +79,17 @@ PipelineConfigure::~PipelineConfigure()
 //
 //
 
+
+///
+//  Reset all widgets to the default state
+//
+void PipelineConfigure::resetAll()
+{
+    mStackedPipelineOptions->setCurrentIndex(0);
+    mPipelineOptionsTract->resetAll();
+    mPipelineOptionsFS->resetAll();
+    mPipelineStatus->resetAll();
+}
 
 ///
 ///  Update all elements of widget to current values (on next clicked)

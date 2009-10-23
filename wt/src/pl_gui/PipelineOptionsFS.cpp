@@ -42,7 +42,8 @@ PipelineOptionsFS::PipelineOptionsFS(WContainerWidget *parent) :
 {
     setStyleClass("tabdiv");
 
- }
+    resetAll();
+}
 
 ///
 //  Destructor
@@ -57,6 +58,15 @@ PipelineOptionsFS::~PipelineOptionsFS()
 //  Public Members
 //
 //
+
+
+///
+//  Reset to default state
+//
+void PipelineOptionsFS::resetAll()
+{
+    PipelineOptions::resetAll();
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -20,6 +20,7 @@
 #include <Wt/WImage>
 #include <Wt/WText>
 #include <Wt/WLabel>
+#include <Wt/WOverlayLoadingIndicator>
 
 ///
 //  Namespaces
@@ -108,6 +109,9 @@ WApplication *createApplication(const WEnvironment& env)
     app->setTitle("CHB Neuroimaging Pipeline");
     app->useStyleSheet("styles.css");
     app->refresh();
+
+    // Set the loading indicator to be an overlay box
+    app->setLoadingIndicator(new WOverlayLoadingIndicator());
 
     return app;
 }

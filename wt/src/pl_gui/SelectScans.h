@@ -39,6 +39,11 @@ public:
     virtual ~SelectScans();
 
     ///
+    /// Reset all widgets to the default state
+    ///
+    void resetAll();
+
+    ///
     /// Signal accessor for scan added
     ///
     Wt::Signal<bool>& getScanAdded() { return mScanAdded; }
@@ -47,6 +52,11 @@ public:
     ///	Get the currently selected pipeline type
     ///
     const Enums::PipelineType& getCurrentPipeline() const { return mScanBrowser->getCurrentPipeline();	}
+
+    ///
+    /// Get pipeline type as string (for command line arg)
+    ///
+    const std::string getCurrentPipelineAsString() const;
 
     ///
     /// Get the list of currently selected scans

@@ -38,6 +38,11 @@ public:
     virtual ~MRIBrowser();
 
     ///
+    /// Reset to default state
+    ///
+    void resetAll();
+
+    ///
     /// Signal accessor for MRI selection
     ///
     Wt::Signal<std::string, std::string, std::string>& mriSelected() { return mMRISelected; }

@@ -44,6 +44,11 @@ public:
     virtual ~PipelineStatus();
 
     ///
+    /// Reset all widgets to the default state
+    ///
+    void resetAll();
+
+    ///
     ///  Update all elements of widget to current values (on next clicked)
     ///
     void updateAll();

@@ -55,6 +55,8 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
         mStageBoxes[i]->setChecked(true);
         mStageButtonGroupLayout->addWidget(mStageBoxes[i]);
     }
+
+    resetAll();
 }
 
 ///
@@ -71,6 +73,17 @@ PipelineOptionsTract::~PipelineOptionsTract()
 //
 //
 
+///
+//  Reset to default state
+//
+void PipelineOptionsTract::resetAll()
+{
+    PipelineOptions::resetAll();
+    for (int i = 0; i < NUM_TRACT_STAGES; i++)
+    {
+        mStageBoxes[i]->setChecked(true);
+    }
+}
 
 ///
 //  Generate command-line options string based on user choices

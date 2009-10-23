@@ -62,6 +62,11 @@ public:
     ScanBrowser(WContainerWidget *parent = 0);
 
     ///
+    /// Reset all widgets to the default state
+    ///
+    void resetAll();
+
+    ///
     /// Destructor
     ///
     virtual ~ScanBrowser();

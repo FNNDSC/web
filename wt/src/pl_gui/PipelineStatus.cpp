@@ -71,6 +71,8 @@ PipelineStatus::PipelineStatus(const std::vector<ScanBrowser::ScanData> &scansTo
     layout->addWidget(selectedScansBox);
     //layout->addStretch(100);
     setLayout(layout);
+
+    resetAll();
 }
 
 ///
@@ -86,6 +88,15 @@ PipelineStatus::~PipelineStatus()
 //  Public Members
 //
 //
+
+///
+//  Reset all widgets to the default state
+//
+void PipelineStatus::resetAll()
+{
+    mPipelineTypeLabel->setText("Unknown");
+    mScansToProcessList->clear();
+}
 
 ///
 //  Update all elements of widget to current values (on next clicked)
