@@ -89,7 +89,7 @@ protected:
     WGroupBox *mDirectoryGroupBox;
 
     /// Directory group box layout
-    WVBoxLayout *mDirectoryGroupBoxLayout;
+    WGridLayout *mDirectoryGroupBoxLayout;
 
     /// Output directory suffix
     WLineEdit *mOutputDirSuffix;

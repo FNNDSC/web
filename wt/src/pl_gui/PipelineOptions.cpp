@@ -57,30 +57,27 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
 
     mDirectoryGroupBox = new WGroupBox("Directory / File / E-mail");
     mDirectoryGroupBox->setStyleClass("groupdiv");
-    mDirectoryGroupBoxLayout = new WVBoxLayout();
+    mDirectoryGroupBoxLayout = new WGridLayout();
     mDirectoryGroupBox->setLayout(mDirectoryGroupBoxLayout);
 
     // Output directory suffix
-    WHBoxLayout *outputDirSuffixLayout = new WHBoxLayout();
-    outputDirSuffixLayout->addWidget(new WLabel("Output Directory Suffix:"), Wt::AlignRight);
+    mDirectoryGroupBoxLayout->addWidget(new WLabel("Output Directory Suffix:"), 0, 0, Wt::AlignRight);
     mOutputDirSuffix = new WLineEdit();
-    outputDirSuffixLayout->addWidget(mOutputDirSuffix, Wt::AlignLeft);
+    mOutputDirSuffix->setMinimumSize(200, WLength::Auto);
+    mDirectoryGroupBoxLayout->addWidget(mOutputDirSuffix, 0, 1, Wt::AlignLeft);
 
     // Output file suffix
-    WHBoxLayout *outputFileSuffixLayout = new WHBoxLayout();
-    outputFileSuffixLayout->addWidget(new WLabel("Output File Suffix:"), Wt::AlignRight);
+    mDirectoryGroupBoxLayout->addWidget(new WLabel("Output File Suffix:"), 1, 0, Wt::AlignRight);
     mOutputFileSuffix = new WLineEdit();
-    outputFileSuffixLayout->addWidget(mOutputFileSuffix, Wt::AlignLeft);
+    mOutputFileSuffix->setMinimumSize(200, WLength::Auto);
+    mDirectoryGroupBoxLayout->addWidget(mOutputFileSuffix, 1, 1, Wt::AlignLeft);
 
     // E-mail user
-    WHBoxLayout *emailUserLayout = new WHBoxLayout();
-    emailUserLayout->addWidget(new WLabel("E-mail User:"), Wt::AlignRight);
+    mDirectoryGroupBoxLayout->addWidget(new WLabel("E-mail User:"), 2, 0, Wt::AlignRight);
     mEmailUser = new WLineEdit();
-    emailUserLayout->addWidget(mEmailUser, Wt::AlignLeft);
-
-    mDirectoryGroupBoxLayout->addLayout(outputDirSuffixLayout);
-    mDirectoryGroupBoxLayout->addLayout(outputFileSuffixLayout);
-    mDirectoryGroupBoxLayout->addLayout(emailUserLayout);
+    mEmailUser->setMinimumSize(200, WLength::Auto);
+    mDirectoryGroupBoxLayout->addWidget(mEmailUser, 2, 1, Wt::AlignLeft);
+    mDirectoryGroupBoxLayout->setColumnStretch(1, 1);
 
     // Pipeline options box
     mPipelineOptionsBox = new WGroupBox("Pipeline Options");

@@ -15,6 +15,11 @@
 #include "PipelineOptions.h"
 
 ///
+//  Constants
+//
+const int NUM_FS_STAGES = 3;
+
+///
 /// \class PipelineOptionsFS
 /// \brief Class for options to configure freesurfer pipeline
 ///
@@ -36,12 +41,18 @@ public:
     ///
     void resetAll();
 
+    ///
+    /// Generate command-line options string based on user choices
+    ///
+    std::string getCommandLineString() const;
 
 private:
 
 
 private:
 
+    /// Buttons for pipeline stages
+    WCheckBox *mStageBoxes[NUM_FS_STAGES];
 
 };
 

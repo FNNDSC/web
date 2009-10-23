@@ -54,8 +54,6 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     mScanBox->setStyleClass("groupdiv");
     mScansToProcessBox->setStyleClass("groupdiv");
 
-    mPatientInfoLabel = new WLabel("");
-    mPatientInfoLabel->setStyleClass("whitelabeldiv");
     mScansSelectionBox = new WSelectionBox();
     mScansSelectionBox->setStyleClass("groupdiv");
     mScansSelectionBox->setSelectionMode(Wt::ExtendedSelection);
@@ -68,8 +66,27 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     mAddScanButton = new WPushButton("Add");
     mRemoveScanButton = new WPushButton("Remove");
 
-    WVBoxLayout *patientInfoLayout = new WVBoxLayout();
-    patientInfoLayout->addWidget(mPatientInfoLabel);
+    // Create the patient info box
+    WGridLayout *patientInfoLayout = new WGridLayout();
+    patientInfoLayout->addWidget(new WLabel("Patient ID:"), 0, 0);
+    patientInfoLayout->addWidget(mPatientID = new WLabel(""), 0, 1);
+    patientInfoLayout->addWidget(new WLabel("Patient Name:"), 1, 0);
+    patientInfoLayout->addWidget(mPatientName = new WLabel(""), 1, 1);
+    patientInfoLayout->addWidget(new WLabel("Patient Age:"), 2, 0);
+    patientInfoLayout->addWidget(mPatientAge = new WLabel(""), 2, 1);
+    patientInfoLayout->addWidget(new WLabel("Patient Sex:"), 3, 0);
+    patientInfoLayout->addWidget(mPatientSex = new WLabel(""), 3, 1);
+    patientInfoLayout->addWidget(new WLabel("Patient Birthday:"), 4, 0);
+    patientInfoLayout->addWidget(mPatientBirthday = new WLabel(""), 4, 1);
+    patientInfoLayout->addWidget(new WLabel("Image Scan-Date:"), 5, 0);
+    patientInfoLayout->addWidget(mImageScanDate = new WLabel(""), 5, 1);
+    patientInfoLayout->addWidget(new WLabel("Scanner Manufacturer:"), 5, 0);
+    patientInfoLayout->addWidget(mScannerManufacturer = new WLabel(""), 5, 1);
+    patientInfoLayout->addWidget(new WLabel("Scanner Model:"), 6, 0);
+    patientInfoLayout->addWidget(mScannerModel = new WLabel(""), 6, 1);
+    patientInfoLayout->addWidget(new WLabel("Software Version:"), 7, 0);
+    patientInfoLayout->addWidget(mSoftwareVer = new WLabel(""), 7, 1);
+
     mPatientInfoBox->setLayout(patientInfoLayout);
 
     WGridLayout *scanLayout = new WGridLayout();
@@ -135,6 +152,16 @@ void ScanBrowser::resetAll()
     setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
     mScansToProcessList->clear();
     mScansToProcessData.clear();
+
+    mPatientID->setText("");
+    mPatientName->setText("");
+    mPatientAge->setText("");
+    mPatientSex->setText("");
+    mPatientBirthday->setText("");
+    mImageScanDate->setText("");
+    mScannerManufacturer->setText("");
+    mScannerModel->setText("");
+    mSoftwareVer->setText("");
 }
 
 ///
@@ -187,6 +214,41 @@ void ScanBrowser::setScanDir(std::string scanDir)
                 mScansSelectionBox->addItem(scanName);
                 mScansDicomFiles.push_back(dicomFile);
             }
+            else if (firstToken == "Patient")
+            {
+                string secondToken;
+                string str;
+                istr >> secondToken;
+
+                while (!istr.eof())
+                {
+                    string tmp;
+                    istr >> tmp;
+                    str += tmp + " ";
+                }
+
+                if (secondToken == "ID")
+                {
+                    mPatientID->setText(str);
+                }
+                else if (secondToken == "Name")
+                {
+                    std::replace(str.begin(), str.end(), '^', ',');
+                    mPatientName->setText(str);
+                }
+                else if (secondToken == "Age")
+                {
+                    mPatientAge->setText(str);
+                }
+                else if (secondToken == "Sex")
+                {
+                    mPatientSex->setText(str);
+                }
+                else if (secondToken == "Birthday")
+                {
+                    mPatientBirthday->setText(str);
+                }
+            }
             else if (firstToken == "Image")
             {
                 string secondToken;
@@ -198,18 +260,47 @@ void ScanBrowser::setScanDir(std::string scanDir)
 
                     istr >> scanDate;
                     mScansDate = scanDate;
+                    mImageScanDate->setText(mScansDate);
+                }
+            }
+            else if (firstToken == "Scanner")
+            {
+                string secondToken;
+                string str;
+                istr >> secondToken;
+
+                while (!istr.eof())
+                {
+                    string tmp;
+                    istr >> tmp;
+                    str += tmp + " ";
                 }
 
-                oss << string(buf) << "<br/>";
+                if (secondToken == "Manufacturer")
+                {
+                    mScannerManufacturer->setText(str);
+                }
+                else if (secondToken == "Model")
+                {
+                    mScannerModel->setText(str);
+                }
             }
-            else
+            else if (firstToken == "Software")
             {
-                oss << string(buf) << "<br/>";
+                string secondToken;
+                string str;
+                istr >> secondToken;
+
+                while (!istr.eof())
+                {
+                    string tmp;
+                    istr >> tmp;
+                    str += tmp + " ";
+                }
+
+                mSoftwareVer->setText(str);
             }
         }
-
-        mPatientInfoLabel->setText(oss.str());
-
         tocFile.close();
    }
 }

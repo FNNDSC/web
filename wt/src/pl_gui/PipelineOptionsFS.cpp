@@ -20,6 +20,8 @@
 #include <Wt/WGroupBox>
 #include <Wt/WVBoxLayout>
 #include <Wt/WSelectionBox>
+#include <Wt/WButtonGroup>
+#include <Wt/WCheckBox>
 #include <vector>
 
 ///
@@ -41,6 +43,16 @@ PipelineOptionsFS::PipelineOptionsFS(WContainerWidget *parent) :
     PipelineOptions(parent)
 {
     setStyleClass("tabdiv");
+
+    mStageBoxes[0] = new WCheckBox("1 - Collect DICOM from repository");
+    mStageBoxes[1] = new WCheckBox("2 - Initialize structural reconstruction");
+    mStageBoxes[2] = new WCheckBox("3 - Perform structural reconstruction");
+
+    for (int i = 0; i < NUM_FS_STAGES; i++)
+    {
+        mStageBoxes[i]->setChecked(true);
+        mStageButtonGroupLayout->addWidget(mStageBoxes[i]);
+    }
 
     resetAll();
 }
@@ -66,8 +78,35 @@ PipelineOptionsFS::~PipelineOptionsFS()
 void PipelineOptionsFS::resetAll()
 {
     PipelineOptions::resetAll();
+   for (int i = 0; i < NUM_FS_STAGES; i++)
+   {
+       mStageBoxes[i]->setChecked(true);
+   }
 }
 
+///
+//  Generate command-line options string based on user choices
+//
+std::string PipelineOptionsFS::getCommandLineString() const
+{
+    std::string stageStr = "";
+    std::string args;
+
+    for (int i = 0; i < NUM_FS_STAGES; i++)
+    {
+        if (mStageBoxes[i]->isChecked())
+        {
+            ostringstream oss;
+
+            oss << (i + 1);
+            stageStr += oss.str();
+        }
+    }
+
+    args = "-t " + stageStr;
+
+    return args + " " + PipelineOptions::getCommandLineString();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //

@@ -134,6 +134,33 @@ private:
     /// Patient info group box
     WGroupBox *mPatientInfoBox;
 
+    /// Patient ID
+    WLabel *mPatientID;
+
+    /// Patient Name
+    WLabel *mPatientName;
+
+    /// Patient age
+    WLabel *mPatientAge;
+
+    /// Patient Sex
+    WLabel *mPatientSex;
+
+    /// Patient birthday
+    WLabel *mPatientBirthday;
+
+    /// Scan date
+    WLabel *mImageScanDate;
+
+    /// Scanner manufacturer
+    WLabel *mScannerManufacturer;
+
+    /// Scanner model
+    WLabel *mScannerModel;
+
+    /// Software version
+    WLabel *mSoftwareVer;
+
     /// Scan box
     WGroupBox *mScanBox;
 
@@ -145,9 +172,6 @@ private:
 
     /// Push button to remove scans
     WPushButton *mRemoveScanButton;
-
-    /// Patient info label
-    WLabel *mPatientInfoLabel;
 
     /// Scans selection box
     WSelectionBox *mScansSelectionBox;
