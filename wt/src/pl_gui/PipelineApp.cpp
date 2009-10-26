@@ -13,6 +13,7 @@
 //
 #include "PipelineApp.h"
 #include "SubjectPage.h"
+#include "MonitorPage.h"
 #include "ConfigOptions.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
@@ -66,19 +67,23 @@ void PipelineApp::createUI()
     WGridLayout *topLayout = new WGridLayout();
     topContainer->setStyleClass("topdiv");
     WImage *chbLogo = new WImage("icons/chbIntranet.gif");
+    WImage *brainImage = new WImage("icons/mri.gif");
     chbLogo->setStyleClass("titlediv");
     topLayout->addWidget(chbLogo, 0, 0, Wt::AlignLeft);
     WLabel *titleLabel = new WLabel("Neuroimaging Pipeline");
     titleLabel->setStyleClass("titlediv");
-    topLayout->addWidget(titleLabel, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    topLayout->addWidget(titleLabel, 0, 1, Wt::AlignCenter | Wt::AlignMiddle);
+    topLayout->addWidget(brainImage, 0, 2, Wt::AlignRight);
     topContainer->setLayout(topLayout);
 
     // Create the top tab
     WTabWidget *topTab = new WTabWidget();
+    topTab->setStyleClass("toptabdiv");
     SubjectPage *subjectPage = new SubjectPage();
+    mMonitorPage = new MonitorPage();
     topTab->addTab(subjectPage, "Subjects");
-    topTab->addTab(new WText("Monitor cluster"), "Monitor");
-    topTab->addTab(new WText("Results browser"), "Results");
+    topTab->addTab(mMonitorPage, "Monitor Cluster");
+    topTab->currentChanged().connect(SLOT(this, PipelineApp::mainTabChanged));;
 
     layout->addWidget(topContainer, 0, 0);
     layout->addWidget(topTab, 1, 0);
@@ -89,8 +94,31 @@ void PipelineApp::createUI()
     // documentation and took me a good half a day to figure out.
     subjectPage->resize(WLength(100.0, WLength::Percentage),
                         WLength(100.0, WLength::Percentage));
+    mMonitorPage->resize(WLength(100.0, WLength::Percentage),
+                        WLength(100.0, WLength::Percentage));
 
     w->setLayout(layout);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Public Members
+//
+//
+
+///
+//  Slot for handling when the main tab changes
+//
+void PipelineApp::mainTabChanged(int currentIndex)
+{
+    if (currentIndex == 1)
+    {
+        mMonitorPage->resetAll();
+    }
+    else
+    {
+        mMonitorPage->stopUpdate();
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

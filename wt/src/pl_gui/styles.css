@@ -30,7 +30,7 @@ div.Wt-popupmenu .separator {
 
 .maindiv {
     background-color: #e0ecff
-   
+    
 }
 
 .topdiv {
@@ -42,6 +42,11 @@ div.Wt-popupmenu .separator {
 }
 
 .tabdiv {
+    background-color: #e0ecff
+}
+
+
+.toptabdiv {
     background-color: #e0ecff
 }
 

@@ -54,11 +54,11 @@ public:
     void updateAll();
 
 private:
+
     ///
     /// \brief Creates a title widget.
     ///
     WText *createTitle(const WString& title);
-
 
 private:
 

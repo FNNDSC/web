@@ -1,5 +1,8 @@
 ADD_EXECUTABLE(pl_gui.wt
   ConfigOptions.cpp
+  ClusterJobBrowser.cpp
+  LogFileTailer.cpp
+  MonitorPage.cpp
   MRIBrowser.cpp
   PipelineApp.cpp
   PipelineConfigure.cpp

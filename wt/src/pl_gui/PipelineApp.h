@@ -18,6 +18,7 @@
 
 using namespace Wt;
 
+class MonitorPage;
 
 ///
 /// \class PipelineApp
@@ -36,12 +37,21 @@ public:
     ///
     virtual ~PipelineApp();
 
+    ///
+    /// Slot for handling when the main tab changes
+    ///
+    void mainTabChanged(int currentIndex);
+
 private:
 
     ///
     /// Create the user interface widgets
     ///
     void createUI();
+
+private:
+    /// Monitor page
+    MonitorPage *mMonitorPage;
 
 };
 

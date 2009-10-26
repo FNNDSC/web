@@ -192,7 +192,7 @@ void SubjectPage::nextClicked()
 
                 int linesInFile = getNumberOfLines(scheduleFileName.c_str());
                 int linesToRead = mSelectScans->getScansToProcess().size();
-                int startLine = linesInFile - linesToRead;
+                int startLine = (linesInFile - linesToRead) + 1;
                 int line = 0;
 
                 while (!ifs.eof())
@@ -256,6 +256,7 @@ bool SubjectPage::submitForProcessing()
 
     if (mkstemp(tmpName) == -1)
     {
+        cout << "Error creating file on server: " << tmpName << endl;
         StandardButton result = WMessageBox::show("ERROR",
                                                   string("Error creating file on server: ") + string(tmpName),
                                                   Wt::Ok);
@@ -268,6 +269,8 @@ bool SubjectPage::submitForProcessing()
 
     if (!tmpFile.is_open())
     {
+
+        cout << "Error opening file on server: " << tmpName << endl;
         StandardButton result = WMessageBox::show("ERROR",
                                                   string("Error creating file on server: ") + string(tmpName),
                                                   Wt::Ok);
@@ -351,6 +354,9 @@ bool SubjectPage::submitForProcessing()
 
     if ((newScheduleLines - scheduleLines) != scansToProcess.size())
     {
+        cout << "New lines: " << newScheduleLines << " Old lines: " << scheduleLines
+             << "Scans to process: " << scansToProcess.size() << endl;
+
         StandardButton result = WMessageBox::show("ERROR",
                                                   string("Error occurred in adding files to cluster schedule."),
                                                   Wt::Ok);
@@ -369,15 +375,22 @@ int SubjectPage::getNumberOfLines(const char *fileName)
 {
     int lineCount = 0;
     ifstream ifs(fileName, ios::in);
-    while (!ifs.eof())
+
+    if (ifs.is_open())
     {
-        char buf[1024] = {0};
-        ifs.getline( buf, sizeof(buf));
+        while (!ifs.eof())
+        {
+            char buf[1024] = {0};
+            ifs.getline( buf, sizeof(buf));
 
-        lineCount++;
+            if(strlen(buf) > 2)
+            {
+                lineCount++;
+            }
+        }
+
+        ifs.close();
     }
-
-    ifs.close();
 
     return lineCount;
 }
