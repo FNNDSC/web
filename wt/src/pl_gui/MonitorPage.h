@@ -16,6 +16,7 @@
 #include <Wt/WString>
 #include <Wt/WText>
 #include <string>
+#include "LogFileBrowser.h"
 
 namespace Wt
 {
@@ -73,6 +74,11 @@ private:
     ///
     void jobSelectedChanged(std::string jobSelectedFile);
 
+    ///
+    ///  Handle log selection changes [slot]
+    ///
+    void logSelectedChanged(LogFileBrowser::LogFileEntry logFileEntry);
+
 
 private:
 
@@ -84,6 +90,9 @@ private:
 
     /// Stderr log
     LogFileTailer *mLogStdErr;
+
+    /// Log file browser
+    LogFileBrowser *mLogFileBrowser;
 
 
 };

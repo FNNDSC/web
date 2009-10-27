@@ -11,6 +11,8 @@
 //  GPL v2
 //
 #include "ConfigOptions.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -18,6 +20,7 @@
 ///
 //  Namespaces
 //
+using namespace Wt;
 using namespace std;
 using namespace boost::program_options;
 
@@ -137,13 +140,13 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mPackageDir = vm["packageDir"].as<string>();
         }
 
-        cout << "[DICOM Dir:] " << mDicomDir << endl;
-        cout << "[Output Dir:] " << mOutDir << endl;
-        cout << "[Script Dir:] " << mScriptDir << endl;
-        cout << "[SeriesListTract:] " << mSeriesListTract << endl;
-        cout << "[SeriesListFS:] " << mSeriesListFS << endl;
-        cout << "[Cluster Name:] " << mClusterName << endl;
-        cout << "[Package Dir:] " << mPackageDir << endl;
+        WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
+        WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
+        WApplication::instance()->log("info") << "[Script Dir:] " << mScriptDir;
+        WApplication::instance()->log("info") << "[SeriesListTract:] " << mSeriesListTract;
+        WApplication::instance()->log("info") << "[SeriesListFS:] " << mSeriesListFS;
+        WApplication::instance()->log("info") << "[Cluster Name:] " << mClusterName;
+        WApplication::instance()->log("info") << "[Package Dir:] " << mPackageDir;
 
         configFile.close();
     }

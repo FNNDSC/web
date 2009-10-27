@@ -32,6 +32,11 @@
 #include <string>
 
 ///
+//  Maximum log size
+//
+const int MAX_LOG_SIZE = 16384;
+
+///
 //  Namespaces
 //
 using namespace Wt;
@@ -140,18 +145,28 @@ void LogFileTailer::timerTick()
     std::ifstream logFile(mLogFileName.c_str(), ios::in);
     if (logFile.is_open())
     {
-        ostringstream oss;
+        int maxRequestSize = MAX_LOG_SIZE;
 
+        ostringstream oss;
         oss << logFile.rdbuf();
 
-        stringstream logText;
-        logText << oss.str();
+        stringstream logTextStream;
+        logTextStream << oss.str();
+
+        string logText = logTextStream.str();
+
+        // Truncate the log.  Avoid exceeding the MAX HTTP request size.  Note that this is configurable
+        // in wt_config.xml.  This is overly aggressive for the default setting, but I was having trouble
+        // predicting the HTTP request size based on the string update.
+        if (logText.length() > maxRequestSize)
+        {
+            logText.erase(logText.begin(), logText.begin() + (logText.length() - maxRequestSize));
+        }
 
         // If the text has changed, then do an update
-        if (WString(logText.str()) != mLogFileTextArea->text())
+        if (WString(logText.c_str()) != mLogFileTextArea->text())
         {
-            mLogFileTextArea->setText(logText.str().c_str());
-            logFile.close();
+            mLogFileTextArea->setText(logText.c_str());
 
             // First, take the lock to safely manipulate the UI outside of the
             // normal event loop, by having exclusive access to the session.
@@ -165,9 +180,13 @@ void LogFileTailer::timerTick()
 
             WApplication::instance()->triggerUpdate();
         }
+
+        logFile.close();
     }
     else
     {
         mLogFileTextArea->setText(WString("Couldn't open log file {1}").arg(mLogFileName));;
     }
 }
+
+

@@ -14,6 +14,7 @@
 #include "MonitorPage.h"
 #include "ClusterJobBrowser.h"
 #include "LogFileTailer.h"
+#include "LogFileBrowser.h"
 #include "ConfigOptions.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
@@ -62,23 +63,27 @@ MonitorPage::MonitorPage(WContainerWidget *parent) :
     mClusterJobBrowser = new ClusterJobBrowser();
     layout->addWidget(mClusterJobBrowser, 1, 0);
 
+    mLogFileBrowser = new LogFileBrowser();
+    layout->addWidget(mLogFileBrowser, 1, 1);
 
     mLogStdOut = new LogFileTailer("");
     mLogStdErr = new LogFileTailer("");
     WVBoxLayout *vbox = new WVBoxLayout();
     vbox->addWidget(mLogStdOut);
     vbox->addWidget(mLogStdErr);
-    layout->addLayout(vbox, 1, 1);
+    layout->addLayout(vbox, 1, 2);
 
     // Let row 1 and column 2 take the excess space.
     layout->setRowStretch(1, 1);
-    layout->setColumnStretch(1, 1);
+    layout->setColumnStretch(2, 1);
 
     setLayout(layout);
 
     // Make connections
     mClusterJobBrowser->clusterJobSelected().connect(SLOT(this, MonitorPage::jobSelectedChanged));
+    mLogFileBrowser->logFileSelected().connect(SLOT(this, MonitorPage::logSelectedChanged));
 
+    mLogFileBrowser->hide();
     mLogStdOut->hide();
     mLogStdErr->hide();
 }
@@ -105,6 +110,7 @@ void MonitorPage::resetAll()
 {
     mLogStdOut->hide();
     mLogStdErr->hide();
+    mLogFileBrowser->hide();
     mClusterJobBrowser->resetAll();
 }
 
@@ -129,6 +135,7 @@ void MonitorPage::stopUpdate()
     mLogStdOut->stopUpdate();
     mLogStdErr->hide();
     mLogStdOut->hide();
+    mLogFileBrowser->hide();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -138,17 +145,49 @@ void MonitorPage::stopUpdate()
 //
 
 ///
-/// Handle job selection changes [slot]
-///
+//  Handle job selection changes [slot]
+//
 void MonitorPage::jobSelectedChanged(std::string jobSelectedFile)
 {
-    mLogStdOut->setLogFile(jobSelectedFile + ".std");
-    mLogStdErr->setLogFile(jobSelectedFile + ".err");
+    mLogFileBrowser->setLogBaseDir(path(jobSelectedFile).branch_path().string());
+    mLogFileBrowser->setPostProcDir(ConfigOptions::GetPtr()->GetOutDir());
+    mLogFileBrowser->resetAll();
+    mLogFileBrowser->show();
+}
 
-    mLogStdOut->show();
-    mLogStdErr->show();
-    mLogStdOut->startUpdate();
-    mLogStdErr->startUpdate();
+///
+//  Handle log selection changes [slot]
+//
+void MonitorPage::logSelectedChanged(LogFileBrowser::LogFileEntry logFileEntry)
+{
+    std::string baseLogName;
+
+    baseLogName = logFileEntry.mBaseLogDir + "/" +
+                  logFileEntry.mBaseLogName;
+
+    if (logFileEntry.mHasStdOut)
+    {
+        mLogStdOut->setLogFile(baseLogName + ".std");
+        mLogStdOut->show();
+        mLogStdOut->startUpdate();
+    }
+    else
+    {
+        mLogStdOut->hide();
+        mLogStdOut->stopUpdate();
+    }
+
+    if (logFileEntry.mHasStdErr)
+    {
+        mLogStdErr->setLogFile(baseLogName + ".err");
+        mLogStdErr->show();
+        mLogStdErr->startUpdate();
+    }
+    else
+    {
+        mLogStdErr->hide();
+        mLogStdErr->stopUpdate();
+    }
 }
 
 ///

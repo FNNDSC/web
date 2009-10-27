@@ -15,6 +15,8 @@
 #include "SelectScans.h"
 #include "PipelineConfigure.h"
 #include "ConfigOptions.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
@@ -256,7 +258,7 @@ bool SubjectPage::submitForProcessing()
 
     if (mkstemp(tmpName) == -1)
     {
-        cout << "Error creating file on server: " << tmpName << endl;
+        WApplication::instance()->log("error") << "Error creating file on server: " << tmpName;
         StandardButton result = WMessageBox::show("ERROR",
                                                   string("Error creating file on server: ") + string(tmpName),
                                                   Wt::Ok);
@@ -270,12 +272,11 @@ bool SubjectPage::submitForProcessing()
     if (!tmpFile.is_open())
     {
 
-        cout << "Error opening file on server: " << tmpName << endl;
+        WApplication::instance()->log("error") << "Error opening file on server: " << tmpName;
         StandardButton result = WMessageBox::show("ERROR",
                                                   string("Error creating file on server: ") + string(tmpName),
                                                   Wt::Ok);
 
-        // TODO: Need to do server logging here
         return false;
     }
 
@@ -343,25 +344,23 @@ bool SubjectPage::submitForProcessing()
     cmdToExecute = scriptDir + "/pl_batch_web.bash " + packageDir + " " + scriptDir + " ";
     cmdToExecute += commandArgs + " /tmp";
 
-    cout << "EXEC: " << cmdToExecute << endl;
+    WApplication::instance()->log("info") << "EXEC: " << cmdToExecute;
 
     context ctx;
     child c = launch_shell(cmdToExecute.c_str(), ctx);
     boost::processes::status s = c.wait();
-    cout << "EXIT STATUS: " << s.exit_status() << endl;
+    WApplication::instance()->log("info") << "EXIT STATUS: " << s.exit_status();
 
     int newScheduleLines = getNumberOfLines(scheduleFileName.c_str());
 
     if ((newScheduleLines - scheduleLines) != scansToProcess.size())
     {
-        cout << "New lines: " << newScheduleLines << " Old lines: " << scheduleLines
-             << "Scans to process: " << scansToProcess.size() << endl;
+        WApplication::instance()->log("error") << "New lines: " << newScheduleLines << " Old lines: " << scheduleLines
+                                               << "Scans to process: " << scansToProcess.size();
 
         StandardButton result = WMessageBox::show("ERROR",
                                                   string("Error occurred in adding files to cluster schedule."),
                                                   Wt::Ok);
-
-        // TODO: Need to do server logging here
         return false;
     }
 

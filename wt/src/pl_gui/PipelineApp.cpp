@@ -22,6 +22,7 @@
 #include <Wt/WText>
 #include <Wt/WLabel>
 #include <Wt/WOverlayLoadingIndicator>
+#include <Wt/WLogger>
 
 ///
 //  Namespaces
@@ -41,6 +42,12 @@ using namespace Wt;
 PipelineApp::PipelineApp(const WEnvironment &env) :
     WApplication(env)
 {
+    // Start by loading configuration options
+    if(!ConfigOptions::GetPtr()->LoadFromFile("conf/pl_gui.conf"))
+    {
+        this->log("error") << "Loading configuration file 'conf/pl_gui.conf'";
+    }
+
     createUI();
 }
 
@@ -98,6 +105,8 @@ void PipelineApp::createUI()
                         WLength(100.0, WLength::Percentage));
 
     w->setLayout(layout);
+
+    requestTooLarge().connect(SLOT(this, PipelineApp::largeRequest));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -119,6 +128,20 @@ void PipelineApp::mainTabChanged(int currentIndex)
     {
         mMonitorPage->stopUpdate();
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Private Members
+//
+//
+
+///
+// Handle too large a request being sent
+//
+void PipelineApp::largeRequest(int size)
+{
+    this->log("notice") << "Request too large: " << size;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -149,11 +172,5 @@ WApplication *createApplication(const WEnvironment& env)
 //
 int main(int argc, char **argv)
 {
-    // Start by loading configuration options
-    if(!ConfigOptions::GetPtr()->LoadFromFile("conf/pl_gui.conf"))
-    {
-        return 1;
-    }
-
     return WRun(argc, argv, &createApplication);
 }

@@ -233,7 +233,6 @@ void ScanBrowser::setScanDir(std::string scanDir)
                 }
                 else if (secondToken == "Name")
                 {
-                    std::replace(str.begin(), str.end(), '^', ' ');
                     mPatientName->setText(str);
                 }
                 else if (secondToken == "Age")

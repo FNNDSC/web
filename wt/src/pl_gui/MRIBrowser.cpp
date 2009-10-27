@@ -112,7 +112,7 @@ void MRIBrowser::populateMRIDs(const std::string& mridLogFile)
         stringstream tocURL;
 
         tocURL << scanDir.str() << "/toc.txt";
-        cout << tocURL.str() << endl;
+
 
         std::ifstream tocFile(tocURL.str().c_str());
         if (tocFile.is_open())

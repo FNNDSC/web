@@ -13,6 +13,8 @@
 //
 #include "ClusterJobBrowser.h"
 #include "ConfigOptions.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
@@ -21,6 +23,7 @@
 #include <Wt/WLabel>
 #include <Wt/WStandardItem>
 #include <Wt/WVBoxLayout>
+#include <Wt/WLogger>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <fstream>
@@ -106,8 +109,7 @@ bool ClusterJobBrowser::populateClusterJobs(const std::string& scheduleLogFile)
 
     if (!inFile.is_open())
     {
-        cout << "ERROR: opening schedule log file for reading: " << scheduleLogFile << endl;
-        // TODO: Display message or otherwise handle this condition
+        WApplication::instance()->log("error") << "ERROR: opening schedule log file for reading: " << scheduleLogFile;
         return false;
     }
 

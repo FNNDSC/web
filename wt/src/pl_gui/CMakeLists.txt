@@ -1,6 +1,7 @@
 ADD_EXECUTABLE(pl_gui.wt
   ConfigOptions.cpp
   ClusterJobBrowser.cpp
+  LogFileBrowser.cpp
   LogFileTailer.cpp
   MonitorPage.cpp
   MRIBrowser.cpp

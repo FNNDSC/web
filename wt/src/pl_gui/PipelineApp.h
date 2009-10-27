@@ -49,6 +49,11 @@ private:
     ///
     void createUI();
 
+    ///
+    /// Handle too large a request being sent
+    ///
+    void largeRequest(int size);
+
 private:
     /// Monitor page
     MonitorPage *mMonitorPage;
