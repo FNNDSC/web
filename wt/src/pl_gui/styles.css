@@ -66,6 +66,13 @@ div.Wt-popupmenu .separator {
     border: 1px solid #C3D9FF;
 }
 
+.smallgroupdiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+    font-family: sans-serif;
+    font-size: 10pt;
+}
+
 .whitelabeldiv {
     background-color: white;
     border: none;
@@ -74,7 +81,11 @@ div.Wt-popupmenu .separator {
 .logdiv {
     background-color: black;
     color: white;
-    
+}
+
+.logdivred {
+    background-color: black; /* Didn't look so good red */
+    color: white;
 }
 
 .title {

@@ -25,6 +25,8 @@ namespace Wt
     class WPushButton;
 }
 
+class PatientInfoBox;
+
 using namespace Wt;
 
 ///
@@ -131,35 +133,8 @@ private:
     /// Signal for when scan is add
     Wt::Signal<bool> mScanAdded;
 
-    /// Patient info group box
-    WGroupBox *mPatientInfoBox;
-
-    /// Patient ID
-    WLabel *mPatientID;
-
-    /// Patient Name
-    WLabel *mPatientName;
-
-    /// Patient age
-    WLabel *mPatientAge;
-
-    /// Patient Sex
-    WLabel *mPatientSex;
-
-    /// Patient birthday
-    WLabel *mPatientBirthday;
-
-    /// Scan date
-    WLabel *mImageScanDate;
-
-    /// Scanner manufacturer
-    WLabel *mScannerManufacturer;
-
-    /// Scanner model
-    WLabel *mScannerModel;
-
-    /// Software version
-    WLabel *mSoftwareVer;
+    /// Patient info box
+    PatientInfoBox *mPatientInfoBox;
 
     /// Scan box
     WGroupBox *mScanBox;

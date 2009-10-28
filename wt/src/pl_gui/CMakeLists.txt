@@ -5,6 +5,7 @@ ADD_EXECUTABLE(pl_gui.wt
   LogFileTailer.cpp
   MonitorPage.cpp
   MRIBrowser.cpp
+  PatientInfoBox.cpp
   PipelineApp.cpp
   PipelineConfigure.cpp
   PipelineOptions.cpp

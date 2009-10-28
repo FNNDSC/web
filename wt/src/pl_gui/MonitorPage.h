@@ -26,6 +26,7 @@ namespace Wt
 class ClusterJobBrowser;
 class LogFileTailer;
 class MRIBrowser;
+class PatientInfoBox;
 
 using namespace Wt;
 
@@ -98,6 +99,8 @@ private:
     /// Log file browser
     LogFileBrowser *mLogFileBrowser;
 
+    /// Patient info box
+    PatientInfoBox *mPatientInfoBox;
 
 };
 

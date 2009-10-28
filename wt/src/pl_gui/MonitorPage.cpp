@@ -17,6 +17,7 @@
 #include "LogFileBrowser.h"
 #include "ConfigOptions.h"
 #include "MRIBrowser.h"
+#include "PatientInfoBox.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -65,14 +66,24 @@ MonitorPage::MonitorPage(const MRIBrowser *mriBrowser,
     layout->addWidget(createTitle("Cluster Jobs"), 0, 0);
     layout->addWidget(createTitle("Logs"), 0, 1);
 
+    WVBoxLayout *clusterJobsLayout = new WVBoxLayout();
     mClusterJobBrowser = new ClusterJobBrowser();
-    layout->addWidget(mClusterJobBrowser, 1, 0);
+    mPatientInfoBox = new PatientInfoBox();
+    mPatientInfoBox->setStyleClass("smallgroupdiv");
+
+    clusterJobsLayout->addWidget(mClusterJobBrowser);
+    clusterJobsLayout->addWidget(mPatientInfoBox);
+
+    layout->addLayout(clusterJobsLayout, 1, 0);
 
     mLogFileBrowser = new LogFileBrowser();
-    layout->addWidget(mLogFileBrowser, 1, 1);
 
-    mLogStdOut = new LogFileTailer("");
-    mLogStdErr = new LogFileTailer("");
+    WVBoxLayout *logInfoLayout = new WVBoxLayout();
+    logInfoLayout->addWidget(mLogFileBrowser);
+    layout->addLayout(logInfoLayout, 1, 1);
+
+    mLogStdOut = new LogFileTailer("", false);
+    mLogStdErr = new LogFileTailer("", true);
     WVBoxLayout *vbox = new WVBoxLayout();
     vbox->addWidget(mLogStdOut);
     vbox->addWidget(mLogStdErr);
@@ -116,6 +127,7 @@ void MonitorPage::resetAll()
     mLogStdOut->hide();
     mLogStdErr->hide();
     mLogFileBrowser->hide();
+    mPatientInfoBox->resetAll();
     mClusterJobBrowser->resetAll();
 }
 
@@ -156,6 +168,8 @@ void MonitorPage::jobSelectedChanged(std::string jobSelectedFile)
 {
 
     path logBaseDir = path(jobSelectedFile).branch_path();
+    std::string scanDir = logBaseDir.branch_path().string();
+
     std::string logDirName = logBaseDir.leaf();
     mLogFileBrowser->setLogBaseDir(logBaseDir.string());
 
@@ -164,7 +178,6 @@ void MonitorPage::jobSelectedChanged(std::string jobSelectedFile)
         // The log directory will be
         // <outputDir>/MRID-<logDirNameStripped>  (where <logDirNameStripped> is stripped of
         //                                         leading "log")
-        std::string scanDir = logBaseDir.branch_path().string();
 
         std::string mrid = mMRIBrowser->getMRIDFromScanDir(scanDir);
 
@@ -180,6 +193,9 @@ void MonitorPage::jobSelectedChanged(std::string jobSelectedFile)
     }
     mLogFileBrowser->resetAll();
     mLogFileBrowser->show();
+
+    mPatientInfoBox->resetAll();
+    mPatientInfoBox->setScanDir(scanDir);
 }
 
 ///

@@ -57,13 +57,14 @@ ClusterJobBrowser::ClusterJobBrowser(WContainerWidget *parent) :
             ("oncontextmenu",
              "event.cancelBubble = true; event.returnValue = false; return false;");
     mClusterJobTreeView->setModel(mClusterJobModel);
-    mClusterJobTreeView->resize(350, WLength::Auto);
     mClusterJobTreeView->setSelectionMode(SingleSelection);
     mClusterJobTreeView->expandToDepth(1);
     mClusterJobTreeView->selectionChanged().connect(SLOT(this, ClusterJobBrowser::jobChanged));
+    mClusterJobTreeView->setMinimumSize(350, WLength::Auto);
 
     WVBoxLayout *layout = new WVBoxLayout();
     layout->addWidget(mClusterJobTreeView);
+    layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
 
     resetAll();

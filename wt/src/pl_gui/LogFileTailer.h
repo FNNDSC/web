@@ -35,7 +35,7 @@ public:
     ///
     /// Constructor
     ///
-    LogFileTailer(const std::string& logFileName, int updateMS = 1000,  WContainerWidget *parent = 0);
+    LogFileTailer(const std::string& logFileName, bool bgRed, int updateMS = 1000,  WContainerWidget *parent = 0);
 
     ///
     /// Destructor

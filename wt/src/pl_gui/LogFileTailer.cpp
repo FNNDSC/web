@@ -53,6 +53,7 @@ using namespace boost::filesystem;
 //  Constructor
 //
 LogFileTailer::LogFileTailer(const std::string& logFileName,
+                             bool bgRed,
                              int updateMS,
                              WContainerWidget *parent) :
     WContainerWidget(parent),
@@ -63,7 +64,15 @@ LogFileTailer::LogFileTailer(const std::string& logFileName,
     mLogFileGroupBox = new WGroupBox(path(logFileName).leaf());
 
     mLogFileTextArea = new WTextArea("");
-    mLogFileTextArea->setStyleClass("logdiv");
+
+    if (!bgRed)
+    {
+        mLogFileTextArea->setStyleClass("logdiv");
+    }
+    else
+    {
+        mLogFileTextArea->setStyleClass("logdivred");
+    }
     mLogFileTextArea->decorationStyle().font().setFamily(WFont::Monospace);
 
     WVBoxLayout *vbox = new WVBoxLayout();
