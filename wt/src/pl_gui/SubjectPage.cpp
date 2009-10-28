@@ -121,6 +121,16 @@ void SubjectPage::resetAll()
     mPipelineConfigure->resetAll();
 }
 
+
+
+///
+//  Get the MRI browser
+//
+const MRIBrowser* SubjectPage::getMRIBrowser() const
+{
+    return mSelectScans->getMRIBrowser();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Private Members
@@ -342,7 +352,7 @@ bool SubjectPage::submitForProcessing()
 
     std::string cmdToExecute;
     cmdToExecute = scriptDir + "/pl_batch_web.bash " + packageDir + " " + scriptDir + " ";
-    cmdToExecute += commandArgs + " /tmp";
+    cmdToExecute += commandArgs + " /tmp " + tmpName;
 
     WApplication::instance()->log("info") << "EXEC: " << cmdToExecute;
 

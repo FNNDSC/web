@@ -25,6 +25,7 @@ namespace Wt
 }
 class ClusterJobBrowser;
 class LogFileTailer;
+class MRIBrowser;
 
 using namespace Wt;
 
@@ -40,7 +41,7 @@ public:
     ///
     /// Constructor
     ///
-    MonitorPage(WContainerWidget *parent = 0);
+    MonitorPage(const MRIBrowser* mriBrowser, WContainerWidget *parent = 0);
 
     ///
     /// Destructor
@@ -81,6 +82,9 @@ private:
 
 
 private:
+
+    /// MRI Browser pointer
+    const MRIBrowser* mMRIBrowser;
 
     /// Cluster job browser
     ClusterJobBrowser *mClusterJobBrowser;

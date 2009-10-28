@@ -87,7 +87,7 @@ void PipelineApp::createUI()
     WTabWidget *topTab = new WTabWidget();
     topTab->setStyleClass("toptabdiv");
     SubjectPage *subjectPage = new SubjectPage();
-    mMonitorPage = new MonitorPage();
+    mMonitorPage = new MonitorPage(subjectPage->getMRIBrowser());
     topTab->addTab(subjectPage, "Subjects");
     topTab->addTab(mMonitorPage, "Monitor Cluster");
     topTab->currentChanged().connect(SLOT(this, PipelineApp::mainTabChanged));;

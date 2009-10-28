@@ -43,6 +43,11 @@ public:
     void resetAll();
 
     ///
+    /// Given a scan directory, determine the MRID
+    ///
+    std::string getMRIDFromScanDir(const std::string& scanDir) const;
+
+    ///
     /// Signal accessor for MRI selection
     ///
     Wt::Signal<std::string, std::string, std::string>& mriSelected() { return mMRISelected; }

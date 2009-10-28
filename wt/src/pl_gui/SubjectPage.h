@@ -29,6 +29,7 @@ using namespace Wt;
 
 class SelectScans;
 class PipelineConfigure;
+class MRIBrowser;
 
 ///
 /// \class SubjectPage
@@ -62,6 +63,11 @@ public:
     /// Reset all widgets to the default state
     ///
     void resetAll();
+
+    ///
+    /// Get the MRI browser
+    ///
+    const MRIBrowser* getMRIBrowser() const;
 
 private:
     ///

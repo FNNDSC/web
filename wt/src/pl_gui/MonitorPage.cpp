@@ -16,6 +16,9 @@
 #include "LogFileTailer.h"
 #include "LogFileBrowser.h"
 #include "ConfigOptions.h"
+#include "MRIBrowser.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
@@ -51,8 +54,10 @@ using namespace boost::processes;
 ///
 //  Constructor
 //
-MonitorPage::MonitorPage(WContainerWidget *parent) :
-    WContainerWidget(parent)
+MonitorPage::MonitorPage(const MRIBrowser *mriBrowser,
+                         WContainerWidget *parent) :
+    WContainerWidget(parent),
+    mMRIBrowser(mriBrowser)
 {
     setStyleClass("tabdiv");
 
@@ -149,8 +154,30 @@ void MonitorPage::stopUpdate()
 //
 void MonitorPage::jobSelectedChanged(std::string jobSelectedFile)
 {
-    mLogFileBrowser->setLogBaseDir(path(jobSelectedFile).branch_path().string());
-    mLogFileBrowser->setPostProcDir(ConfigOptions::GetPtr()->GetOutDir());
+
+    path logBaseDir = path(jobSelectedFile).branch_path();
+    std::string logDirName = logBaseDir.leaf();
+    mLogFileBrowser->setLogBaseDir(logBaseDir.string());
+
+    if (mMRIBrowser != NULL)
+    {
+        // The log directory will be
+        // <outputDir>/MRID-<logDirNameStripped>  (where <logDirNameStripped> is stripped of
+        //                                         leading "log")
+        std::string scanDir = logBaseDir.branch_path().string();
+
+        std::string mrid = mMRIBrowser->getMRIDFromScanDir(scanDir);
+
+        // Strip leading "log"
+        logDirName.erase(logDirName.begin(), logDirName.begin() + 3);
+
+        std::string postProcDir = ConfigOptions::GetPtr()->GetOutDir() + "/" +
+                                  mrid + logDirName;
+
+        mLogFileBrowser->setPostProcDir(postProcDir);
+
+
+    }
     mLogFileBrowser->resetAll();
     mLogFileBrowser->show();
 }

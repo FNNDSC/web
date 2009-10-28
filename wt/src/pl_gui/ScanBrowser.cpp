@@ -80,12 +80,12 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     patientInfoLayout->addWidget(mPatientBirthday = new WLabel(""), 4, 1);
     patientInfoLayout->addWidget(new WLabel("Image Scan-Date:"), 5, 0);
     patientInfoLayout->addWidget(mImageScanDate = new WLabel(""), 5, 1);
-    patientInfoLayout->addWidget(new WLabel("Scanner Manufacturer:"), 5, 0);
-    patientInfoLayout->addWidget(mScannerManufacturer = new WLabel(""), 5, 1);
-    patientInfoLayout->addWidget(new WLabel("Scanner Model:"), 6, 0);
-    patientInfoLayout->addWidget(mScannerModel = new WLabel(""), 6, 1);
-    patientInfoLayout->addWidget(new WLabel("Software Version:"), 7, 0);
-    patientInfoLayout->addWidget(mSoftwareVer = new WLabel(""), 7, 1);
+    patientInfoLayout->addWidget(new WLabel("Scanner Manufacturer:"), 6, 0);
+    patientInfoLayout->addWidget(mScannerManufacturer = new WLabel(""), 6, 1);
+    patientInfoLayout->addWidget(new WLabel("Scanner Model:"), 7, 0);
+    patientInfoLayout->addWidget(mScannerModel = new WLabel(""), 7, 1);
+    patientInfoLayout->addWidget(new WLabel("Software Version:"), 8, 0);
+    patientInfoLayout->addWidget(mSoftwareVer = new WLabel(""), 8, 1);
 
     mPatientInfoBox->setLayout(patientInfoLayout);
 

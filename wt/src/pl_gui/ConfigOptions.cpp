@@ -59,6 +59,7 @@ ConfigOptions::ConfigOptions() :
 //
 ConfigOptions::~ConfigOptions()
 {
+    delete mOptionDesc;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

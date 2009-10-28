@@ -11,6 +11,8 @@
 //
 #include "MRIBrowser.h"
 #include "ConfigOptions.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
@@ -22,12 +24,14 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <boost/filesystem.hpp>
 
 ///
 //  Namespaces
 //
 using namespace Wt;
 using namespace std;
+using namespace boost::filesystem;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -79,6 +83,40 @@ void MRIBrowser::resetAll()
     WModelIndexSet noSelection;
     mMRITreeView->setSelectedIndexes(noSelection);
 
+}
+
+
+///
+/// Given a scan directory, determine the MRID
+///
+std::string MRIBrowser::getMRIDFromScanDir(const std::string& scanDir) const
+{
+    path scanPath(scanDir);
+
+    for (int i = 0; i < mMRIModel->rowCount(); i++)
+    {
+        WStandardItem *item = mMRIModel->item(i);
+
+        if (item != NULL)
+        {
+            boost::any displayData = item->data(DisplayRole);
+            boost::any d = item->data(UserRole);
+            if (!displayData.empty() && !d.empty())
+            {
+                std::string curScanDir = boost::any_cast<std::string>(d);
+                path curScanPath(curScanDir);
+
+                if (scanPath == curScanPath)
+                {
+
+                    WString mrid = boost::any_cast<WString>(displayData);
+                    return mrid.toUTF8();
+                }
+            }
+        }
+    }
+
+    return ("");
 }
 
 ///////////////////////////////////////////////////////////////////////////////

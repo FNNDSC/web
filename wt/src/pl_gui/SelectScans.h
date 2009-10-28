@@ -63,6 +63,11 @@ public:
     ///
     const std::vector<ScanBrowser::ScanData>& getScansToProcess() const { return mScanBrowser->getScansToProcess(); }
 
+    ///
+    /// Get the MRI browser
+    ///
+    const MRIBrowser* getMRIBrowser() const { return mMRIBrowser;   }
+
 private:
     ///
     /// \brief Creates a title widget.
