@@ -24,6 +24,7 @@
 #include <Wt/WPushButton>
 #include <Wt/WStackedWidget>
 #include <Wt/WMessageBox>
+#include <signal.h>
 #include <boost/process/process.hpp>
 #include <boost/process/child.hpp>
 #include <boost/process/launch_shell.hpp>

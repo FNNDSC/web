@@ -106,7 +106,7 @@ std::string MRIBrowser::getMRIDFromScanDir(const std::string& scanDir) const
                 std::string curScanDir = boost::any_cast<std::string>(d);
                 path curScanPath(curScanDir);
 
-                if (scanPath == curScanPath)
+                if (scanPath.normalize() == curScanPath.normalize())
                 {
 
                     WString mrid = boost::any_cast<WString>(displayData);

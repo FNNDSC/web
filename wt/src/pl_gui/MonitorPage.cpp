@@ -28,6 +28,7 @@
 #include <Wt/WPushButton>
 #include <Wt/WStackedWidget>
 #include <Wt/WMessageBox>
+#include <signal.h>
 #include <boost/process/process.hpp>
 #include <boost/process/child.hpp>
 #include <boost/process/launch_shell.hpp>
@@ -187,6 +188,8 @@ void MonitorPage::jobSelectedChanged(std::string jobSelectedFile)
         std::string postProcDir = ConfigOptions::GetPtr()->GetOutDir() + "/" +
                                   mrid + logDirName;
 
+        WApplication::instance()->log("debug") << "ScanDir: " << scanDir;
+        WApplication::instance()->log("debug") << "PostProcDir: " << postProcDir;
         mLogFileBrowser->setPostProcDir(postProcDir);
 
 

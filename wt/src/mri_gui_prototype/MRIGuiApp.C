@@ -42,7 +42,7 @@
 #include <Wt/WTextArea>
 #include <Wt/WTimer>
 #include <Wt/WScrollArea>
-
+#include <signal.h>
 #include <boost/process/process.hpp>
 #include <boost/process/child.hpp>
 #include <boost/process/launch_shell.hpp>
