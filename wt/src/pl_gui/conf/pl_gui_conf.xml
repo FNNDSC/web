@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<Results>
+	<Pipeline name="tract_meta.bash">
+		<FilePatterns>
+			<FilePattern dir="true" name=".*-stage-2-.*">
+				<FilePattern dir="true" name="final-trackvis">
+					<FilePattern dir="false" name=".*\.trk" recurse="false" />
+				</FilePattern>
+			</FilePattern>
+			<FilePattern dir="true" name=".*-stage-2-.*">
+				<FilePattern dir="true" name=".*stage-3.*">
+					<FilePattern dir="false" name=".*\.nii" recurse="false" />
+				</FilePattern>
+			</FilePattern>
+			<FilePattern dir="true" name=".*-stage-3-.*">
+				<FilePattern dir="true" name="AXI">
+					<FilePattern dir="false" name=".*\.png" recurse="false" />
+				</FilePattern>
+				<FilePattern dir="true" name="COR">
+					<FilePattern dir="false" name=".*\.png" recurse="false" />
+				</FilePattern>
+				<FilePattern dir="true" name="SAG">
+					<FilePattern dir="false" name=".*\.png" recurse="false" />
+				</FilePattern>
+			</FilePattern>	
+		</FilePatterns>
+	</Pipeline>
+</Results>

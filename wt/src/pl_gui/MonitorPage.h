@@ -16,7 +16,6 @@
 #include <Wt/WString>
 #include <Wt/WText>
 #include <string>
-#include "LogFileBrowser.h"
 
 namespace Wt
 {
@@ -24,9 +23,10 @@ namespace Wt
     class WStackedWidget;
 }
 class ClusterJobBrowser;
-class LogFileTailer;
 class MRIBrowser;
 class PatientInfoBox;
+class MonitorLogTab;
+class MonitorResultsTab;
 
 using namespace Wt;
 
@@ -76,11 +76,6 @@ private:
     ///
     void jobSelectedChanged(std::string jobSelectedFile);
 
-    ///
-    ///  Handle log selection changes [slot]
-    ///
-    void logSelectedChanged(LogFileBrowser::LogFileEntry logFileEntry);
-
 
 private:
 
@@ -90,14 +85,11 @@ private:
     /// Cluster job browser
     ClusterJobBrowser *mClusterJobBrowser;
 
-    /// Stdout log
-    LogFileTailer *mLogStdOut;
+    /// Monitor log tab
+    MonitorLogTab *mMonitorLogTab;
 
-    /// Stderr log
-    LogFileTailer *mLogStdErr;
-
-    /// Log file browser
-    LogFileBrowser *mLogFileBrowser;
+    /// Monitor results tab
+    MonitorResultsTab *mMonitorResultsTab;
 
     /// Patient info box
     PatientInfoBox *mPatientInfoBox;

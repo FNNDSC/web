@@ -1,9 +1,13 @@
 ADD_EXECUTABLE(pl_gui.wt
   ConfigOptions.cpp
+  ConfigXML.cpp
   ClusterJobBrowser.cpp
+  FileBrowser.cpp
   LogFileBrowser.cpp
   LogFileTailer.cpp
+  MonitorLogTab.cpp
   MonitorPage.cpp
+  MonitorResultsTab.cpp
   MRIBrowser.cpp
   PatientInfoBox.cpp
   PipelineApp.cpp
@@ -12,11 +16,12 @@ ADD_EXECUTABLE(pl_gui.wt
   PipelineOptionsFS.cpp
   PipelineOptionsTract.cpp
   PipelineStatus.cpp
+  ResultsBrowser.cpp
   ScanBrowser.cpp
   SelectScans.cpp
   SubjectPage.cpp
 )
-TARGET_LINK_LIBRARIES(pl_gui.wt wt ${EXAMPLES_CONNECTOR} ${BOOST_WT_LIBRARIES} ${BOOST_FS_LIB_MT})
+TARGET_LINK_LIBRARIES(pl_gui.wt wt ${EXAMPLES_CONNECTOR} ${BOOST_WT_LIBRARIES} ${BOOST_FS_LIB_MT} mxml)
 
 INCLUDE_DIRECTORIES(
   ${WT_SOURCE_DIR}/src

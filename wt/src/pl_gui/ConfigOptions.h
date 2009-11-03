@@ -48,13 +48,14 @@ public:
 
 
     // Accessors
-    const std::string& GetDicomDir()        const { return mDicomDir; }
-    const std::string& GetOutDir()          const { return mOutDir; }
-    const std::string& GetSeriesListTract() const { return mSeriesListTract; }
-    const std::string& GetSeriesListFS()    const { return mSeriesListFS; }
-    const std::string& GetScriptDir()       const { return mScriptDir; }
-    const std::string& GetClusterName()     const { return mClusterName; }
-    const std::string& GetPackageDir()      const { return mPackageDir; }
+    const std::string& GetDicomDir()            const { return mDicomDir; }
+    const std::string& GetOutDir()              const { return mOutDir; }
+    const std::string& GetSeriesListTract()     const { return mSeriesListTract; }
+    const std::string& GetSeriesListFS()        const { return mSeriesListFS; }
+    const std::string& GetScriptDir()           const { return mScriptDir; }
+    const std::string& GetClusterName()         const { return mClusterName; }
+    const std::string& GetPackageDir()          const { return mPackageDir; }
+    const std::string& GetConfigXML()           const { return mConfigXML; }
 private:
 
     // Singleton instance
@@ -83,6 +84,9 @@ private:
 
     /// Package dir
     std::string mPackageDir;
+
+    /// Results configuration XML file
+    std::string mConfigXML;
 };
 
 #endif // CONFIGOPTIONS_H

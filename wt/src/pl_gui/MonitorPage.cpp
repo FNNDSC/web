@@ -12,9 +12,9 @@
 //  GPL v2
 //
 #include "MonitorPage.h"
+#include "MonitorLogTab.h"
+#include "MonitorResultsTab.h"
 #include "ClusterJobBrowser.h"
-#include "LogFileTailer.h"
-#include "LogFileBrowser.h"
 #include "ConfigOptions.h"
 #include "MRIBrowser.h"
 #include "PatientInfoBox.h"
@@ -28,6 +28,7 @@
 #include <Wt/WPushButton>
 #include <Wt/WStackedWidget>
 #include <Wt/WMessageBox>
+#include <Wt/WTabWidget>
 #include <signal.h>
 #include <boost/process/process.hpp>
 #include <boost/process/child.hpp>
@@ -65,7 +66,14 @@ MonitorPage::MonitorPage(const MRIBrowser *mriBrowser,
 
     WGridLayout *layout = new WGridLayout();
     layout->addWidget(createTitle("Cluster Jobs"), 0, 0);
-    layout->addWidget(createTitle("Logs"), 0, 1);
+
+    WTabWidget *tabWidget = new WTabWidget();
+    tabWidget->setStyleClass("toptabdiv");
+    mMonitorLogTab = new MonitorLogTab(mriBrowser);
+    mMonitorResultsTab = new MonitorResultsTab(mriBrowser);
+    tabWidget->addTab(mMonitorResultsTab, "Results");
+    tabWidget->addTab(mMonitorLogTab, "Logs");
+    layout->addWidget(tabWidget, 1, 1);
 
     WVBoxLayout *clusterJobsLayout = new WVBoxLayout();
     mClusterJobBrowser = new ClusterJobBrowser();
@@ -77,32 +85,24 @@ MonitorPage::MonitorPage(const MRIBrowser *mriBrowser,
 
     layout->addLayout(clusterJobsLayout, 1, 0);
 
-    mLogFileBrowser = new LogFileBrowser();
-
-    WVBoxLayout *logInfoLayout = new WVBoxLayout();
-    logInfoLayout->addWidget(mLogFileBrowser);
-    layout->addLayout(logInfoLayout, 1, 1);
-
-    mLogStdOut = new LogFileTailer("", false);
-    mLogStdErr = new LogFileTailer("", true);
-    WVBoxLayout *vbox = new WVBoxLayout();
-    vbox->addWidget(mLogStdOut);
-    vbox->addWidget(mLogStdErr);
-    layout->addLayout(vbox, 1, 2);
 
     // Let row 1 and column 2 take the excess space.
     layout->setRowStretch(1, 1);
-    layout->setColumnStretch(2, 1);
+    layout->setColumnStretch(1, 1);
 
     setLayout(layout);
 
     // Make connections
     mClusterJobBrowser->clusterJobSelected().connect(SLOT(this, MonitorPage::jobSelectedChanged));
-    mLogFileBrowser->logFileSelected().connect(SLOT(this, MonitorPage::logSelectedChanged));
 
-    mLogFileBrowser->hide();
-    mLogStdOut->hide();
-    mLogStdErr->hide();
+    // All items in the tabbed widget need to be resized to 100% to
+    // fill the contents.  This trick came from the Wt WTabWidget
+    // documentation and took me a good half a day to figure out.
+    mMonitorLogTab->resize(WLength(100.0, WLength::Percentage),
+                           WLength(100.0, WLength::Percentage));
+    mMonitorResultsTab->resize(WLength(100.0, WLength::Percentage),
+                               WLength(100.0, WLength::Percentage));
+
 }
 
 ///
@@ -125,9 +125,8 @@ MonitorPage::~MonitorPage()
 //
 void MonitorPage::resetAll()
 {
-    mLogStdOut->hide();
-    mLogStdErr->hide();
-    mLogFileBrowser->hide();
+    mMonitorLogTab->resetAll();
+    mMonitorResultsTab->resetAll();
     mPatientInfoBox->resetAll();
     mClusterJobBrowser->resetAll();
 }
@@ -137,11 +136,7 @@ void MonitorPage::resetAll()
 //
 void MonitorPage::startUpdate()
 {
-    if (!mLogStdOut->isHidden())
-    {
-        mLogStdErr->startUpdate();
-        mLogStdOut->startUpdate();
-    }
+    mMonitorLogTab->startUpdate();
 }
 
 ///
@@ -149,11 +144,7 @@ void MonitorPage::startUpdate()
 //
 void MonitorPage::stopUpdate()
 {
-    mLogStdErr->stopUpdate();
-    mLogStdOut->stopUpdate();
-    mLogStdErr->hide();
-    mLogStdOut->hide();
-    mLogFileBrowser->hide();
+    mMonitorLogTab->stopUpdate();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -171,70 +162,13 @@ void MonitorPage::jobSelectedChanged(std::string jobSelectedFile)
     path logBaseDir = path(jobSelectedFile).branch_path();
     std::string scanDir = logBaseDir.branch_path().string();
 
-    std::string logDirName = logBaseDir.leaf();
-    mLogFileBrowser->setLogBaseDir(logBaseDir.string());
-
-    if (mMRIBrowser != NULL)
-    {
-        // The log directory will be
-        // <outputDir>/MRID-<logDirNameStripped>  (where <logDirNameStripped> is stripped of
-        //                                         leading "log")
-
-        std::string mrid = mMRIBrowser->getMRIDFromScanDir(scanDir);
-
-        // Strip leading "log"
-        logDirName.erase(logDirName.begin(), logDirName.begin() + 3);
-
-        std::string postProcDir = ConfigOptions::GetPtr()->GetOutDir() + "/" +
-                                  mrid + logDirName;
-
-        WApplication::instance()->log("debug") << "ScanDir: " << scanDir;
-        WApplication::instance()->log("debug") << "PostProcDir: " << postProcDir;
-        mLogFileBrowser->setPostProcDir(postProcDir);
-
-
-    }
-    mLogFileBrowser->resetAll();
-    mLogFileBrowser->show();
+    mMonitorLogTab->jobSelectedChanged(jobSelectedFile);
+    mMonitorResultsTab->jobSelectedChanged(jobSelectedFile);
 
     mPatientInfoBox->resetAll();
     mPatientInfoBox->setScanDir(scanDir);
 }
 
-///
-//  Handle log selection changes [slot]
-//
-void MonitorPage::logSelectedChanged(LogFileBrowser::LogFileEntry logFileEntry)
-{
-    std::string baseLogName;
-
-    baseLogName = logFileEntry.mBaseLogDir + "/" +
-                  logFileEntry.mBaseLogName;
-
-    if (logFileEntry.mHasStdOut)
-    {
-        mLogStdOut->setLogFile(baseLogName + ".std");
-        mLogStdOut->show();
-        mLogStdOut->startUpdate();
-    }
-    else
-    {
-        mLogStdOut->hide();
-        mLogStdOut->stopUpdate();
-    }
-
-    if (logFileEntry.mHasStdErr)
-    {
-        mLogStdErr->setLogFile(baseLogName + ".err");
-        mLogStdErr->show();
-        mLogStdErr->startUpdate();
-    }
-    else
-    {
-        mLogStdErr->hide();
-        mLogStdErr->stopUpdate();
-    }
-}
 
 ///
 //  Creates a title widget.

@@ -1,8 +1,8 @@
 //
 //
 //  Description:
-//      Definition of Log File browser widget.  This widget provides
-//      a browser for all of the log files for a cluster run.
+//      Definition of results browser widget.  This widget provides
+//      a browser for all of the results files for a cluster run.
 //
 //  Author:
 //      Dan Ginsburg
@@ -10,8 +10,8 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
-#ifndef LOGFILEBROWSER_H
-#define LOGFILEBROWSER_H
+#ifndef RESULTSBROWSER_H
+#define RESULTSBROWSER_H
 
 #include "FileBrowser.h"
 #include <vector>
@@ -21,13 +21,14 @@ using namespace Wt;
 namespace Wt
 {
     class WPushButton;
+    class WStandardItem;
 }
 
 ///
-/// \class LogFileBrowser
-/// \brief Provides a browser for all the log files of a cluster job
+/// \class ResultsBrowser
+/// \brief Provides a browser for filtered results of a cluster job
 ///
-class LogFileBrowser : public FileBrowser
+class ResultsBrowser : public FileBrowser
 {
 public:
 
@@ -57,17 +58,17 @@ public:
         /// Depth of folder from mRootLogDir -> mBaseLogDir
         int mDepth;
 
-    } LogFileEntry;
+    } ResultFileEntry;
 
     ///
     /// Constructor
     ///
-    LogFileBrowser(WContainerWidget *parent = 0);
+    ResultsBrowser(WContainerWidget *parent = 0);
 
     ///
     /// Destructor
     ///
-    virtual ~LogFileBrowser();
+    virtual ~ResultsBrowser();
 
     ///
     /// Reset to the default state
@@ -75,19 +76,19 @@ public:
     void resetAll();
 
     ///
-    ///  Set the log base directory
+    ///  Set the base directory for the results
     ///
-    void setLogBaseDir(const std::string& baseDir);
+    void setResultsBaseDir(const std::string& baseDir);
 
     ///
-    ///  Set the log base directory
+    /// Set the name of the pipeline
     ///
-    void setPostProcDir(const std::string& postProcDir);
+    void setPipelineName(const std::string& pipelineName);
 
     ///
     /// Signal accessor for log file selection
     ///
-    Wt::Signal<LogFileEntry>& logFileSelected() { return mLogFileSelected; }
+    Wt::Signal<ResultFileEntry>& resultFileSelected() { return mResultFileSelected; }
 
 protected:
 
@@ -97,37 +98,37 @@ protected:
     void populateBrowser();
 
     ///
-    ///  Log file selection changed by user
+    ///  Result file selection changed by user
     ///
-    void logChanged();
+    void resultChanged();
 
     ///
-    ///  Add log files from a base directory
+    ///  Add files from tree
     ///
-    void addLogEntriesFromDir(const boost::filesystem::path& logDir, bool rootDir, int depth = -1);
+    void addFilesFromTree(WStandardItem *item, const std::string& baseDir,
+                          int depth, int &index);
 
-
     ///
-    ///  Handle refresh log button clicked [slot]
+    ///  Handle refresh results button clicked [slot]
     ///
-    void refreshLogs();
+    void refreshResults();
 
 private:
 
     /// Log file vector
-    std::vector<LogFileEntry> mLogFileEntries;
+    std::vector<ResultFileEntry> mResultFileEntries;
 
-    /// Signal for when a log file is selected
-    Wt::Signal<LogFileEntry> mLogFileSelected;
+    /// Signal for when a result file is selected
+    Wt::Signal<ResultFileEntry> mResultFileSelected;
 
     /// Refersh button
     WPushButton *mRefreshButton;
 
-    /// Log base directory
-    std::string mBaseLogDir;
+    /// Results base directory
+    std::string mResultsBaseDir;
 
-    /// Post proc directory
-    std::string mPostProcDir;
+    /// Pipeline name
+    std::string mPipelineName;
 
 };
 

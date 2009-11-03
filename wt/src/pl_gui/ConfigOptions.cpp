@@ -51,6 +51,7 @@ ConfigOptions::ConfigOptions() :
         ("seriesListFS",    value<string>(), "Series list freesurfer (comma separated)")
         ("clusterName",     value<string>(), "Cluster name")
         ("packageDir",      value<string>(), "Package directory")
+        ("configXML",       value<string>(), "Config XML file")
         ;
 }
 
@@ -141,6 +142,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mPackageDir = vm["packageDir"].as<string>();
         }
 
+        if (vm.count("configXML"))
+        {
+            mConfigXML = vm["configXML"].as<string>();
+        }
+
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
         WApplication::instance()->log("info") << "[Script Dir:] " << mScriptDir;
@@ -148,6 +154,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[SeriesListFS:] " << mSeriesListFS;
         WApplication::instance()->log("info") << "[Cluster Name:] " << mClusterName;
         WApplication::instance()->log("info") << "[Package Dir:] " << mPackageDir;
+        WApplication::instance()->log("info") << "[Results Config XML:] " << mConfigXML;
 
         configFile.close();
     }

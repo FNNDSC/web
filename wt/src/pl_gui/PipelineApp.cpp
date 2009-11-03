@@ -15,6 +15,7 @@
 #include "SubjectPage.h"
 #include "MonitorPage.h"
 #include "ConfigOptions.h"
+#include "ConfigXML.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
@@ -46,6 +47,11 @@ PipelineApp::PipelineApp(const WEnvironment &env) :
     if(!ConfigOptions::GetPtr()->LoadFromFile("conf/pl_gui.conf"))
     {
         this->log("error") << "Loading configuration file 'conf/pl_gui.conf'";
+    }
+
+    if(!ConfigXML::getPtr()->loadFromFile(ConfigOptions::GetPtr()->GetConfigXML()))
+    {
+        this->log("error") << "Loading results configuration XML file" << ConfigOptions::GetPtr()->GetConfigXML();
     }
 
     createUI();

@@ -44,23 +44,13 @@ using namespace boost::filesystem;
 //  Constructor
 //
 LogFileBrowser::LogFileBrowser(WContainerWidget *parent) :
-    WContainerWidget(parent)
+    FileBrowser(parent)
 {
-    mLogTreeView = new WTreeView();
-    mLogModel = new WStandardItemModel();
-
-    mLogTreeView->setAttributeValue
-            ("oncontextmenu",
-             "event.cancelBubble = true; event.returnValue = false; return false;");
-    mLogTreeView->setModel(mLogModel);
-    mLogTreeView->resize(350, WLength::Auto);
-    mLogTreeView->setSelectionMode(SingleSelection);
-    mLogTreeView->expandToDepth(1);
-    mLogTreeView->selectionChanged().connect(SLOT(this, LogFileBrowser::logChanged));
+    mTreeView->selectionChanged().connect(SLOT(this, LogFileBrowser::logChanged));
 
     mRefreshButton = new WPushButton("Refresh Available Logs");
     WGridLayout *layout = new WGridLayout();
-    layout->addWidget(mLogTreeView, 0, 0);
+    layout->addWidget(mTreeView, 0, 0);
     layout->addWidget(mRefreshButton, 1, 0);
     layout->setRowStretch(0, 1);
     setLayout(layout);
@@ -75,8 +65,13 @@ LogFileBrowser::LogFileBrowser(WContainerWidget *parent) :
 //
 LogFileBrowser::~LogFileBrowser()
 {
-    delete mLogModel;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Public Members
+//
+//
 
 ///
 //  Reset to default state
@@ -84,19 +79,20 @@ LogFileBrowser::~LogFileBrowser()
 void LogFileBrowser::resetAll()
 {
     WModelIndexSet noSelection;
-    mLogTreeView->setSelectedIndexes(noSelection);
-    mLogModel->clear();
+    mTreeView->setSelectedIndexes(noSelection);
+    mModel->clear();
 
-    populateLogs(mBaseLogDir, mPostProcDir);
+    populateBrowser();
 
-    if (mLogModel->rowCount() == 0)
+    if (mModel->rowCount() == 0)
     {
-        WStandardItem *newItem = new WStandardItem("NO LOGS FOUND");
+        WStandardItem *newItem = new WStandardItem("NO FILES FOUND");
         newItem->setFlags(newItem->flags().clear(ItemIsSelectable));
         newItem->setIcon("icons/folder.gif");
-        mLogModel->appendRow(newItem);
+        mModel->appendRow(newItem);
     }
 }
+
 
 ///
 //  Set the log base directory
@@ -116,187 +112,28 @@ void LogFileBrowser::setPostProcDir(const std::string& postProcDir)
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Private Members
+//  Protected Members
 //
 //
 
 ///
 //  Populate the log job model by parsing the directories for log files
 //
-bool LogFileBrowser::populateLogs(const std::string& baseLogDir, const std::string& postProcDir)
+void LogFileBrowser::populateBrowser()
 {
     mLogFileEntries.clear();
-    addLogEntriesFromDir(path(baseLogDir), true);
-    addLogEntriesFromDir(path(postProcDir), false);
+    addLogEntriesFromDir(path(mBaseLogDir), true);
+    addLogEntriesFromDir(path(mPostProcDir), false);
 
-    //
-    //  The code below creates a tree such as follows:
-    //
-    //  + tract_meta.bash
-    //  + dicom_seriesCollect.bash
-    //  + tract_meta-stage-2-dcm2trk.bash
-    //    |
-    //    + stage-1-mri_convert
-    //      |
-    //      + diff_unpack
-    //
-    //   ...
-    //
-    //  The relatively convoluted logic below is responsible for
-    //  creating this tree structure from the folders that were
-    //  found.
-
-    // Create folder entries
-    for (int i = 0; i < mLogFileEntries.size(); i++)
+    // Add the entries to the browser
+    for(int i = 0; i < mLogFileEntries.size(); i++)
     {
         const LogFileEntry *logFileEntry = &mLogFileEntries[i];
 
-        // If it's not a root directory, add the unique folder names as
-        // root folder entries
-        if (!logFileEntry->mRootDir)
-        {
-            bool addEntry = true;
-
-            int modelRow;
-
-            // Iterate over all the rows in the root
-            for (modelRow = 0; modelRow < mLogModel->rowCount(); modelRow++)
-            {
-                WStandardItem *item = mLogModel->item(modelRow);
-                bool match = true;
-
-                // For the depth of the folder, attempt to match as many folders
-                // as possible.
-                for (int depth = 0; depth <= logFileEntry->mDepth && item != NULL; depth++)
-                {
-                    path logDirPath = path(logFileEntry->mBaseLogDir);
-                    for (int d = 0; d < (logFileEntry->mDepth - depth); d++)
-                    {
-                        logDirPath = logDirPath.branch_path();
-                    }
-                    std::string folderLeafName = path(logDirPath).leaf();
-
-                    boost::any displayData = item->data(DisplayRole);
-                    if (!displayData.empty())
-                    {
-                        WString folderName = boost::any_cast<WString>(displayData);
-
-                        // Folder did not match, this means we need to add it
-                        // to the tree
-                        if (folderName.toUTF8() != folderLeafName)
-                        {
-                            match = false;
-                            break;
-                        }
-                    }
-                }
-
-                // All folders matched, we do not need a new folder
-                if (match)
-                {
-                    addEntry = false;
-                }
-            }
-
-            // Add all of the necessary folder entries to the tree
-            if (addEntry)
-            {
-                WStandardItem *lastItem = mLogModel->invisibleRootItem();
-
-                for (int depth = 0; depth <= logFileEntry->mDepth; depth++)
-                {
-                    path logDirPath = path(logFileEntry->mBaseLogDir);
-                    for (int d = 0; d < (logFileEntry->mDepth - depth); d++)
-                    {
-                        logDirPath = logDirPath.branch_path();
-                    }
-                    std::string folderLeafName = path(logDirPath).leaf();
-
-                    bool addFolder = true;
-                    for (int row = 0; row < lastItem->rowCount(); row++)
-                    {
-                        WStandardItem *item = lastItem->child(row);
-                        std::string folderLeafName = path(logDirPath).leaf();
-
-                        boost::any displayData = item->data(DisplayRole);
-                        if (!displayData.empty())
-                        {
-                            WString folderName = boost::any_cast<WString>(displayData);
-
-                            if (folderName.toUTF8() == folderLeafName)
-                            {
-                               addFolder = false;
-                               lastItem = item;
-                               break;
-                            }
-                        }
-                    }
-
-                    if (addFolder)
-                    {
-                        WStandardItem *newItem = new WStandardItem(folderLeafName);
-                        newItem->setFlags(newItem->flags().clear(ItemIsSelectable));
-                        newItem->setIcon("icons/folder.gif");
-                        lastItem->appendRow(newItem);
-                        lastItem = newItem;
-                    }
-                }
-            }
-        }
-        // For root entries, add the file logs
-        else
-        {
-            mLogModel->appendRow(createLogEntry(logFileEntry));
-        }
+        addEntry(logFileEntry->mRootDir, logFileEntry->mDepth,
+                 logFileEntry->mBaseLogDir, logFileEntry->mBaseLogName,
+                 i);
     }
-
-
-    // Now add each of the items under the folders
-    for (int i = 0; i < mLogFileEntries.size(); i++)
-    {
-        const LogFileEntry *logFileEntry = &mLogFileEntries[i];
-
-        if (!logFileEntry->mRootDir)
-        {
-            WStandardItem *lastItem = mLogModel->invisibleRootItem();
-
-            for (int depth = 0; depth <= logFileEntry->mDepth; depth++)
-            {
-                path logDirPath = path(logFileEntry->mBaseLogDir);
-                for (int d = 0; d < (logFileEntry->mDepth - depth); d++)
-                {
-                    logDirPath = logDirPath.branch_path();
-                }
-                std::string folderLeafName = path(logDirPath).leaf();
-
-                for (int row = 0; row < lastItem->rowCount(); row++)
-                {
-                    WStandardItem *item = lastItem->child(row);
-                    std::string folderLeafName = path(logDirPath).leaf();
-
-                    boost::any displayData = item->data(DisplayRole);
-                    if (!displayData.empty())
-                    {
-                        WString folderName = boost::any_cast<WString>(displayData);
-
-                        if (folderName.toUTF8() == folderLeafName)
-                        {
-
-                           lastItem = item;
-                           break;
-                        }
-                    }
-                }
-            }
-
-            if (lastItem != NULL)
-            {
-                lastItem->appendRow(createLogEntry(logFileEntry));
-            }
-        }
-    }
-
-    return true;
 }
 
 ///
@@ -393,36 +230,21 @@ void LogFileBrowser::addLogEntriesFromDir(const path& logDir, bool rootDir, int 
 }
 
 ///
-//  Create a log entry
-//
-WStandardItem *LogFileBrowser::createLogEntry(const LogFileEntry* logEntry)
-{
-    WStandardItem *result = new WStandardItem(logEntry->mBaseLogName);
-
-    result->setIcon("icons/file.gif");
-
-    // Set the data for the log entry in the user roles
-    result->setData(*logEntry, UserRole);
-
-    return result;
-}
-
-///
 //  Log selection changed by user
 //
 void LogFileBrowser::logChanged()
 {
-    if (mLogTreeView->selectedIndexes().empty())
+    if (mTreeView->selectedIndexes().empty())
         return;
 
-    WModelIndex selected = *mLogTreeView->selectedIndexes().begin();
-    boost::any logEntryData = selected.data(UserRole);
+    WModelIndex selected = *mTreeView->selectedIndexes().begin();
+    boost::any logEntryDataIndex = selected.data(UserRole);
 
-    if (!logEntryData.empty())
+    if (!logEntryDataIndex.empty())
     {
-        LogFileEntry logFileEntry = boost::any_cast<LogFileEntry>(logEntryData);
+        int logFileEntryIndex = boost::any_cast<int>(logEntryDataIndex);
 
-        mLogFileSelected.emit(logFileEntry);
+        mLogFileSelected.emit(mLogFileEntries[logFileEntryIndex]);
     }
 }
 
@@ -431,15 +253,15 @@ void LogFileBrowser::logChanged()
 //
 void LogFileBrowser::refreshLogs()
 {
-    mLogModel->clear();
-    populateLogs(mBaseLogDir, mPostProcDir);
+    mModel->clear();
+    populateBrowser();
 
-    if (mLogModel->rowCount() == 0)
+    if (mModel->rowCount() == 0)
     {
         WStandardItem *newItem = new WStandardItem("NO LOGS FOUND");
         newItem->setFlags(newItem->flags().clear(ItemIsSelectable));
         newItem->setIcon("icons/folder.gif");
-        mLogModel->appendRow(newItem);
+        mModel->appendRow(newItem);
     }
 }
 
