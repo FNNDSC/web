@@ -19,6 +19,7 @@
 
 class MRIBrowser;
 class ResultsBrowser;
+class FilePreviewBox;
 
 namespace Wt
 {
@@ -57,7 +58,10 @@ public:
 
 private:
 
-
+    ///
+    ///  Handle result file selection changes [slot]
+    ///
+    void resultFileChanged(std::string resultFilePath);
 
 private:
 
@@ -70,6 +74,8 @@ private:
     /// Results browser
     ResultsBrowser *mResultsBrowser;
 
+    /// File info box
+    FilePreviewBox *mFilePreviewBox;
 };
 
 #endif // MONITORRESULTSTAB_H

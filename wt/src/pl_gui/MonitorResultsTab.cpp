@@ -14,6 +14,7 @@
 #include "ConfigOptions.h"
 #include "MRIBrowser.h"
 #include "ResultsBrowser.h"
+#include "FilePreviewBox.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -60,13 +61,21 @@ MonitorResultsTab::MonitorResultsTab(const MRIBrowser *mriBrowser,
     setStyleClass("tabdiv");
 
     mResultsBrowser = new ResultsBrowser();
+    mFilePreviewBox = new FilePreviewBox();
+    mFilePreviewBox->setStyleClass("smallgroupdiv");
 
     WGridLayout *layout = new WGridLayout();
     layout->addWidget(mResultsBrowser, 0, 0);
+    layout->addWidget(mFilePreviewBox, 0, 1);
+    layout->setColumnStretch(1, 1);
 
     setLayout(layout);
 
+    // Make connections
+    mResultsBrowser->resultFileSelected().connect(SLOT(this, MonitorResultsTab::resultFileChanged));
+
     mResultsBrowser->hide();
+    mFilePreviewBox->hide();
 }
 
 ///
@@ -90,6 +99,7 @@ MonitorResultsTab::~MonitorResultsTab()
 void MonitorResultsTab::resetAll()
 {
     mResultsBrowser->hide();
+    mFilePreviewBox->hide();
 }
 
 ///
@@ -128,9 +138,20 @@ void MonitorResultsTab::jobSelectedChanged(std::string jobSelectedFile)
    mResultsBrowser->show();
 }
 
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Private Members
 //
 //
+
+///
+//  Handle result file selection changes [slot]
+//
+void MonitorResultsTab::resultFileChanged(std::string resultFilePath)
+{
+    mFilePreviewBox->setFilePath(resultFilePath);
+    mFilePreviewBox->show();
+}
 

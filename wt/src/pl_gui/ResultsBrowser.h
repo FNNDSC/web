@@ -32,34 +32,6 @@ class ResultsBrowser : public FileBrowser
 {
 public:
 
-    /// Log file entry structure
-    typedef struct
-    {
-        /// Located in root log directory
-        bool mRootDir;
-
-        /// Has standard out file
-        bool mHasStdOut;
-
-        /// Has standard err file
-        bool mHasStdErr;
-
-        /// Basename for log
-        std::string mBaseLogName;
-
-        /// Path to log directory
-        std::string mBaseLogDir;
-
-        /// Root director of log (as opposed to base, which points
-        /// to the actual base directory).  This is the location of
-        /// the root folder given sub-folders are present
-        std::string mRootLogDir;
-
-        /// Depth of folder from mRootLogDir -> mBaseLogDir
-        int mDepth;
-
-    } ResultFileEntry;
-
     ///
     /// Constructor
     ///
@@ -86,9 +58,9 @@ public:
     void setPipelineName(const std::string& pipelineName);
 
     ///
-    /// Signal accessor for log file selection
+    /// Signal accessor for result file selection
     ///
-    Wt::Signal<ResultFileEntry>& resultFileSelected() { return mResultFileSelected; }
+    Wt::Signal<std::string>& resultFileSelected() { return mResultFileSelected; }
 
 protected:
 
@@ -116,10 +88,10 @@ protected:
 private:
 
     /// Log file vector
-    std::vector<ResultFileEntry> mResultFileEntries;
+    std::vector<std::string> mResultFileEntries;
 
     /// Signal for when a result file is selected
-    Wt::Signal<ResultFileEntry> mResultFileSelected;
+    Wt::Signal<std::string> mResultFileSelected;
 
     /// Refersh button
     WPushButton *mRefreshButton;

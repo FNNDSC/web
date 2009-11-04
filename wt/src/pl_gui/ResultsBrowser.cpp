@@ -53,6 +53,7 @@ ResultsBrowser::ResultsBrowser(WContainerWidget *parent) :
     FileBrowser(parent)
 {
     mTreeView->selectionChanged().connect(SLOT(this, ResultsBrowser::resultChanged));
+   //TreeView->resize(600, WLength::Auto);
 
     mRefreshButton = new WPushButton("Refresh Available Results");
     WGridLayout *layout = new WGridLayout();
@@ -89,6 +90,8 @@ void ResultsBrowser::resetAll()
     mModel->clear();
 
     populateBrowser();
+
+    //mTreeView->expandToDepth(4); // Causing crash on reload
 
     if (mModel->rowCount() == 0)
     {
@@ -130,6 +133,7 @@ void ResultsBrowser::setPipelineName(const std::string& pipelineName)
 void ResultsBrowser::populateBrowser()
 {
     WStandardItemModel *model = ConfigXML::getPtr()->getResultsPipelineTree(mPipelineName);
+    mResultFileEntries.clear();
 
     if (model != NULL)
     {
@@ -190,6 +194,8 @@ void ResultsBrowser::addFilesFromTree(WStandardItem *item, const std::string& ba
                 addEntry(false, depth,
                          dirIter->path().branch_path().string(), dirIter->path().leaf(),
                          index);
+
+                mResultFileEntries.push_back(dirIter->path().string());
                 index++;
             }
         }
@@ -205,17 +211,16 @@ void ResultsBrowser::resultChanged()
     if (mTreeView->selectedIndexes().empty())
         return;
 
-    /*
+
     WModelIndex selected = *mTreeView->selectedIndexes().begin();
-    boost::any logEntryDataIndex = selected.data(UserRole);
+    boost::any fileEntryDataIndex = selected.data(UserRole);
 
-    if (!logEntryDataIndex.empty())
+    if (!fileEntryDataIndex.empty())
     {
-        int logFileEntryIndex = boost::any_cast<int>(logEntryDataIndex);
+        int index = boost::any_cast<int>(fileEntryDataIndex);
 
-        mLogFileSelected.emit(mLogFileEntries[logFileEntryIndex]);
+        mResultFileSelected.emit(mResultFileEntries[index]);
     }
-    */
 }
 
 ///
@@ -225,6 +230,8 @@ void ResultsBrowser::refreshResults()
 {
     mModel->clear();
     populateBrowser();
+    //mTreeView->expandToDepth(4);
+
 
     if (mModel->rowCount() == 0)
     {
