@@ -11,6 +11,7 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "PipelineOptions.h"
 #include "ConfigOptions.h"
 #include "GlobalEnums.h"
@@ -61,22 +62,22 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
     mDirectoryGroupBox->setLayout(mDirectoryGroupBoxLayout);
 
     // Output directory suffix
-    mDirectoryGroupBoxLayout->addWidget(new WLabel("Output Directory Suffix:"), 0, 0, Wt::AlignRight);
+    mDirectoryGroupBoxLayout->addWidget(new WLabel("Output Directory Suffix:"), 0, 0, Wt::AlignRight  | Wt::AlignMiddle);
     mOutputDirSuffix = new WLineEdit();
     mOutputDirSuffix->setMinimumSize(200, WLength::Auto);
-    mDirectoryGroupBoxLayout->addWidget(mOutputDirSuffix, 0, 1, Wt::AlignLeft);
+    mDirectoryGroupBoxLayout->addWidget(mOutputDirSuffix, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
 
     // Output file suffix
-    mDirectoryGroupBoxLayout->addWidget(new WLabel("Output File Suffix:"), 1, 0, Wt::AlignRight);
+    mDirectoryGroupBoxLayout->addWidget(new WLabel("Output File Suffix:"), 1, 0, Wt::AlignRight  | Wt::AlignMiddle);
     mOutputFileSuffix = new WLineEdit();
     mOutputFileSuffix->setMinimumSize(200, WLength::Auto);
-    mDirectoryGroupBoxLayout->addWidget(mOutputFileSuffix, 1, 1, Wt::AlignLeft);
+    mDirectoryGroupBoxLayout->addWidget(mOutputFileSuffix, 1, 1, Wt::AlignLeft | Wt::AlignMiddle);
 
     // E-mail user
-    mDirectoryGroupBoxLayout->addWidget(new WLabel("E-mail User:"), 2, 0, Wt::AlignRight);
+    mDirectoryGroupBoxLayout->addWidget(new WLabel("E-mail User:"), 2, 0, Wt::AlignRight  | Wt::AlignMiddle);
     mEmailUser = new WLineEdit();
     mEmailUser->setMinimumSize(200, WLength::Auto);
-    mDirectoryGroupBoxLayout->addWidget(mEmailUser, 2, 1, Wt::AlignLeft);
+    mDirectoryGroupBoxLayout->addWidget(mEmailUser, 2, 1, Wt::AlignLeft | Wt::AlignMiddle);
     mDirectoryGroupBoxLayout->setColumnStretch(1, 1);
 
     // Pipeline options box
@@ -133,8 +134,8 @@ std::string PipelineOptions::getCommandLineString() const
     //
     std::string args = "-v 10 -c -C ";
 
-    args += ConfigOptions::GetPtr()->GetClusterName();
-    args += " -O " + ConfigOptions::GetPtr()->GetOutDir();
+    args += getConfigOptionsPtr()->GetClusterName();
+    args += " -O " + getConfigOptionsPtr()->GetOutDir();
 
     if (!mEmailUser->text().empty())
     {

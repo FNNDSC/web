@@ -9,6 +9,7 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "ScanBrowser.h"
 #include "PatientInfoBox.h"
 #include "ConfigOptions.h"
@@ -91,6 +92,7 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
 
     layout->addLayout(leftLayout, 0, 0);
     layout->addLayout(rightLayout, 0, 1);
+    layout->setRowStretch(0, -1);
     layout->setColumnStretch(1, 1);
 
     // Connect signals to slots
@@ -272,11 +274,11 @@ void ScanBrowser::addScanClicked()
         {
             Enums::PipelineType pipelineType = Enums::PIPELINE_UNKNOWN;
 
-            if (findSeriesMatch(ConfigOptions::GetPtr()->GetSeriesListTract(), curScanText.toUTF8()))
+            if (findSeriesMatch(getConfigOptionsPtr()->GetSeriesListTract(), curScanText.toUTF8()))
             {
                 pipelineType = Enums::PIPELINE_TYPE_TRACT;
             }
-            else if(findSeriesMatch(ConfigOptions::GetPtr()->GetSeriesListFS(), curScanText.toUTF8()))
+            else if(findSeriesMatch(getConfigOptionsPtr()->GetSeriesListFS(), curScanText.toUTF8()))
             {
                 pipelineType = Enums::PIPELINE_TYPE_FS;
             }
@@ -344,7 +346,7 @@ void ScanBrowser::removeScanClicked()
         iter++;
     }
 
-    // Emit a signal with whehter a scan is selected
+    // Emit a signal with whether a scan is selected
     mScanAdded.emit(!mScansToProcessData.empty());
 
     if (mScansToProcessData.empty())

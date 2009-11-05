@@ -24,10 +24,6 @@ using namespace Wt;
 using namespace std;
 using namespace boost::program_options;
 
-///
-//  Static Members
-//
-ConfigOptions* ConfigOptions::mInstance = NULL;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -70,19 +66,6 @@ ConfigOptions::~ConfigOptions()
 //
 
 ///
-//  Get a reference to the singleton instance
-//
-ConfigOptions* ConfigOptions::GetPtr()
-{
-    if (mInstance == NULL)
-    {
-        mInstance = new ConfigOptions();
-    }
-
-    return mInstance;
-}
-
-///-+
 //  Load configuration from file
 //
 bool ConfigOptions::LoadFromFile(const std::string& configPath)

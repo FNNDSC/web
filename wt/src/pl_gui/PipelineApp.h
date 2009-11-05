@@ -19,6 +19,8 @@
 using namespace Wt;
 
 class MonitorPage;
+class ConfigOptions;
+class ConfigXML;
 
 ///
 /// \class PipelineApp
@@ -42,6 +44,16 @@ public:
     ///
     void mainTabChanged(int currentIndex);
 
+    ///
+    /// Get the configuration XML object
+    ///
+    ConfigXML* getConfigXML() const { return mConfigXML; }
+
+    ///
+    /// Get the configuration options object
+    ///
+    ConfigOptions* getConfigOptions() const { return mConfigOptions; }
+
 private:
 
     ///
@@ -58,6 +70,23 @@ private:
     /// Monitor page
     MonitorPage *mMonitorPage;
 
+    /// Configuration options
+    ConfigOptions *mConfigOptions;
+
+    /// Configuration XML
+    ConfigXML *mConfigXML;
 };
+
+///
+/// Return the ConfigXML pointer from the application instance.  Each
+/// session has its own WApplication instance.
+///
+ConfigXML* getConfigXMLPtr();
+
+///
+/// Return the ConfigOptions pointer from the application instance.  Each
+/// session has its own WApplication instance.
+///
+ConfigOptions* getConfigOptionsPtr();
 
 #endif // PIPELINEAPP_H

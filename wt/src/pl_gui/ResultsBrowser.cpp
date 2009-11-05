@@ -10,6 +10,7 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "ResultsBrowser.h"
 #include "ConfigOptions.h"
 #include "ConfigXML.h"
@@ -53,7 +54,7 @@ ResultsBrowser::ResultsBrowser(WContainerWidget *parent) :
     FileBrowser(parent)
 {
     mTreeView->selectionChanged().connect(SLOT(this, ResultsBrowser::resultChanged));
-   //TreeView->resize(600, WLength::Auto);
+    //mTreeView->resize(600, WLength::Auto);
 
     mRefreshButton = new WPushButton("Refresh Available Results");
     WGridLayout *layout = new WGridLayout();
@@ -91,7 +92,7 @@ void ResultsBrowser::resetAll()
 
     populateBrowser();
 
-    //mTreeView->expandToDepth(4); // Causing crash on reload
+    mTreeView->expandToDepth(4);
 
     if (mModel->rowCount() == 0)
     {
@@ -132,7 +133,7 @@ void ResultsBrowser::setPipelineName(const std::string& pipelineName)
 //
 void ResultsBrowser::populateBrowser()
 {
-    WStandardItemModel *model = ConfigXML::getPtr()->getResultsPipelineTree(mPipelineName);
+    WStandardItemModel *model = getConfigXMLPtr()->getResultsPipelineTree(mPipelineName);
     mResultFileEntries.clear();
 
     if (model != NULL)
@@ -153,7 +154,7 @@ void ResultsBrowser::populateBrowser()
 void ResultsBrowser::addFilesFromTree(WStandardItem *item, const std::string& baseDir, int depth, int &index)
 {
     boost::any data = item->data(UserRole);
-    if (!data.empty())
+    if (!data.empty() && exists(baseDir))
     {
         ConfigXML::FilePatternNode node = boost::any_cast<ConfigXML::FilePatternNode>(data);
 
@@ -229,8 +230,9 @@ void ResultsBrowser::resultChanged()
 void ResultsBrowser::refreshResults()
 {
     mModel->clear();
+
     populateBrowser();
-    //mTreeView->expandToDepth(4);
+    mTreeView->expandToDepth(4);
 
 
     if (mModel->rowCount() == 0)

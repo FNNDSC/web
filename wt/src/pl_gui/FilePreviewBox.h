@@ -20,6 +20,7 @@
 
 namespace Wt
 {
+    class WAnchor;
     class WLabel;
     class WImage;
     class WFileResource;
@@ -85,8 +86,14 @@ private:
     /// Image resource
     WFileResource *mImageResource;
 
+    /// Download file resource
+    WFileResource *mDownloadFileResource;
+
     /// Download button
     WPushButton *mDownloadButton;
+
+    /// Download anchor
+    WAnchor *mDownloadAnchor;
 };
 
 #endif // FILEPREVIEWBOX_H

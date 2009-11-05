@@ -11,6 +11,7 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "SubjectPage.h"
 #include "SelectScans.h"
 #include "PipelineConfigure.h"
@@ -197,8 +198,8 @@ void SubjectPage::nextClicked()
             if(submitForProcessing())
             {
                 std::string logEntriesToDisplay;
-                std::string scheduleFileName = ConfigOptions::GetPtr()->GetOutDir() +
-                                               "/" +  ConfigOptions::GetPtr()->GetClusterName() +
+                std::string scheduleFileName = getConfigOptionsPtr()->GetOutDir() +
+                                               "/" +  getConfigOptionsPtr()->GetClusterName() +
                                                "/schedule.log";
 
                 ifstream ifs(scheduleFileName.c_str(), ios::in);
@@ -294,7 +295,7 @@ bool SubjectPage::submitForProcessing()
     // plBatch_create outputs command line options and then a list
     // of files to process
     tmpFile << "DEFAULTCOM = " << mPipelineConfigure->getCommandLineString() << endl;
-    tmpFile << "DEFAULTDIR = " << ConfigOptions::GetPtr()->GetDicomDir() << endl;
+    tmpFile << "DEFAULTDIR = " << getConfigOptionsPtr()->GetDicomDir() << endl;
 
     const std::vector<ScanBrowser::ScanData>& scansToProcess = mSelectScans->getScansToProcess();
     int dirCount = 1; // TODO: Correct the computation of these to match plBatch_create.bash
@@ -335,14 +336,14 @@ bool SubjectPage::submitForProcessing()
 
     // Get the number of lines in the current log file
     std::string scheduleFileName;
-    scheduleFileName = ConfigOptions::GetPtr()->GetOutDir() +
-                       "/" +  ConfigOptions::GetPtr()->GetClusterName() +
+    scheduleFileName = getConfigOptionsPtr()->GetOutDir() +
+                       "/" +  getConfigOptionsPtr()->GetClusterName() +
                        "/schedule.log";
     int scheduleLines = getNumberOfLines(scheduleFileName.c_str());
 
     // Now run pl_batch.bash to queue up into the schedule
-    std::string packageDir = ConfigOptions::GetPtr()->GetPackageDir();
-    std::string scriptDir = ConfigOptions::GetPtr()->GetScriptDir();
+    std::string packageDir = getConfigOptionsPtr()->GetPackageDir();
+    std::string scriptDir = getConfigOptionsPtr()->GetScriptDir();
     std::string commandArgs;
 
     // Create the following command line args for running pl_batch

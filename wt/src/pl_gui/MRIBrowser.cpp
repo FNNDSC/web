@@ -9,6 +9,7 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "MRIBrowser.h"
 #include "ConfigOptions.h"
 #include <Wt/WApplication>
@@ -48,7 +49,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     // Populate the list of MRIDs
     mMRITreeView = new WTreeView();
     mMRIModel = new WStandardItemModel();
-    populateMRIDs(ConfigOptions::GetPtr()->GetDicomDir() + + "/dcm_MRID_age.log");
+    populateMRIDs(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID_age.log");
 
     mMRITreeView->setAttributeValue
             ("oncontextmenu",
@@ -145,7 +146,7 @@ void MRIBrowser::populateMRIDs(const std::string& mridLogFile)
         istr >> scanName >> MRID >> age;
 
         stringstream scanDir;
-        scanDir << ConfigOptions::GetPtr()->GetDicomDir() << "/" << scanName;
+        scanDir << getConfigOptionsPtr()->GetDicomDir() << "/" << scanName;
 
         stringstream tocURL;
 

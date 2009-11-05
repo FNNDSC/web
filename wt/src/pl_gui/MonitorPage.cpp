@@ -98,10 +98,10 @@ MonitorPage::MonitorPage(const MRIBrowser *mriBrowser,
     // All items in the tabbed widget need to be resized to 100% to
     // fill the contents.  This trick came from the Wt WTabWidget
     // documentation and took me a good half a day to figure out.
-    mMonitorLogTab->resize(WLength(100.0, WLength::Percentage),
-                           WLength(100.0, WLength::Percentage));
-    mMonitorResultsTab->resize(WLength(100.0, WLength::Percentage),
-                               WLength(100.0, WLength::Percentage));
+    mMonitorLogTab->resize(WLength(100, WLength::Percentage),
+                           WLength(100, WLength::Percentage));
+    mMonitorResultsTab->resize(WLength(100, WLength::Percentage),
+                               WLength(100, WLength::Percentage));
 
 }
 

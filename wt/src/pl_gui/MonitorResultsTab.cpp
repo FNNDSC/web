@@ -10,6 +10,7 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "MonitorResultsTab.h"
 #include "ConfigOptions.h"
 #include "MRIBrowser.h"
@@ -126,7 +127,7 @@ void MonitorResultsTab::jobSelectedChanged(std::string jobSelectedFile)
        // Strip leading "log"
        logDirName.erase(logDirName.begin(), logDirName.begin() + 3);
 
-       std::string postProcDir = ConfigOptions::GetPtr()->GetOutDir() + "/" +
+       std::string postProcDir = getConfigOptionsPtr()->GetOutDir() + "/" +
                                  mrid + logDirName;
 
        mResultsBrowser->setResultsBaseDir(postProcDir);

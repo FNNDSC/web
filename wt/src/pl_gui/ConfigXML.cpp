@@ -1,7 +1,7 @@
 //
 //
 //  Description:
-//      Implementation of singleton class that loads an XML file that configures
+//      Implementation of class that loads an XML file that configures
 //      how the pipeline results are accumulated.
 //
 //  Author:
@@ -24,10 +24,6 @@
 using namespace Wt;
 using namespace std;
 
-///
-//  Static Members
-//
-ConfigXML* ConfigXML::mInstance = NULL;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -54,19 +50,6 @@ ConfigXML::~ConfigXML()
 //  Public Members
 //
 //
-
-///
-//  Get a reference to the singleton instance
-//
-ConfigXML* ConfigXML::getPtr()
-{
-    if (mInstance == NULL)
-    {
-        mInstance = new ConfigXML();
-    }
-
-    return mInstance;
-}
 
 ///
 //  Load configuration from XML file

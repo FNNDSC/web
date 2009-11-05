@@ -35,11 +35,6 @@ public:
     virtual ~ConfigOptions();
 
     ///
-    /// Get a pointer to the singleton instance
-    ///
-    static ConfigOptions* GetPtr();
-
-    ///
     /// Load configuration from file
     /// \param configFile Full path to configuration file
     /// \return Whether loading was successful
@@ -57,9 +52,6 @@ public:
     const std::string& GetPackageDir()          const { return mPackageDir; }
     const std::string& GetConfigXML()           const { return mConfigXML; }
 private:
-
-    // Singleton instance
-    static ConfigOptions *mInstance;
 
     // Allowable options
     boost::program_options::options_description *mOptionDesc;

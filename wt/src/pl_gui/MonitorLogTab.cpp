@@ -10,6 +10,7 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "MonitorLogTab.h"
 #include "LogFileTailer.h"
 #include "LogFileBrowser.h"
@@ -77,6 +78,7 @@ MonitorLogTab::MonitorLogTab(const MRIBrowser *mriBrowser,
     vbox->addWidget(mLogStdErr);
     layout->addLayout(vbox, 0, 1);
 
+    layout->setRowStretch(0, -1);
     layout->setColumnStretch(1, 1);
 
     setLayout(layout);
@@ -161,7 +163,7 @@ void MonitorLogTab::jobSelectedChanged(std::string jobSelectedFile)
         // Strip leading "log"
         logDirName.erase(logDirName.begin(), logDirName.begin() + 3);
 
-        std::string postProcDir = ConfigOptions::GetPtr()->GetOutDir() + "/" +
+        std::string postProcDir = getConfigOptionsPtr()->GetOutDir() + "/" +
                                   mrid + logDirName;
 
         WApplication::instance()->log("debug") << "ScanDir: " << scanDir;

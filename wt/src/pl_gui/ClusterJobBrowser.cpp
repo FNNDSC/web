@@ -11,6 +11,7 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "ClusterJobBrowser.h"
 #include "ConfigOptions.h"
 #include <Wt/WApplication>
@@ -61,6 +62,7 @@ ClusterJobBrowser::ClusterJobBrowser(WContainerWidget *parent) :
     mClusterJobTreeView->expandToDepth(1);
     mClusterJobTreeView->selectionChanged().connect(SLOT(this, ClusterJobBrowser::jobChanged));
     mClusterJobTreeView->setMinimumSize(350, WLength::Auto);
+    mClusterJobTreeView->setHeaderHeight(0);
 
     WVBoxLayout *layout = new WVBoxLayout();
     layout->addWidget(mClusterJobTreeView);
@@ -87,8 +89,8 @@ void ClusterJobBrowser::resetAll()
     mClusterJobTreeView->setSelectedIndexes(noSelection);
     mClusterJobModel->clear();
 
-    string scheduleFileName = ConfigOptions::GetPtr()->GetOutDir() +
-                               "/" +  ConfigOptions::GetPtr()->GetClusterName() +
+    string scheduleFileName = getConfigOptionsPtr()->GetOutDir() +
+                               "/" +  getConfigOptionsPtr()->GetClusterName() +
                                "/schedule.log";
     populateClusterJobs(scheduleFileName);
 

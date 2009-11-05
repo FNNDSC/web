@@ -54,6 +54,7 @@ FileBrowser::FileBrowser(WContainerWidget *parent) :
     mTreeView->setModel(mModel);
     mTreeView->resize(350, WLength::Auto);
     mTreeView->setSelectionMode(SingleSelection);
+    mTreeView->setHeaderHeight(0);
     //mTreeView->selectionChanged().connect(SLOT(this, LogFileBrowser::logChanged));
 }
 

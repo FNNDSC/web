@@ -83,7 +83,7 @@ void LogFileBrowser::resetAll()
     mModel->clear();
 
     populateBrowser();
-    //mTreeView->expandToDepth(3);
+    mTreeView->expandToDepth(3);
 
     if (mModel->rowCount() == 0)
     {
@@ -256,7 +256,7 @@ void LogFileBrowser::refreshLogs()
 {
     mModel->clear();
     populateBrowser();
-    //mTreeView->expandToDepth(4);
+    mTreeView->expandToDepth(4);
 
 
     if (mModel->rowCount() == 0)

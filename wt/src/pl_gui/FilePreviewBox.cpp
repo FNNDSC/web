@@ -27,6 +27,8 @@
 #include <Wt/WPushButton>
 #include <Wt/WMessageBox>
 #include <Wt/WFileResource>
+#include <Wt/WAnchor>
+#include <Wt/WFileResource>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -55,7 +57,13 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
     setTitle("File Info");
 
     mImagePreview = new WImage();
-    mDownloadButton = new WPushButton("Download");
+
+
+    // Create an anchor that references a URL
+    mDownloadFileResource = new WFileResource("application/octet-stream", "");
+    mDownloadAnchor = new WAnchor(mDownloadFileResource);
+    mDownloadAnchor->setTarget(TargetThisWindow);
+    mDownloadButton = new WPushButton("Download", mDownloadAnchor);
 
     WGridLayout *layout = new WGridLayout();
 
@@ -71,12 +79,12 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
 
     WHBoxLayout *hbox = new WHBoxLayout();
     hbox->addStretch(10);
-    hbox->addWidget(mDownloadButton);
+    hbox->addWidget(mDownloadAnchor);
     hbox->addStretch(10);
 
     layout->addLayout(fileInfoLayout, 0, 0);
     layout->addLayout(hbox, 1, 0);
-    layout->addWidget(mImagePreview, 2, 0);
+    layout->addWidget(mImagePreview, 2, 0, Wt::AlignCenter);
     layout->setRowStretch(2, 1);
     setLayout(layout);
 
@@ -120,6 +128,8 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
 
     mFileName->setText(filePath.leaf());
     mFileDir->setText(filePath.branch_path().string());
+    mDownloadFileResource->setFileName(filePathStr);
+    mDownloadFileResource->suggestFileName(filePath.leaf());
 
     mFileSize->setText(WString("{1} Bytes").arg((int)file_size(filePath)));
 

@@ -30,6 +30,40 @@
 //
 using namespace Wt;
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Functions
+//
+//
+
+
+///
+//  Return the ConfigXML pointer from the application instance.  Each
+//  session has its own WApplication instance.
+//
+ConfigXML* getConfigXMLPtr()
+{
+    PipelineApp* instance = dynamic_cast<PipelineApp*>(WApplication::instance());
+
+    if (instance != NULL)
+    {
+        return instance->getConfigXML();
+    }
+}
+
+///
+//  Return the ConfigOptions pointer from the application instance.  Each
+//  session has its own WApplication instance.
+//
+ConfigOptions* getConfigOptionsPtr()
+{
+    PipelineApp* instance = dynamic_cast<PipelineApp*>(WApplication::instance());
+
+    if (instance != NULL)
+    {
+        return instance->getConfigOptions();
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -43,15 +77,18 @@ using namespace Wt;
 PipelineApp::PipelineApp(const WEnvironment &env) :
     WApplication(env)
 {
+    mConfigOptions = new ConfigOptions();
+    mConfigXML = new ConfigXML();
+
     // Start by loading configuration options
-    if(!ConfigOptions::GetPtr()->LoadFromFile("conf/pl_gui.conf"))
+    if(!mConfigOptions->LoadFromFile("conf/pl_gui.conf"))
     {
         this->log("error") << "Loading configuration file 'conf/pl_gui.conf'";
     }
 
-    if(!ConfigXML::getPtr()->loadFromFile(ConfigOptions::GetPtr()->GetConfigXML()))
+    if(!mConfigXML->loadFromFile(mConfigOptions->GetConfigXML()))
     {
-        this->log("error") << "Loading results configuration XML file" << ConfigOptions::GetPtr()->GetConfigXML();
+        this->log("error") << "Loading results configuration XML file" << getConfigOptionsPtr()->GetConfigXML();
     }
 
     createUI();
@@ -62,6 +99,8 @@ PipelineApp::PipelineApp(const WEnvironment &env) :
 //
 PipelineApp::~PipelineApp()
 {
+    delete mConfigOptions;
+    delete mConfigXML;
 }
 
 

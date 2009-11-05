@@ -75,8 +75,9 @@ LogFileTailer::LogFileTailer(const std::string& logFileName,
     }
     mLogFileTextArea->decorationStyle().font().setFamily(WFont::Monospace);
 
-    WVBoxLayout *vbox = new WVBoxLayout();
-    vbox->addWidget(mLogFileTextArea);
+    WGridLayout *vbox = new WGridLayout();
+    vbox->addWidget(mLogFileTextArea, 0, 0);
+    vbox->setRowStretch(0, -1);
     mLogFileGroupBox->setLayout(vbox);
 
     layout->addWidget(mLogFileGroupBox);

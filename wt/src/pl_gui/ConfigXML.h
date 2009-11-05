@@ -1,7 +1,7 @@
 //
 //
 //  Description:
-//      Definition of singleton class that loads an XML file that configures
+//      Definition of class that loads an XML file that configures
 //      how the pipeline results are accumulated.
 //
 //  Author:
@@ -30,7 +30,7 @@ using namespace Wt;
 
 ///
 /// \class ConfigXML
-/// \brief Singleton object for accessing configuration of the per-pipeline results
+/// \brief Object for accessing configuration of the per-pipeline results
 ///
 class ConfigXML
 {
@@ -58,11 +58,6 @@ public:
     /// Destructor
     ///
     virtual ~ConfigXML();
-
-    ///
-    /// Get a pointer to the singleton instance
-    ///
-    static ConfigXML* getPtr();
 
     ///
     /// Load configuration from XML file
@@ -98,9 +93,6 @@ protected:
     bool parseFilePatternNode(WStandardItem *item, mxml_node_t *filePatternNode,
                                const std::string& configPath, int indent);
 
-
-    /// Singleton instance
-    static ConfigXML *mInstance;
 
     /// Map relating pipeline by string to a tree of entries
     std::map<std::string, WStandardItemModel* > mPipelineMap;
