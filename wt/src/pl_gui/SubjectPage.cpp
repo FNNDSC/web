@@ -70,7 +70,9 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
     layout->addWidget(mStackedStage, 0, 0);
 
     mNextButton = new WPushButton("Next ->");
+    mNextButton->setMinimumSize(WLength(65, WLength::Pixel), WLength::Auto);
     mBackButton = new WPushButton("<- Back");
+    mBackButton->setMinimumSize(WLength(65, WLength::Pixel), WLength::Auto);
 
     WHBoxLayout *navLayout = new WHBoxLayout();
     navLayout->addStretch(100);

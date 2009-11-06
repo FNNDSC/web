@@ -52,7 +52,7 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     mScanBox = new WGroupBox("Scans");
     mScansToProcessBox = new WGroupBox("Scans to Process");
 
-    mPatientInfoBox->setStyleClass("groupdiv");
+    mPatientInfoBox->setStyleClass("verysmallgroupdiv");
     mScanBox->setStyleClass("groupdiv");
     mScansToProcessBox->setStyleClass("groupdiv");
 

@@ -47,6 +47,7 @@ LogFileBrowser::LogFileBrowser(WContainerWidget *parent) :
     FileBrowser(parent)
 {
     mTreeView->selectionChanged().connect(SLOT(this, LogFileBrowser::logChanged));
+    mTreeView->resize(350, WLength::Auto);
 
     mRefreshButton = new WPushButton("Refresh Available Logs");
     WGridLayout *layout = new WGridLayout();

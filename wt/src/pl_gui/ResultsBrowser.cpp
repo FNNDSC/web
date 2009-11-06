@@ -54,7 +54,7 @@ ResultsBrowser::ResultsBrowser(WContainerWidget *parent) :
     FileBrowser(parent)
 {
     mTreeView->selectionChanged().connect(SLOT(this, ResultsBrowser::resultChanged));
-    //mTreeView->resize(600, WLength::Auto);
+    mTreeView->setMinimumSize(400, WLength::Auto);
 
     mRefreshButton = new WPushButton("Refresh Available Results");
     WGridLayout *layout = new WGridLayout();

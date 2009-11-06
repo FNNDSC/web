@@ -78,7 +78,7 @@ MonitorPage::MonitorPage(const MRIBrowser *mriBrowser,
     WVBoxLayout *clusterJobsLayout = new WVBoxLayout();
     mClusterJobBrowser = new ClusterJobBrowser();
     mPatientInfoBox = new PatientInfoBox();
-    mPatientInfoBox->setStyleClass("smallgroupdiv");
+    mPatientInfoBox->setStyleClass("verysmallgroupdiv");
 
     clusterJobsLayout->addWidget(mClusterJobBrowser);
     clusterJobsLayout->addWidget(mPatientInfoBox);

@@ -25,11 +25,13 @@
 #include <Wt/WStandardItem>
 #include <Wt/WVBoxLayout>
 #include <Wt/WLogger>
+#include <Wt/WDate>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <stack>
 
 ///
 //  Namespaces
@@ -54,14 +56,11 @@ ClusterJobBrowser::ClusterJobBrowser(WContainerWidget *parent) :
     mClusterJobTreeView = new WTreeView();
     mClusterJobModel = new WStandardItemModel();
 
-    mClusterJobTreeView->setAttributeValue
-            ("oncontextmenu",
-             "event.cancelBubble = true; event.returnValue = false; return false;");
     mClusterJobTreeView->setModel(mClusterJobModel);
     mClusterJobTreeView->setSelectionMode(SingleSelection);
     mClusterJobTreeView->expandToDepth(1);
     mClusterJobTreeView->selectionChanged().connect(SLOT(this, ClusterJobBrowser::jobChanged));
-    mClusterJobTreeView->setMinimumSize(350, WLength::Auto);
+    mClusterJobTreeView->setMinimumSize(300, WLength::Auto);
     mClusterJobTreeView->setHeaderHeight(0);
 
     WVBoxLayout *layout = new WVBoxLayout();
@@ -109,6 +108,7 @@ void ClusterJobBrowser::resetAll()
 bool ClusterJobBrowser::populateClusterJobs(const std::string& scheduleLogFile)
 {
     std::ifstream inFile(scheduleLogFile.c_str());
+    stack<WStandardItem*> jobStack;
 
     if (!inFile.is_open())
     {
@@ -157,14 +157,51 @@ bool ClusterJobBrowser::populateClusterJobs(const std::string& scheduleLogFile)
 
         if (jobDesc != "")
         {
-            WStandardItem *newItem = new WStandardItem(jobDesc);
+            string jobDate;
+            string jobTime;
+            string jobServer;
+            istringstream iss(jobDesc);
+            int index = 0;
+
+            // Parse string of form "ddd MMM d hh:mm:ss TZN server"
+            while(!iss.eof())
+            {
+                string tmp;
+                iss >> tmp;
+
+                if (index < 6)
+                {
+                    if (index != 3 && index != 4)
+                    {
+                        jobDate += tmp + " ";
+                    }
+                    else if (index != 4)
+                    {
+                        jobTime = tmp;
+                    }
+                }
+                else if (index == 6)
+                {
+                    jobServer = tmp;
+                }
+                index++;
+            }
+
+            WStandardItem *newItem = new WStandardItem(jobDate + jobTime + " [" + jobServer + "]");
             newItem->setData(jobStage, UserRole);
             newItem->setData(jobBash, UserRole + 1);
             newItem->setIcon("icons/folder.gif");
 
-            mClusterJobModel->appendRow(newItem);
+            jobStack.push(newItem);
         }
     }
+
+    while(!jobStack.empty())
+    {
+        mClusterJobModel->appendRow(jobStack.top());
+        jobStack.pop();
+    }
+
 }
 
 

@@ -51,15 +51,12 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mMRIModel = new WStandardItemModel();
     populateMRIDs(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID_age.log");
 
-    mMRITreeView->setAttributeValue
-            ("oncontextmenu",
-             "event.cancelBubble = true; event.returnValue = false; return false;");
     mMRITreeView->setModel(mMRIModel);
     mMRITreeView->resize(200, WLength::Auto);
     mMRITreeView->setSelectionMode(SingleSelection);
     mMRITreeView->expandToDepth(1);
     mMRITreeView->selectionChanged().connect(SLOT(this, MRIBrowser::mriChanged));
-
+    mMRITreeView->setHeaderHeight(0);
 
     WVBoxLayout *layout = new WVBoxLayout();
     layout->addWidget(mMRITreeView);

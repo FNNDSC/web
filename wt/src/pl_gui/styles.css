@@ -59,6 +59,9 @@ div.Wt-popupmenu .separator {
 .Wt-treeview {
     background-color: white;
     border: 1px solid #C3D9FF;
+    font-family: verdana,helvetica,tahoma,sans-serif;
+    font-size: 8pt;
+
 }
 
 .groupdiv {

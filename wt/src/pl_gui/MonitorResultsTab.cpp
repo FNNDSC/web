@@ -63,7 +63,7 @@ MonitorResultsTab::MonitorResultsTab(const MRIBrowser *mriBrowser,
 
     mResultsBrowser = new ResultsBrowser();
     mFilePreviewBox = new FilePreviewBox();
-    mFilePreviewBox->setStyleClass("smallgroupdiv");
+    mFilePreviewBox->setStyleClass("verysmallgroupdiv");
 
     WGridLayout *layout = new WGridLayout();
     layout->addWidget(mResultsBrowser, 0, 0);

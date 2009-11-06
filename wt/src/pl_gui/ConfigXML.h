@@ -14,17 +14,13 @@
 #define CONFIGXML_H
 
 #define BOOST_PROCESS_HEADER_ONLY
+#include <Wt/WStandardItemModel>
 #include <boost/program_options.hpp>
 #include <string>
 #include <map>
 #include <list>
 #include <mxml.h>
 
-namespace Wt
-{
-    class WStandardItemModel;
-    class WStandardItem;
-};
 
 using namespace Wt;
 
@@ -77,6 +73,24 @@ public:
 
 protected:
 
+    /// Pipeline structure
+    class PipelineConf
+    {
+    public:
+        PipelineConf()  { mModel = new WStandardItemModel; }
+        ~PipelineConf() { delete mModel; }
+
+        /// Model of pipeline tree
+        WStandardItemModel* mModel;
+
+        /// Pipeline description
+        std::string mDescription;
+
+        /// Pipeline tag for meta script
+        std::string mMetaTag;
+
+    };
+
     ///
     /// Parse XML tree
     ///
@@ -95,7 +109,7 @@ protected:
 
 
     /// Map relating pipeline by string to a tree of entries
-    std::map<std::string, WStandardItemModel* > mPipelineMap;
+    std::map<std::string, PipelineConf*> mPipelineMap;
 };
 
 #endif // CONFIGXML_H

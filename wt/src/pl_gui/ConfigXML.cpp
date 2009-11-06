@@ -43,6 +43,13 @@ ConfigXML::ConfigXML()
 //
 ConfigXML::~ConfigXML()
 {
+    std::map<std::string, PipelineConf*>::iterator mapIter = mPipelineMap.begin();
+
+    while (mapIter != mPipelineMap.end())
+    {
+        delete mapIter->second;
+        mapIter++;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -80,7 +87,7 @@ WStandardItemModel* ConfigXML::getResultsPipelineTree(const std::string& pipelin
         return NULL;
     }
 
-    return (mPipelineMap[pipelineName]);
+    return (mPipelineMap[pipelineName]->mModel);
 }
 
 
@@ -148,7 +155,19 @@ bool ConfigXML::parsePipelineNode(mxml_node_t *pipelineNode, const std::string& 
 
     if (mPipelineMap.find(pipelineName) == mPipelineMap.end())
     {
-        mPipelineMap[pipelineName] = new WStandardItemModel();
+        mPipelineMap[pipelineName] = new PipelineConf();
+
+        const char *pipelineDesc = mxmlElementGetAttr(pipelineNode, "desc");
+        if (pipelineDesc)
+        {
+            mPipelineMap[pipelineName]->mDescription = string(pipelineDesc);
+        }
+
+        const char *pipelineTag = mxmlElementGetAttr(pipelineNode, "tag");
+        if (pipelineTag)
+        {
+            mPipelineMap[pipelineName]->mMetaTag = string(pipelineTag);
+        }
     }
 
     mxml_node_t *filePatternsNode = mxmlFindElement(pipelineNode, pipelineNode, "FilePatterns", NULL, NULL, MXML_DESCEND);
@@ -172,7 +191,7 @@ bool ConfigXML::parsePipelineNode(mxml_node_t *pipelineNode, const std::string& 
                                           NULL, NULL,
                                           MXML_NO_DESCEND))
     {
-        result = result && parseFilePatternNode(mPipelineMap[pipelineName]->invisibleRootItem(), filePatternNode, configPath, 0);
+        result = result && parseFilePatternNode(mPipelineMap[pipelineName]->mModel->invisibleRootItem(), filePatternNode, configPath, 0);
     }
 
     return result;

@@ -58,7 +58,6 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
 
     mImagePreview = new WImage();
 
-
     // Create an anchor that references a URL
     mDownloadFileResource = new WFileResource("application/octet-stream", "");
     mDownloadAnchor = new WAnchor(mDownloadFileResource);
@@ -145,6 +144,7 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
             mImageResource->setFileName(filePathStr);
         }
         mImagePreview->setResource(mImageResource);
+        mImagePreview->setMaximumSize(650, 532);
         mImagePreview->show();
     }
     else
