@@ -237,7 +237,7 @@ void ResultsBrowser::refreshResults()
 
     if (mModel->rowCount() == 0)
     {
-        WStandardItem *newItem = new WStandardItem("NO Results FOUND");
+        WStandardItem *newItem = new WStandardItem("NO RESULTS FOUND");
         newItem->setFlags(newItem->flags().clear(ItemIsSelectable));
         newItem->setIcon("icons/folder.gif");
         mModel->appendRow(newItem);

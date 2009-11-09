@@ -25,6 +25,7 @@
 #include <Wt/WPushButton>
 #include <Wt/WStackedWidget>
 #include <Wt/WMessageBox>
+#include <Wt/WDate>
 #include <signal.h>
 #include <boost/process/process.hpp>
 #include <boost/process/child.hpp>
@@ -35,6 +36,7 @@
 #include <iostream>
 #include <string>
 #include <stdlib.h>
+#include <ctime>
 
 ///
 //  Namespaces
@@ -299,9 +301,15 @@ bool SubjectPage::submitForProcessing()
     tmpFile << "DEFAULTCOM = " << mPipelineConfigure->getCommandLineString() << endl;
     tmpFile << "DEFAULTDIR = " << getConfigOptionsPtr()->GetDicomDir() << endl;
 
+    time_t curTime;
+    tm *t;
+    time( &curTime );
+    t = localtime( &curTime );
+
+    std::string curDate = (WDate::currentDate().toString("yyyyMMdd") +
+                           WString("-{1}{2}{3}").arg(t->tm_hour).arg(t->tm_min).arg(t->tm_sec)).toUTF8();
+
     const std::vector<ScanBrowser::ScanData>& scansToProcess = mSelectScans->getScansToProcess();
-    int dirCount = 1; // TODO: Correct the computation of these to match plBatch_create.bash
-    int seriesCount = 1;
     for (int i = 0; i < scansToProcess.size(); i++)
     {
         // This table defines a batch run geared towards processing
@@ -327,12 +335,9 @@ bool SubjectPage::submitForProcessing()
 
         tmpFile << path(scansToProcess[i].mScanDir).leaf() << ";"
                 << scansToProcess[i].mDicomFile << ";"
-                << "-" << date << "_" << age << "-D" << dirCount << "-S"  << seriesCount << mPipelineConfigure->getOutputFileSuffix() << ";"
-                << "-" << date << "_" << age << "-D" << dirCount << "-S"  << seriesCount << mPipelineConfigure->getOutputDirSuffix() << endl;
+                << "-" << date << "_" << age << "-" << curDate << "-" << mPipelineConfigure->getOutputFileSuffix() << ";"
+                << "-" << date << "_" << age << "-" << curDate << "-" << mPipelineConfigure->getOutputDirSuffix() << endl;
 
-        // TODO: Correct the computation of these to match plBatch_create.bash
-        dirCount++;
-        seriesCount++;
     }
     tmpFile.close();
 
