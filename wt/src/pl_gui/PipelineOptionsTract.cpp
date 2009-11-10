@@ -47,9 +47,10 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     mStageBoxes[0] = new WCheckBox("1 - Collect DICOM from repository");
     mStageBoxes[1] = new WCheckBox("2 - Construct tractograpy");
     mStageBoxes[2] = new WCheckBox("3 - Slice 3D model along anatomical planes");
+#if 0 // Temporarily disabled until we get MatLAB
     mStageBoxes[3] = new WCheckBox("4 - Convert slices to DICOM");
     mStageBoxes[4] = new WCheckBox("5 - Transmit slices to PACS");
-
+#endif
     for (int i = 0; i < NUM_TRACT_STAGES; i++)
     {
         mStageBoxes[i]->setChecked(true);

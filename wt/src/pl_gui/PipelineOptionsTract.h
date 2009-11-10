@@ -17,7 +17,11 @@
 ///
 //  Constants
 //
-const int NUM_TRACT_STAGES = 5;
+#if 0 // Temporarily disable stage 4 and 5
+    const int NUM_TRACT_STAGES = 5;
+#else
+    const int NUM_TRACT_STAGES = 3;
+#endif
 
 namespace Wt
 {
