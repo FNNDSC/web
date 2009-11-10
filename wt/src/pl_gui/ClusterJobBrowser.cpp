@@ -93,7 +93,13 @@ void ClusterJobBrowser::resetAll()
                                "/schedule.log";
     populateClusterJobs(scheduleFileName);
 
-
+    if (mClusterJobModel->rowCount() == 0)
+    {
+        WStandardItem *newItem = new WStandardItem("NO JOBS FOUND");
+        newItem->setFlags(newItem->flags().clear(ItemIsSelectable));
+        newItem->setIcon("icons/folder.gif");
+        mClusterJobModel->appendRow(newItem);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -112,7 +118,7 @@ bool ClusterJobBrowser::populateClusterJobs(const std::string& scheduleLogFile)
 
     if (!inFile.is_open())
     {
-        WApplication::instance()->log("error") << "ERROR: opening schedule log file for reading: " << scheduleLogFile;
+        WApplication::instance()->log("warn") << "WARNING: failed opening schedule log file for reading: " << scheduleLogFile;
         return false;
     }
 

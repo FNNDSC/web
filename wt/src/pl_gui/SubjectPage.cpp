@@ -310,6 +310,7 @@ bool SubjectPage::submitForProcessing()
                            WString("-{1}{2}{3}").arg(t->tm_hour).arg(t->tm_min).arg(t->tm_sec)).toUTF8();
 
     const std::vector<ScanBrowser::ScanData>& scansToProcess = mSelectScans->getScansToProcess();
+
     for (int i = 0; i < scansToProcess.size(); i++)
     {
         // This table defines a batch run geared towards processing
