@@ -65,7 +65,6 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
     mSettingsGroupBox->setStyleClass("groupdiv");
     mSettingsGroupBoxLayout = new WGridLayout();
     mSettingsGroupBox->setLayout(mSettingsGroupBoxLayout);
-    mSettingsGroupBox->hide();
 
     // Output directory suffix
     mDirectoryGroupBoxLayout->addWidget(new WLabel("Output Directory Suffix (Optional):"), 0, 0, Wt::AlignRight  | Wt::AlignMiddle);
@@ -91,8 +90,6 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
     mPipelineOptionsBox->setStyleClass("groupdiv");
     mPipelineOptionsBoxLayout = new WGridLayout();
     mPipelineOptionsBoxLayout->addWidget(mStageButtonGroup, 0, 0);
-    mPipelineOptionsBoxLayout->addWidget(mSettingsGroupBox, 1, 0);
-    mPipelineOptionsBoxLayout->addWidget(mDirectoryGroupBox, 2, 0);
 
 
     mPipelineOptionsBox->setLayout(mPipelineOptionsBoxLayout);

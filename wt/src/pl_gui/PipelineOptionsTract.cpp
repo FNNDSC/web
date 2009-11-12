@@ -67,7 +67,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     mReconAlgorithmComboBox = new WComboBox();
     mReconAlgorithmComboBox->addItem("FACT");
     mReconAlgorithmComboBox->addItem("2nd Order Runga-Kutta");
-    comboBoxLayout->addWidget(new WLabel("Reconstruction algorithm for tracking:"), 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    comboBoxLayout->addWidget(new WLabel("Reconstruction Algorithm:"), 0, 0, Wt::AlignRight | Wt::AlignMiddle);
     comboBoxLayout->addWidget(mReconAlgorithmComboBox, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
 
     // Image model
@@ -81,6 +81,10 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     mEddyCurrentCheckBox = new WCheckBox("Perform Eddy Current Correction (ECC)");
     mSettingsGroupBoxLayout->addWidget(mEddyCurrentCheckBox, 0, 0, Wt::AlignMiddle);
     mSettingsGroupBoxLayout->addLayout(comboBoxLayout, 1, 0);
+
+    // Add to the base class layout
+    mPipelineOptionsBoxLayout->addWidget(mSettingsGroupBox, 1, 0);
+    mPipelineOptionsBoxLayout->addWidget(mDirectoryGroupBox, 2, 0);
 
     resetAll();
 }

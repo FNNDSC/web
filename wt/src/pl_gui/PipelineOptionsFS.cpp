@@ -54,6 +54,10 @@ PipelineOptionsFS::PipelineOptionsFS(WContainerWidget *parent) :
         mStageButtonGroupLayout->addWidget(mStageBoxes[i]);
     }
 
+    // Add to the base class layout
+    mPipelineOptionsBoxLayout->addWidget(mDirectoryGroupBox, 1, 0);
+
+
     resetAll();
 }
 
@@ -62,6 +66,7 @@ PipelineOptionsFS::PipelineOptionsFS(WContainerWidget *parent) :
 //
 PipelineOptionsFS::~PipelineOptionsFS()
 {
+    delete mSettingsGroupBox; // Not added to layout, so it has no parent
 }
 
 
