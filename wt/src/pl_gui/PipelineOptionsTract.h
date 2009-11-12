@@ -26,6 +26,7 @@
 namespace Wt
 {
     class WCheckBox;
+    class WComboBox;
 };
 
 ///
@@ -62,6 +63,15 @@ private:
 
     /// Buttons for pipeline stages
     WCheckBox *mStageBoxes[NUM_TRACT_STAGES];
+
+    /// Checkbox for performing Eddy Current correction
+    WCheckBox *mEddyCurrentCheckBox;
+
+    /// Reconstruction algorithm
+    WComboBox *mReconAlgorithmComboBox;
+
+    /// Image model
+    WComboBox *mImageModelComboBox;
 
 
 };

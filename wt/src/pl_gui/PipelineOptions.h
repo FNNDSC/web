@@ -91,6 +91,12 @@ protected:
     /// Directory group box layout
     WGridLayout *mDirectoryGroupBoxLayout;
 
+    /// Settings group box
+    WGroupBox *mSettingsGroupBox;
+
+    /// Settings group box layout
+    WGridLayout *mSettingsGroupBoxLayout;
+
     /// Output directory suffix
     WLineEdit *mOutputDirSuffix;
 

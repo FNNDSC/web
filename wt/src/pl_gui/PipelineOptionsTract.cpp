@@ -22,6 +22,7 @@
 #include <Wt/WSelectionBox>
 #include <Wt/WButtonGroup>
 #include <Wt/WCheckBox>
+#include <Wt/WComboBox>
 #include <vector>
 
 ///
@@ -57,6 +58,30 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
         mStageButtonGroupLayout->addWidget(mStageBoxes[i]);
     }
 
+    // Settings box configuration
+    mSettingsGroupBox->show();
+
+    WGridLayout *comboBoxLayout = new WGridLayout();
+
+    // Reconstruction algorithm
+    mReconAlgorithmComboBox = new WComboBox();
+    mReconAlgorithmComboBox->addItem("FACT");
+    mReconAlgorithmComboBox->addItem("2nd Order Runga-Kutta");
+    comboBoxLayout->addWidget(new WLabel("Reconstruction algorithm for tracking:"), 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    comboBoxLayout->addWidget(mReconAlgorithmComboBox, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+
+    // Image model
+    mImageModelComboBox = new WComboBox();
+    mImageModelComboBox->addItem("DTI");
+    mImageModelComboBox->addItem("HARDI");
+    comboBoxLayout->addWidget(new WLabel("Image Model:"), 1, 0, Wt::AlignRight | Wt::AlignMiddle);
+    comboBoxLayout->addWidget(mImageModelComboBox, 1, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    comboBoxLayout->setColumnStretch(1, 1);
+
+    mEddyCurrentCheckBox = new WCheckBox("Perform Eddy Current Correction (ECC)");
+    mSettingsGroupBoxLayout->addWidget(mEddyCurrentCheckBox, 0, 0, Wt::AlignMiddle);
+    mSettingsGroupBoxLayout->addLayout(comboBoxLayout, 1, 0);
+
     resetAll();
 }
 
@@ -84,6 +109,8 @@ void PipelineOptionsTract::resetAll()
     {
         mStageBoxes[i]->setChecked(true);
     }
+
+    mEddyCurrentCheckBox->setChecked(false);
 }
 
 ///
@@ -106,6 +133,24 @@ std::string PipelineOptionsTract::getCommandLineString() const
     }
 
     args = "-t " + stageStr;
+
+    // Skip eddy current correction (-k)
+    if (!mEddyCurrentCheckBox->isChecked())
+    {
+        args += " -k";
+    }
+
+    // Non-default recon algorithm (-A <reconAlg>)
+    if (mReconAlgorithmComboBox->currentIndex() == 1)
+    {
+        args += " -A rk2";
+    }
+
+    // Non-default image model (-I <imageModel>)
+    if (mReconAlgorithmComboBox->currentIndex() == 1)
+    {
+        args += " -I hardi";
+    }
 
     return args + " " + PipelineOptions::getCommandLineString();
 }
