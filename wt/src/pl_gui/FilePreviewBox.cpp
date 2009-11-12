@@ -123,33 +123,41 @@ void FilePreviewBox::resetAll()
 //
 void FilePreviewBox::setFilePath(std::string filePathStr)
 {
-    path filePath = path(filePathStr);
-
-    mFileName->setText(filePath.leaf());
-    mFileDir->setText(filePath.branch_path().string());
-    mDownloadFileResource->setFileName(filePathStr);
-    mDownloadFileResource->suggestFileName(filePath.leaf());
-
-    mFileSize->setText(WString("{1} Bytes").arg((int)file_size(filePath)));
-
-    if (!imageExtension(filePathStr).empty())
+    try
     {
-        if (mImageResource == NULL)
+        path filePath = path(filePathStr);
+
+        mFileName->setText(filePath.leaf());
+        mFileDir->setText(filePath.branch_path().string());
+        mDownloadFileResource->setFileName(filePathStr);
+        mDownloadFileResource->suggestFileName(filePath.leaf());
+
+        mFileSize->setText(WString("{1} Bytes").arg((int)file_size(filePath)));
+
+        if (!imageExtension(filePathStr).empty())
         {
-            mImageResource = new WFileResource("mime/" + imageExtension(filePathStr),
-                                               filePathStr);
+            if (mImageResource == NULL)
+            {
+                mImageResource = new WFileResource("mime/" + imageExtension(filePathStr),
+                                                   filePathStr);
+            }
+            else
+            {
+                mImageResource->setFileName(filePathStr);
+            }
+            mImagePreview->setResource(mImageResource);
+            mImagePreview->setMaximumSize(650, 532);
+            mImagePreview->show();
         }
         else
         {
-            mImageResource->setFileName(filePathStr);
+            mImagePreview->hide();
         }
-        mImagePreview->setResource(mImageResource);
-        mImagePreview->setMaximumSize(650, 532);
-        mImagePreview->show();
     }
-    else
+    catch (...)
     {
-        mImagePreview->hide();
+        // If any exceptions occur, the file may no longer exist, so reset box
+        resetAll();
     }
 
 }
