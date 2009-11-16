@@ -25,6 +25,7 @@ namespace Wt
     class WPushButton;
 }
 
+class MRIInfoBox;
 class PatientInfoBox;
 
 using namespace Wt;
@@ -128,6 +129,11 @@ private:
     ///
     void removeScanClicked();
 
+    ///
+    //  Scan selection changed
+    //
+    void scanSelectionChanged(int index);
+
 private:
 
     /// Signal for when scan is add
@@ -136,8 +142,8 @@ private:
     /// Patient info box
     PatientInfoBox *mPatientInfoBox;
 
-    /// Scan box
-    WGroupBox *mScanBox;
+    /// MRI info box
+    MRIInfoBox *mMRIInfoBox;
 
     /// Scans to process box
     WGroupBox *mScansToProcessBox;

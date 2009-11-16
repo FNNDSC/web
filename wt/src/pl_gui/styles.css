@@ -98,6 +98,12 @@ div.Wt-popupmenu .separator {
     color: white;
 }
 
+.mriinfodiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+}
+
+
 .title {
     font-weight: bold;
 }

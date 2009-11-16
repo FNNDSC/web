@@ -12,6 +12,7 @@
 #include "PipelineApp.h"
 #include "ScanBrowser.h"
 #include "PatientInfoBox.h"
+#include "MRIInfoBox.h"
 #include "ConfigOptions.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
@@ -22,6 +23,7 @@
 #include <Wt/WStandardItem>
 #include <Wt/WGroupBox>
 #include <Wt/WVBoxLayout>
+#include <Wt/WHBoxLayout>
 #include <Wt/WSelectionBox>
 #include <Wt/WPushButton>
 #include <Wt/WMessageBox>
@@ -49,16 +51,16 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     WContainerWidget(parent)
 {
     mPatientInfoBox = new PatientInfoBox();
-    mScanBox = new WGroupBox("Scans");
+    mMRIInfoBox = new MRIInfoBox();
     mScansToProcessBox = new WGroupBox("Scans to Process");
 
+    mMRIInfoBox->setStyleClass("groupdiv");
     mPatientInfoBox->setStyleClass("verysmallgroupdiv");
-    mScanBox->setStyleClass("groupdiv");
     mScansToProcessBox->setStyleClass("groupdiv");
 
     mScansSelectionBox = new WSelectionBox();
     mScansSelectionBox->setStyleClass("groupdiv");
-    mScansSelectionBox->setSelectionMode(Wt::ExtendedSelection);
+    mScansSelectionBox->setSelectionMode(Wt::SingleSelection);
     mScansToProcessList = new WSelectionBox();
     mScansToProcessList->setStyleClass("groupdiv");
     mScansToProcessList->setSelectionMode(Wt::ExtendedSelection);
@@ -72,30 +74,38 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     scanLayout->addWidget(mScansSelectionBox, 0, 0);
     scanLayout->addWidget(mAddScanButton, 1, 0, Wt::AlignCenter);
     scanLayout->setRowStretch(0, 1);
-    mScanBox->setLayout(scanLayout);
 
     WGridLayout *scansToProcessLayout = new WGridLayout();
     scansToProcessLayout->addWidget(mScansToProcessList, 0, 0);
     scansToProcessLayout->addWidget(mRemoveScanButton, 1, 0, Wt::AlignCenter);
-    scansToProcessLayout->addWidget(mPipelineModeLabel, 2, 0, Wt::AlignCenter);
     scansToProcessLayout->setRowStretch(0, 1);
-    mScansToProcessBox->setLayout(scansToProcessLayout);
+
+
+    WHBoxLayout *hBox = new WHBoxLayout();
+    hBox->addLayout(scanLayout);
+    hBox->addLayout(scansToProcessLayout);
+
+    WGridLayout *scansToProcessBoxLayout = new WGridLayout();
+    scansToProcessBoxLayout->addLayout(hBox, 0, 0);
+    scansToProcessBoxLayout->addWidget(mPipelineModeLabel, 1, 0, Wt::AlignCenter);
+    scansToProcessBoxLayout->setRowStretch(0, 1);
+    mScansToProcessBox->setLayout(scansToProcessBoxLayout);
+
+
+    WGridLayout *topLayout = new WGridLayout();
+    topLayout->addWidget(mPatientInfoBox, 0, 0);
+    topLayout->addWidget(mScansToProcessBox, 0, 1);
+    topLayout->setColumnStretch(1, 1);
+
 
     WGridLayout *layout = new WGridLayout();
-
-    WVBoxLayout *leftLayout = new WVBoxLayout();
-    leftLayout->addWidget(mPatientInfoBox);
-    leftLayout->addWidget(mScanBox);
-
-    WVBoxLayout *rightLayout = new WVBoxLayout();
-    rightLayout->addWidget(mScansToProcessBox);
-
-    layout->addLayout(leftLayout, 0, 0);
-    layout->addLayout(rightLayout, 0, 1);
+    layout->addLayout(topLayout, 0, 0);
+    layout->addWidget(mMRIInfoBox, 1, 0);
     layout->setRowStretch(0, -1);
-    layout->setColumnStretch(1, 1);
+    layout->setRowStretch(1, -1);
 
     // Connect signals to slots
+    mScansSelectionBox->activated().connect(SLOT(this, ScanBrowser::scanSelectionChanged));
     mAddScanButton->clicked().connect(SLOT(this, ScanBrowser::addScanClicked));
     mRemoveScanButton->clicked().connect(SLOT(this, ScanBrowser::removeScanClicked));
 
@@ -134,6 +144,7 @@ void ScanBrowser::resetAll()
     mScansToProcessData.clear();
 
     mPatientInfoBox->resetAll();
+    mMRIInfoBox->resetAll();
 }
 
 ///
@@ -160,6 +171,9 @@ void ScanBrowser::setScanDir(std::string scanDir)
 
     // Load the patient info box
     mPatientInfoBox->setScanDir(scanDir);
+
+    // Clear the MRI info
+    mMRIInfoBox->resetAll();
 
     if (tocFile.is_open())
     {
@@ -236,89 +250,84 @@ void ScanBrowser::setCurAge(std::string age)
 //
 void ScanBrowser::addScanClicked()
 {
+    int currentIndex = mScansSelectionBox->currentIndex();
+    if (currentIndex < 0)
+        return;
 
-    const set<int>& selectedSet = mScansSelectionBox->selectedIndexes();
-    set<int>::const_iterator iter = selectedSet.begin();
+    WString curScanText = mScansSelectionBox->itemText(currentIndex);
+    ScanData newScanData;
 
-    while (iter != selectedSet.end())
+    newScanData.mMRID = mCurMRID;
+    newScanData.mDicomFile = mScansDicomFiles[currentIndex];
+    newScanData.mScanDate = mScansDate;
+    newScanData.mScanName = curScanText.toUTF8();
+    newScanData.mScanDir = mCurScanDir;
+    newScanData.mAge = mCurAge;
+
+    bool addScan = true;
+    for (int i = 0; i < mScansToProcessData.size(); i++)
     {
-        WString curScanText = mScansSelectionBox->itemText(*iter);
-        ScanData newScanData;
-
-        newScanData.mMRID = mCurMRID;
-        newScanData.mDicomFile = mScansDicomFiles[*iter];
-        newScanData.mScanDate = mScansDate;
-        newScanData.mScanName = curScanText.toUTF8();
-        newScanData.mScanDir = mCurScanDir;
-        newScanData.mAge = mCurAge;
-
-        bool addScan = true;
-        for (int i = 0; i < mScansToProcessData.size(); i++)
+        // Check to see if it has already been added, and if so display
+        // a message to the user
+        if(newScanData.mMRID == mScansToProcessData[i].mMRID &&
+           newScanData.mDicomFile == mScansToProcessData[i].mDicomFile &&
+           newScanData.mScanName == mScansToProcessData[i].mScanName)
         {
-            // Check to see if it has already been added, and if so display
-            // a message to the user
-            if(newScanData.mMRID == mScansToProcessData[i].mMRID &&
-               newScanData.mDicomFile == mScansToProcessData[i].mDicomFile &&
-               newScanData.mScanName == mScansToProcessData[i].mScanName)
+            StandardButton result = WMessageBox::show("Scan Already Selected",
+                                                      "Can not add scan: [MRID:] " + newScanData.mMRID +
+                                                      " [Scan:] " + newScanData.mScanName + "\nIt has already been selected for processing.",
+                                                      Wt::Ok);
+            addScan = false;
+            break;
+        }
+    }
+
+    if (addScan)
+    {
+        Enums::PipelineType pipelineType = Enums::PIPELINE_UNKNOWN;
+
+        if (findSeriesMatch(getConfigOptionsPtr()->GetSeriesListTract(), curScanText.toUTF8()))
+        {
+            pipelineType = Enums::PIPELINE_TYPE_TRACT;
+        }
+        else if(findSeriesMatch(getConfigOptionsPtr()->GetSeriesListFS(), curScanText.toUTF8()))
+        {
+            pipelineType = Enums::PIPELINE_TYPE_FS;
+        }
+
+        if (pipelineType != Enums::PIPELINE_UNKNOWN)
+        {
+            if (mPipelineType == Enums::PIPELINE_UNKNOWN)
             {
-                StandardButton result = WMessageBox::show("Scan Already Selected",
-                                                          "Can not add scan: [MRID:] " + newScanData.mMRID +
-                                                          " [Scan:] " + newScanData.mScanName + "\nIt has already been selected for processing.",
-                                                          Wt::Ok);
-                addScan = false;
-                break;
+                setCurrentPipeline(pipelineType);
+            }
+            else
+            {
+                if (pipelineType != mPipelineType)
+                {
+                    StandardButton result =
+                            WMessageBox::show("Pipeline Mismatch",
+                                              "[MRID:] " + newScanData.mMRID +
+                                              " [Scan:] " + newScanData.mScanName + " does not match current pipeline type." +
+                                              "\nAre you sure you want to add it?",
+                                              Wt::Yes | Wt::No);
+
+                    if (result == Wt::No)
+                    {
+                        addScan = false;
+                    }
+                }
             }
         }
 
         if (addScan)
         {
-            Enums::PipelineType pipelineType = Enums::PIPELINE_UNKNOWN;
-
-            if (findSeriesMatch(getConfigOptionsPtr()->GetSeriesListTract(), curScanText.toUTF8()))
-            {
-                pipelineType = Enums::PIPELINE_TYPE_TRACT;
-            }
-            else if(findSeriesMatch(getConfigOptionsPtr()->GetSeriesListFS(), curScanText.toUTF8()))
-            {
-                pipelineType = Enums::PIPELINE_TYPE_FS;
-            }
-
-            if (pipelineType != Enums::PIPELINE_UNKNOWN)
-            {
-                if (mPipelineType == Enums::PIPELINE_UNKNOWN)
-                {
-                    setCurrentPipeline(pipelineType);
-                }
-                else
-                {
-                    if (pipelineType != mPipelineType)
-                    {
-                        StandardButton result =
-                                WMessageBox::show("Pipeline Mismatch",
-                                                  "[MRID:] " + newScanData.mMRID +
-                                                  " [Scan:] " + newScanData.mScanName + " does not match current pipeline type." +
-                                                  "\nAre you sure you want to add it?",
-                                                  Wt::Yes | Wt::No);
-
-                        if (result == Wt::No)
-                        {
-                            addScan = false;
-                        }
-                    }
-                }
-            }
-
-            if (addScan)
-            {
-                mScansToProcessList->addItem("[MRID:] " + mCurMRID + " [Scan:] " + curScanText);
-                mScansToProcessData.push_back(newScanData);
-            }
+            mScansToProcessList->addItem("[MRID:] " + mCurMRID + " [Scan:] " + curScanText);
+            mScansToProcessData.push_back(newScanData);
         }
-
-        iter++;
     }
 
-    // Emit a signal with whether a scan is selected
+     // Emit a signal with whether a scan is selected
     mScanAdded.emit(!mScansToProcessData.empty());
 
     if (mScansToProcessData.empty())
@@ -352,6 +361,21 @@ void ScanBrowser::removeScanClicked()
     if (mScansToProcessData.empty())
     {
         setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
+    }
+}
+
+
+///
+//  Scan selection changed
+//
+void ScanBrowser::scanSelectionChanged(int index)
+{
+    if (index >= 0 && index < mScansDicomFiles.size())
+    {
+        string dicomFile = mScansDicomFiles[index];
+
+
+        mMRIInfoBox->setDicomFileName(mCurScanDir + "/mri_info/" + dicomFile);
     }
 }
 

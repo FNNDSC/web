@@ -8,8 +8,9 @@ ADD_EXECUTABLE(pl_gui.wt
   LogFileTailer.cpp
   MonitorLogTab.cpp
   MonitorPage.cpp
-  MonitorResultsTab.cpp
+  MonitorResultsTab.cpp 
   MRIBrowser.cpp
+  MRIInfoBox.cpp
   PatientInfoBox.cpp
   PipelineApp.cpp
   PipelineConfigure.cpp
