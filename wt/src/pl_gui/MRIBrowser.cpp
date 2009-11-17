@@ -142,6 +142,12 @@ void MRIBrowser::populateMRIDs(const std::string& mridLogFile)
         istringstream istr( string(buf), ios_base::out);
         istr >> scanName >> MRID >> age;
 
+        // If age was an error, then just map it to UNKNOWN_AGE
+        if (age == "ERROR:")
+        {
+            age = "UNKNOWN_AGE";
+        }
+
         stringstream scanDir;
         scanDir << getConfigOptionsPtr()->GetDicomDir() << "/" << scanName;
 
