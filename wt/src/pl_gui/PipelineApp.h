@@ -21,6 +21,7 @@ using namespace Wt;
 class MonitorPage;
 class ConfigOptions;
 class ConfigXML;
+class SubjectPage;
 
 ///
 /// \class PipelineApp
@@ -69,6 +70,9 @@ private:
 private:
     /// Monitor page
     MonitorPage *mMonitorPage;
+
+    /// Subject page
+    SubjectPage *mSubjectPage;
 
     /// Configuration options
     ConfigOptions *mConfigOptions;

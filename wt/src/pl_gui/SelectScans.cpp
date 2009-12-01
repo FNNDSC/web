@@ -12,12 +12,16 @@
 #include "SelectScans.h"
 #include "MRIBrowser.h"
 #include "ScanBrowser.h"
+#include "ClusterLoadChart.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
 #include <Wt/WLabel>
 #include <Wt/WPushButton>
 #include <Wt/WText>
+#include <Wt/WTimer>
 
 ///
 //  Namespaces
@@ -41,7 +45,7 @@ SelectScans::SelectScans(WContainerWidget *parent) :
 
     WGridLayout *layout = new WGridLayout();
     layout->addWidget(createTitle("MRIDs"), 0, 0);
-    layout->addWidget(createTitle("Info"), 0, 1);
+
 
     mMRIBrowser = new MRIBrowser();
     mScanBrowser = new ScanBrowser();
@@ -49,10 +53,22 @@ SelectScans::SelectScans(WContainerWidget *parent) :
     layout->addWidget(mMRIBrowser, 1, 0);
     layout->addWidget(mScanBrowser, 1, 1);
 
+
+
+
+    mClusterLoadChart = new ClusterLoadChart();
+    WHBoxLayout *topHBox = new WHBoxLayout();
+    topHBox->addWidget(createTitle("Info"), AlignTop);
+    topHBox->addStretch(2000);
+    topHBox->addWidget(mClusterText = createTitle("Cluster Usage"), AlignTop);
+    topHBox->addWidget(mClusterLoadChart, AlignTop);
+    layout->addLayout(topHBox, 0, 1);
+
+
     // Let row 1 and column 2 take the excess space.
+    layout->setRowStretch(0, -1);
     layout->setRowStretch(1, 1);
     layout->setColumnStretch(1, 1);
-
 
     setLayout(layout);
 
@@ -85,6 +101,9 @@ void SelectScans::resetAll()
     mScanBrowser->hide();
     mScanBrowser->resetAll();
     mMRIBrowser->resetAll();
+    mClusterLoadChart->hide();
+    mClusterText->hide();
+    mClusterLoadChart->stopUpdate();
 }
 
 ///
@@ -130,6 +149,9 @@ void SelectScans::mriChanged(std::string mrid, std::string scanDir, std::string 
     mScanBrowser->setScanDir(scanDir);
     mScanBrowser->setCurAge(age);
     mScanBrowser->show();
+    mClusterLoadChart->show();
+    mClusterText->show();
+    mClusterLoadChart->startUpdate();
 }
 
 

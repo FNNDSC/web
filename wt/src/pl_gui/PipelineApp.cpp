@@ -131,9 +131,9 @@ void PipelineApp::createUI()
     // Create the top tab
     WTabWidget *topTab = new WTabWidget();
     topTab->setStyleClass("toptabdiv");
-    SubjectPage *subjectPage = new SubjectPage();
-    mMonitorPage = new MonitorPage(subjectPage->getMRIBrowser());
-    topTab->addTab(subjectPage, "Subjects");
+    mSubjectPage = new SubjectPage();
+    mMonitorPage = new MonitorPage(mSubjectPage->getMRIBrowser());
+    topTab->addTab(mSubjectPage, "Subjects");
     topTab->addTab(mMonitorPage, "Monitor Cluster");
     topTab->currentChanged().connect(SLOT(this, PipelineApp::mainTabChanged));;
 
@@ -144,7 +144,7 @@ void PipelineApp::createUI()
     // All items in the tabbed widget need to be resized to 100% to
     // fill the contents.  This trick came from the Wt WTabWidget
     // documentation and took me a good half a day to figure out.
-    subjectPage->resize(WLength(100.0, WLength::Percentage),
+    mSubjectPage->resize(WLength(100.0, WLength::Percentage),
                         WLength(100.0, WLength::Percentage));
     mMonitorPage->resize(WLength(100.0, WLength::Percentage),
                         WLength(100.0, WLength::Percentage));
@@ -200,7 +200,7 @@ void PipelineApp::largeRequest(int size)
 //
 WApplication *createApplication(const WEnvironment& env)
 {
-    WApplication *app = new PipelineApp(env);
+    PipelineApp *app = new PipelineApp(env);
     app->setTwoPhaseRenderingThreshold(0);
     app->setTitle("CHB Neuroimaging Pipeline");
     app->useStyleSheet("styles.css");

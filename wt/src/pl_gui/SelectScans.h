@@ -17,9 +17,14 @@
 #include "GlobalEnums.h"
 #include "ScanBrowser.h"
 
+namespace Wt
+{
+    class WText;
+}
 using namespace Wt;
 
 class MRIBrowser;
+class ClusterLoadChart;
 
 ///
 /// \class SelectScans
@@ -96,7 +101,11 @@ private:
     /// Scan browser widget
     ScanBrowser *mScanBrowser;
 
+    /// Cluster load chart
+    ClusterLoadChart *mClusterLoadChart;
 
+    /// Cluster text
+    WText *mClusterText;
 };
 
 #endif // SELECTSCANS_H
