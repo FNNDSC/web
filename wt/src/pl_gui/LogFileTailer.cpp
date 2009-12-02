@@ -55,9 +55,11 @@ using namespace boost::filesystem;
 LogFileTailer::LogFileTailer(const std::string& logFileName,
                              bool bgRed,
                              int updateMS,
+                             bool showEnd,
                              WContainerWidget *parent) :
     WContainerWidget(parent),
-    mLogFileName(logFileName)
+    mLogFileName(logFileName),
+    mShowEnd(showEnd)
 {
     WVBoxLayout *layout = new WVBoxLayout();
 
@@ -170,25 +172,38 @@ void LogFileTailer::timerTick()
         // predicting the HTTP request size based on the string update.
         if (logText.length() > maxRequestSize)
         {
-            logText.erase(logText.begin(), logText.begin() + (logText.length() - maxRequestSize));
+            if (mShowEnd)
+            {
+                logText.erase(logText.begin(), logText.begin() + (logText.length() - maxRequestSize));
+            }
+            else
+            {
+                logText.erase(logText.begin() + maxRequestSize, logText.end());
+            }
         }
 
         // If the text has changed, then do an update
         if (WString(logText.c_str()) != mLogFileTextArea->text())
         {
-            mLogFileTextArea->setText(logText.c_str());
+            if (mShowEnd == true || (mShowEnd == false && logText.length() > 1))
+            {
+                mLogFileTextArea->setText(logText.c_str());
+            }
 
-            // First, take the lock to safely manipulate the UI outside of the
-            // normal event loop, by having exclusive access to the session.
-            WApplication::UpdateLock lock = WApplication::instance()->getUpdateLock();
+            if (mShowEnd)
+            {
+                // First, take the lock to safely manipulate the UI outside of the
+                // normal event loop, by having exclusive access to the session.
+                WApplication::UpdateLock lock = WApplication::instance()->getUpdateLock();
 
-            //
-            // Little javascript trick to make sure we scroll along with new content
-            //
-            WApplication::instance()->doJavaScript(mLogFileTextArea->jsRef() + ".scrollTop += "
-                                                 + mLogFileTextArea->jsRef() + ".scrollHeight;");
+                //
+                // Little javascript trick to make sure we scroll along with new content
+                //
+                WApplication::instance()->doJavaScript(mLogFileTextArea->jsRef() + ".scrollTop += "
+                                                     + mLogFileTextArea->jsRef() + ".scrollHeight;");
 
-            WApplication::instance()->triggerUpdate();
+                WApplication::instance()->triggerUpdate();
+            }
         }
 
         logFile.close();

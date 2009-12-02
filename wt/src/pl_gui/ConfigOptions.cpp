@@ -49,6 +49,7 @@ ConfigOptions::ConfigOptions() :
         ("packageDir",      value<string>(), "Package directory")
         ("configXML",       value<string>(), "Config XML file")
         ("procStatFile",    value<string>(), "Proc Stat file")
+        ("topLogFile",      value<string>(), "Top Log file")
         ;
 }
 
@@ -136,6 +137,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mProcStatFile = vm["procStatFile"].as<string>();
         }
 
+        if (vm.count("topLogFile"))
+        {
+            mTopLogFile = vm["topLogFile"].as<string>();
+        }
+
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
         WApplication::instance()->log("info") << "[Script Dir:] " << mScriptDir;
@@ -145,6 +151,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[Package Dir:] " << mPackageDir;
         WApplication::instance()->log("info") << "[Results Config XML:] " << mConfigXML;
         WApplication::instance()->log("info") << "[Proc stat file:] " << mProcStatFile;
+        WApplication::instance()->log("info") << "[Top log file:] " << mTopLogFile;
 
         configFile.close();
     }

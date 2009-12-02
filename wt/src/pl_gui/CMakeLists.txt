@@ -3,6 +3,7 @@ ADD_EXECUTABLE(pl_gui.wt
   ConfigXML.cpp
   ClusterJobBrowser.cpp
   ClusterLoadChart.cpp
+  ClusterLoadPage.cpp
   FileBrowser.cpp
   FilePreviewBox.cpp
   LogFileBrowser.cpp

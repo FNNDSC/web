@@ -85,6 +85,9 @@ ClusterLoadChart::ClusterLoadChart(WContainerWidget *parent) :
 
     WDataSeries dataSeries(1, CurveSeries);
     dataSeries.setFillRange(MinimumValueFill);
+    WPen dataPen = dataSeries.pen();
+    dataPen.setColor(WColor("green"));
+    dataSeries.setPen(dataPen);
 
     mChart->addSeries(dataSeries);
     mChart->resize(150, 25);
@@ -178,7 +181,28 @@ void ClusterLoadChart::addCPUReading(float value)
         iter++;
     }
 
+    // Set the color based on the latest reading
+    WDataSeries& dataSeries = mChart->series(1);
+    WPen dataPen = dataSeries.pen();
+    WBrush dataBrush = dataSeries.brush();
 
+    if (value >= 0.0 && value < 0.40)
+    {
+        dataPen.setColor(WColor("green"));
+        dataBrush.setColor(WColor("green"));
+    }
+    else if (value >= 0.40 && value < 0.80)
+    {
+        dataPen.setColor(WColor("orange"));
+        dataBrush.setColor(WColor("orange"));
+    }
+    else
+    {
+        dataPen.setColor(WColor("red"));
+        dataBrush.setColor(WColor("red"));
+    }
+    dataSeries.setPen(dataPen);
+    dataSeries.setBrush(dataBrush);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

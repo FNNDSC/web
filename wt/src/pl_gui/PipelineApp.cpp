@@ -14,6 +14,7 @@
 #include "PipelineApp.h"
 #include "SubjectPage.h"
 #include "MonitorPage.h"
+#include "ClusterLoadPage.h"
 #include "ConfigOptions.h"
 #include "ConfigXML.h"
 #include <Wt/WContainerWidget>
@@ -133,8 +134,10 @@ void PipelineApp::createUI()
     topTab->setStyleClass("toptabdiv");
     mSubjectPage = new SubjectPage();
     mMonitorPage = new MonitorPage(mSubjectPage->getMRIBrowser());
+    mClusterLoadPage = new ClusterLoadPage();
     topTab->addTab(mSubjectPage, "Subjects");
     topTab->addTab(mMonitorPage, "Monitor Cluster");
+    topTab->addTab(mClusterLoadPage, "Cluster Load");
     topTab->currentChanged().connect(SLOT(this, PipelineApp::mainTabChanged));;
 
     layout->addWidget(topContainer, 0, 0);
@@ -145,9 +148,11 @@ void PipelineApp::createUI()
     // fill the contents.  This trick came from the Wt WTabWidget
     // documentation and took me a good half a day to figure out.
     mSubjectPage->resize(WLength(100.0, WLength::Percentage),
-                        WLength(100.0, WLength::Percentage));
+                         WLength(100.0, WLength::Percentage));
     mMonitorPage->resize(WLength(100.0, WLength::Percentage),
-                        WLength(100.0, WLength::Percentage));
+                         WLength(100.0, WLength::Percentage));
+    mClusterLoadPage->resize(WLength(100.0, WLength::Percentage),
+                             WLength(100.0, WLength::Percentage));
 
     w->setLayout(layout);
 
@@ -172,6 +177,15 @@ void PipelineApp::mainTabChanged(int currentIndex)
     else
     {
         mMonitorPage->stopUpdate();
+    }
+
+    if (currentIndex == 2)
+    {
+        mClusterLoadPage->startUpdate();
+    }
+    else
+    {
+        mClusterLoadPage->stopUpdate();
     }
 }
 

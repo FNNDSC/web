@@ -52,6 +52,7 @@ public:
     const std::string& GetPackageDir()          const { return mPackageDir; }
     const std::string& GetConfigXML()           const { return mConfigXML; }
     const std::string& GetProcStatFile()        const { return mProcStatFile; }
+    const std::string& GetTopLogFile()          const { return mTopLogFile; }
 private:
 
     // Allowable options
@@ -83,6 +84,9 @@ private:
 
     /// Proc stat file
     std::string mProcStatFile;
+
+    /// Top log file
+    std::string mTopLogFile;
 };
 
 #endif // CONFIGOPTIONS_H
