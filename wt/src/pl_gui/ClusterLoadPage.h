@@ -15,6 +15,7 @@
 #include <Wt/WContainerWidget>
 
 class LogFileTailer;
+class ClusterLoadChart;
 
 using namespace Wt;
 
@@ -63,6 +64,9 @@ private:
 
     /// Top log file tailer
     LogFileTailer *mTopFileTailer;
+
+    /// Cluster load chart
+    ClusterLoadChart *mClusterLoadChart;
 };
 
 #endif // CLUSTERLOADPAGE_H

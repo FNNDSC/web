@@ -10,6 +10,7 @@
 //  GPL v2
 //
 #include "ClusterLoadPage.h"
+#include "ClusterLoadChart.h"
 #include "ConfigOptions.h"
 #include "LogFileTailer.h"
 #include "PipelineApp.h"
@@ -48,9 +49,14 @@ ClusterLoadPage::ClusterLoadPage(WContainerWidget *parent) :
     setStyleClass("tabdiv");
 
     mTopFileTailer = new LogFileTailer(getConfigOptionsPtr()->GetTopLogFile(), false, 1000, false);
+    mClusterLoadChart = new ClusterLoadChart();
+
+    WGridLayout *gridBox = new WGridLayout();
+    gridBox->addWidget(createTitle("Cluster Usage"), 0, 0, AlignRight | AlignMiddle);
+    gridBox->addWidget(mClusterLoadChart, 0, 1, AlignLeft);
 
     WGridLayout *layout = new WGridLayout();
-    layout->addWidget(createTitle("Current Cluster Load"), 0, 0);
+    layout->addLayout(gridBox, 0, 0);
     layout->addWidget(mTopFileTailer, 1, 0);
 
     layout->setRowStretch(1, 1);
@@ -85,6 +91,7 @@ void ClusterLoadPage::resetAll()
 void ClusterLoadPage::startUpdate()
 {
     mTopFileTailer->startUpdate();
+    mClusterLoadChart->startUpdate();
 }
 
 ///
@@ -93,6 +100,7 @@ void ClusterLoadPage::startUpdate()
 void ClusterLoadPage::stopUpdate()
 {
     mTopFileTailer->stopUpdate();
+    mClusterLoadChart->stopUpdate();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
