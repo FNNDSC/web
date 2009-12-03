@@ -52,18 +52,31 @@ ConfigXML* getConfigXMLPtr()
     }
 }
 
+
+
+///
+/// Return the ConfigOptions pointer from the application instance.  Each
+/// session has its own WApplication instance.
+///
+///     THREAD-SAFE version of function
+///
+ConfigOptions* getConfigOptionsPtrTS(WApplication *appInstance)
+{
+    PipelineApp* instance = dynamic_cast<PipelineApp*>(appInstance);
+
+    if (instance != NULL)
+    {
+        return instance->getConfigOptions();
+    }
+}
+
 ///
 //  Return the ConfigOptions pointer from the application instance.  Each
 //  session has its own WApplication instance.
 //
 ConfigOptions* getConfigOptionsPtr()
 {
-    PipelineApp* instance = dynamic_cast<PipelineApp*>(WApplication::instance());
-
-    if (instance != NULL)
-    {
-        return instance->getConfigOptions();
-    }
+    return getConfigOptionsPtrTS(WApplication::instance());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -93,6 +106,8 @@ PipelineApp::PipelineApp(const WEnvironment &env) :
     }
 
     createUI();
+
+    enableUpdates(true);
 }
 
 ///

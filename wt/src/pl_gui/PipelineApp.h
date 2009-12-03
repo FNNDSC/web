@@ -95,6 +95,18 @@ ConfigXML* getConfigXMLPtr();
 /// Return the ConfigOptions pointer from the application instance.  Each
 /// session has its own WApplication instance.
 ///
+///     NOTE: This function is not thread safe, it should only be called
+///           from the main thread.
+///
 ConfigOptions* getConfigOptionsPtr();
+
+///
+/// Return the ConfigOptions pointer from the application instance.  Each
+/// session has its own WApplication instance.
+///
+///     THREAD-SAFE version of function
+///
+ConfigOptions* getConfigOptionsPtrTS(WApplication *appInstance);
+
 
 #endif // PIPELINEAPP_H

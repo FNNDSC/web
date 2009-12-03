@@ -15,12 +15,15 @@
 
 #include <Wt/WContainerWidget>
 #include <string>
+#include <boost/thread/thread.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Wt
 {
     class WTextArea;
     class WGroupBox;
     class WTimer;
+    class WApplication;
 }
 
 using namespace Wt;
@@ -53,9 +56,9 @@ public:
     void setLogFile(const std::string& logFileName);
 
     ///
-    ///  Update timer ticked
+    ///  Thread callback for updating log
     ///
-    void timerTick();
+    void updateLog();
 
     ///
     ///  Start updating log
@@ -83,11 +86,20 @@ private:
     /// Group box container
     WGroupBox *mLogFileGroupBox;
 
-    /// Timer for triggering updates
-    WTimer *mTimer;
+    /// Thread for background processing
+    boost::thread  *mThread;
+
+    /// Stop requested
+    volatile bool mStopRequested;
+
+    /// Update milliseconds
+    int mUpdateMS;
 
     /// Whether to show the end of the log
     bool mShowEnd;
+
+    // Application pointer
+    WApplication *mApp;
 };
 
 #endif // LOGFILETAILER_H

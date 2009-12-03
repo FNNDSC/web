@@ -16,11 +16,15 @@
 #include <Wt/WContainerWidget>
 #include <string>
 #include <deque>
+#include <boost/thread/thread.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Wt
 {
+    class PipelineApp;
     class WStandardItemModel;
     class WTimer;
+    class WApplication;
     namespace Chart
     {
         class WCartesianChart;
@@ -65,9 +69,9 @@ public:
 private:
 
     ///
-    /// Timer tick
+    ///  Threaded callback which handles doing updates to the chart
     ///
-    void timerTick();
+    void updateChart();
 
     ///
     /// Add a reading
@@ -82,14 +86,21 @@ private:
     /// Chart to display data
     WCartesianChart *mChart;
 
-    /// Timer
-    WTimer *mTimer;
-
     /// Timings queue
     std::deque<float> mCPUReadings;
 
     /// Utilization timers
     unsigned int mCPUUtilization[4];
+
+    /// Application pointer
+    WApplication *mApp;
+
+    /// Thread for background processing
+    boost::thread *mThread;
+
+    /// Stop requested
+    volatile bool mStopRequested;
+
 };
 
 #endif // CLUSTERLOADCHART_H

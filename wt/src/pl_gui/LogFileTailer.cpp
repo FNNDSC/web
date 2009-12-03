@@ -13,6 +13,7 @@
 #include "LogFileTailer.h"
 #include "ConfigOptions.h"
 #include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
@@ -27,6 +28,9 @@
 #include <Wt/WCssDecorationStyle>
 #include <Wt/WTimer>
 #include <boost/filesystem.hpp>
+#include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -59,7 +63,10 @@ LogFileTailer::LogFileTailer(const std::string& logFileName,
                              WContainerWidget *parent) :
     WContainerWidget(parent),
     mLogFileName(logFileName),
-    mShowEnd(showEnd)
+    mShowEnd(showEnd),
+    mUpdateMS(updateMS),
+    mStopRequested(true),
+    mApp(WApplication::instance())
 {
     WVBoxLayout *layout = new WVBoxLayout();
 
@@ -86,11 +93,6 @@ LogFileTailer::LogFileTailer(const std::string& logFileName,
 
     setLayout(layout);
 
-    // Create update timer
-    mTimer = new WTimer();
-    mTimer->setInterval(updateMS);
-    mTimer->timeout().connect(SLOT(this, LogFileTailer::timerTick));
-
     resetAll();
 }
 
@@ -99,7 +101,7 @@ LogFileTailer::LogFileTailer(const std::string& logFileName,
 //
 LogFileTailer::~LogFileTailer()
 {
-    delete mTimer;
+    stopUpdate();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -113,7 +115,7 @@ LogFileTailer::~LogFileTailer()
 //
 void LogFileTailer::resetAll()
 {
-
+    stopUpdate();
 }
 
 ///
@@ -121,9 +123,11 @@ void LogFileTailer::resetAll()
 //
 void LogFileTailer::startUpdate()
 {
-    // Do first update now
-    timerTick();
-    mTimer->start();
+    mStopRequested = false;
+    if (mThread == NULL)
+    {
+        mThread = new boost::thread(boost::bind(&LogFileTailer::updateLog, this));
+    }
 }
 
 ///
@@ -131,7 +135,12 @@ void LogFileTailer::startUpdate()
 //
 void LogFileTailer::stopUpdate()
 {
-    mTimer->stop();
+   mStopRequested = true;
+   if (mThread != NULL)
+   {
+       delete mThread;
+       mThread = NULL;
+   }
 }
 
 ///
@@ -152,65 +161,79 @@ void LogFileTailer::setLogFile(const std::string& logFileName)
 ///
 //  Update timer ticked
 //
-void LogFileTailer::timerTick()
+void LogFileTailer::updateLog()
 {
-    std::ifstream logFile(mLogFileName.c_str(), ios::in);
-    if (logFile.is_open())
+    while(!mStopRequested)
     {
-        int maxRequestSize = MAX_LOG_SIZE;
-
-        ostringstream oss;
-        oss << logFile.rdbuf();
-
-        stringstream logTextStream;
-        logTextStream << oss.str();
-
-        string logText = logTextStream.str();
-
-        // Truncate the log.  Avoid exceeding the MAX HTTP request size.  Note that this is configurable
-        // in wt_config.xml.  This is overly aggressive for the default setting, but I was having trouble
-        // predicting the HTTP request size based on the string update.
-        if (logText.length() > maxRequestSize)
+        std::ifstream logFile(mLogFileName.c_str(), ios::in);
+        if (logFile.is_open())
         {
-            if (mShowEnd)
-            {
-                logText.erase(logText.begin(), logText.begin() + (logText.length() - maxRequestSize));
-            }
-            else
-            {
-                logText.erase(logText.begin() + maxRequestSize, logText.end());
-            }
-        }
+            int maxRequestSize = MAX_LOG_SIZE;
 
-        // If the text has changed, then do an update
-        if (WString(logText.c_str()) != mLogFileTextArea->text())
-        {
-            if (mShowEnd == true || (mShowEnd == false && logText.length() > 1))
+            ostringstream oss;
+            oss << logFile.rdbuf();
+
+            stringstream logTextStream;
+            logTextStream << oss.str();
+
+            string logText = logTextStream.str();
+
+            // Truncate the log.  Avoid exceeding the MAX HTTP request size.  Note that this is configurable
+            // in wt_config.xml.  This is overly aggressive for the default setting, but I was having trouble
+            // predicting the HTTP request size based on the string update.
+            if (logText.length() > maxRequestSize)
             {
-                mLogFileTextArea->setText(logText.c_str());
+                if (mShowEnd)
+                {
+                    logText.erase(logText.begin(), logText.begin() + (logText.length() - maxRequestSize));
+                }
+                else
+                {
+                    logText.erase(logText.begin() + maxRequestSize, logText.end());
+                }
             }
 
-            if (mShowEnd)
+            // If the text has changed, then do an update
+            if (WString(logText.c_str()) != mLogFileTextArea->text())
             {
                 // First, take the lock to safely manipulate the UI outside of the
                 // normal event loop, by having exclusive access to the session.
-                WApplication::UpdateLock lock = WApplication::instance()->getUpdateLock();
+                WApplication::UpdateLock lock = mApp->getUpdateLock();
 
-                //
-                // Little javascript trick to make sure we scroll along with new content
-                //
-                WApplication::instance()->doJavaScript(mLogFileTextArea->jsRef() + ".scrollTop += "
-                                                     + mLogFileTextArea->jsRef() + ".scrollHeight;");
+                if (mShowEnd == true || (mShowEnd == false && logText.length() > 1))
+                {
+                    mLogFileTextArea->setText(logText.c_str());
+                }
 
-                WApplication::instance()->triggerUpdate();
+                if (mShowEnd)
+                {
+                    //
+                    // Little javascript trick to make sure we scroll along with new content
+                    //
+                    mApp->doJavaScript(mLogFileTextArea->jsRef() + ".scrollTop += "
+                                                         + mLogFileTextArea->jsRef() + ".scrollHeight;");
+                }
+
+                mApp->triggerUpdate();
             }
+
+
+            logFile.close();
+        }
+        else
+        {
+            // First, take the lock to safely manipulate the UI outside of the
+            // normal event loop, by having exclusive access to the session.
+            WApplication::UpdateLock lock = mApp->getUpdateLock();
+
+            mLogFileTextArea->setText(WString("Couldn't open log file {1}").arg(mLogFileName));;
+
+            mApp->triggerUpdate();
+
         }
 
-        logFile.close();
-    }
-    else
-    {
-        mLogFileTextArea->setText(WString("Couldn't open log file {1}").arg(mLogFileName));;
+        // Sleep for 1 second
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
     }
 }
 

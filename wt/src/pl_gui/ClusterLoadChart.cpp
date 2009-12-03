@@ -32,6 +32,9 @@
 #include <Wt/WPushButton>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -56,12 +59,18 @@ const int NUM_SAMPLES = 40;
 //
 //
 
+
 ///
 //  Constructor
 //
 ClusterLoadChart::ClusterLoadChart(WContainerWidget *parent) :
-    WContainerWidget(parent)
+    WContainerWidget(parent),
+    mStopRequested(true),
+    mThread(NULL)
 {
+    mApp = WApplication::instance();
+    mApp->enableUpdates();
+
     mModel = new WStandardItemModel(NUM_SAMPLES, 2, this);
     mModel->setHeaderData(0, boost::any(WString("Time")));
     mModel->setHeaderData(1, boost::any(WString("CPU Load %")));
@@ -107,11 +116,6 @@ ClusterLoadChart::ClusterLoadChart(WContainerWidget *parent) :
     layout->addWidget(mChart, AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
-
-    // Create update timer
-    mTimer = new WTimer();
-    mTimer->setInterval(1000);
-    mTimer->timeout().connect(SLOT(this, ClusterLoadChart::timerTick));
 }
 
 ///
@@ -119,7 +123,7 @@ ClusterLoadChart::ClusterLoadChart(WContainerWidget *parent) :
 //
 ClusterLoadChart::~ClusterLoadChart()
 {
-    delete mTimer;
+    stopUpdate();
 }
 
 ///
@@ -127,6 +131,7 @@ ClusterLoadChart::~ClusterLoadChart()
 //
 void ClusterLoadChart::resetAll()
 {
+    stopUpdate();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -140,7 +145,11 @@ void ClusterLoadChart::resetAll()
 //
 void ClusterLoadChart::startUpdate()
 {
-    mTimer->start();
+    mStopRequested = false;
+    if (mThread == NULL)
+    {
+        mThread = new boost::thread(boost::bind(&ClusterLoadChart::updateChart, this));
+    }
 }
 
 ///
@@ -148,7 +157,12 @@ void ClusterLoadChart::startUpdate()
 //
 void ClusterLoadChart::stopUpdate()
 {
-    mTimer->stop();
+    mStopRequested = true;
+    if (mThread != NULL)
+    {
+        delete mThread;
+        mThread = NULL;
+    }
 }
 
 ///
@@ -212,60 +226,73 @@ void ClusterLoadChart::addCPUReading(float value)
 //
 
 ///
-// Timer tick
+//  Threaded callback which handles doing updates to the chart
 //
-void ClusterLoadChart::timerTick()
+void ClusterLoadChart::updateChart()
 {
-    std::ifstream inFile(getConfigOptionsPtr()->GetProcStatFile().c_str());
-    while (!inFile.eof())
+    while(!mStopRequested)
     {
-        char buf[1024] = {0};
-        inFile.getline( buf, sizeof(buf));
-        std::string token;
-
-        istringstream istr( string(buf), ios_base::out);
-        istr >> token;
-
-        if (token == "cpu")
+        std::ifstream inFile(getConfigOptionsPtrTS(mApp)->GetProcStatFile().c_str());
+        while (!inFile.eof())
         {
-            unsigned int cpuUtilization[4];
+            char buf[1024] = {0};
 
-            for (int i = 0; i < 4; i++)
+            inFile.getline( buf, sizeof(buf));
+            std::string token;
+
+            istringstream istr( string(buf), ios_base::out);
+            istr >> token;
+
+            if (token == "cpu")
             {
-                string cpuUtilizationStr;
-                istr >> cpuUtilizationStr;
+                unsigned int cpuUtilization[4];
 
-                cpuUtilization[i] = atoi(cpuUtilizationStr.c_str());
+                for (int i = 0; i < 4; i++)
+                {
+                    string cpuUtilizationStr;
+                    istr >> cpuUtilizationStr;
+
+                    cpuUtilization[i] = atoi(cpuUtilizationStr.c_str());
+                }
+
+                // 0 - user time
+                // 1 - nice time
+                // 2 - system time
+                // 3 - idle time
+                unsigned int usageTime = (cpuUtilization[0] - mCPUUtilization[0]) + (cpuUtilization[1] - mCPUUtilization[1]) +
+                                         (cpuUtilization[2] - mCPUUtilization[2]);
+                unsigned int totalTime = usageTime + (cpuUtilization[3] - mCPUUtilization[3]);
+                float cpuPercent;
+
+                if (totalTime != 0)
+                {
+                    cpuPercent = (float)usageTime / (float)totalTime;
+                }
+
+                // First, take the lock to safely manipulate the UI outside of the
+                // normal event loop, by having exclusive access to the session.
+                WApplication::UpdateLock lock = mApp->getUpdateLock();
+
+                if (mCPUUtilization[0] != 0)
+                {
+                    addCPUReading(cpuPercent);
+                }
+
+                for (int i = 0; i < 4; i++)
+                {
+                    mCPUUtilization[i] = cpuUtilization[i];
+                }
+
+                mChart->update();
+                mApp->triggerUpdate();
+
+                break;
             }
-
-            // 0 - user time
-            // 1 - nice time
-            // 2 - system time
-            // 3 - idle time
-            unsigned int usageTime = (cpuUtilization[0] - mCPUUtilization[0]) + (cpuUtilization[1] - mCPUUtilization[1]) +
-                                     (cpuUtilization[2] - mCPUUtilization[2]);
-            unsigned int totalTime = usageTime + (cpuUtilization[3] - mCPUUtilization[3]);
-            float cpuPercent;
-
-            if (totalTime != 0)
-            {
-                cpuPercent = (float)usageTime / (float)totalTime;
-            }
-
-            if (mCPUUtilization[0] != 0)
-            {
-                addCPUReading(cpuPercent);
-            }
-
-            for (int i = 0; i < 4; i++)
-            {
-                mCPUUtilization[i] = cpuUtilization[i];
-            }
-            break;
         }
-    }
 
-    mChart->update();
+        // Sleep for 1 second
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    }
 }
 
 
