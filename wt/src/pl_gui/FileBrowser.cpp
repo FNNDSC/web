@@ -46,7 +46,7 @@ FileBrowser::FileBrowser(WContainerWidget *parent) :
     WContainerWidget(parent)
 {
     mTreeView = new WTreeView();
-    mModel = new WStandardItemModel();
+    mModel = new WStandardItemModel(this);
 
     mTreeView->setAttributeValue
             ("oncontextmenu",
@@ -61,7 +61,6 @@ FileBrowser::FileBrowser(WContainerWidget *parent) :
 //
 FileBrowser::~FileBrowser()
 {
-    delete mModel;
 }
 
 

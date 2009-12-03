@@ -48,7 +48,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
 {
     // Populate the list of MRIDs
     mMRITreeView = new WTreeView();
-    mMRIModel = new WStandardItemModel();
+    mMRIModel = new WStandardItemModel(this);
     populateMRIDs(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID_age.log");
 
     mMRITreeView->setModel(mMRIModel);
@@ -70,7 +70,6 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
 //
 MRIBrowser::~MRIBrowser()
 {
-    delete mMRIModel;
 }
 
 ///

@@ -54,7 +54,7 @@ ClusterJobBrowser::ClusterJobBrowser(WContainerWidget *parent) :
 {
     // Populate the list of MRIDs
     mClusterJobTreeView = new WTreeView();
-    mClusterJobModel = new WStandardItemModel();
+    mClusterJobModel = new WStandardItemModel(this);
 
     mClusterJobTreeView->setModel(mClusterJobModel);
     mClusterJobTreeView->setSelectionMode(SingleSelection);
@@ -76,7 +76,6 @@ ClusterJobBrowser::ClusterJobBrowser(WContainerWidget *parent) :
 //
 ClusterJobBrowser::~ClusterJobBrowser()
 {
-    delete mClusterJobModel;
 }
 
 ///

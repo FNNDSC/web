@@ -98,6 +98,7 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
 //
 FilePreviewBox::~FilePreviewBox()
 {
+    delete mDownloadFileResource;
 }
 
 

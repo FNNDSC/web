@@ -62,7 +62,7 @@ const int NUM_SAMPLES = 40;
 ClusterLoadChart::ClusterLoadChart(WContainerWidget *parent) :
     WContainerWidget(parent)
 {
-    mModel = new WStandardItemModel(NUM_SAMPLES, 2);
+    mModel = new WStandardItemModel(NUM_SAMPLES, 2, this);
     mModel->setHeaderData(0, boost::any(WString("Time")));
     mModel->setHeaderData(1, boost::any(WString("CPU Load %")));
 

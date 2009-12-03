@@ -133,6 +133,7 @@ bool ConfigXML::parseXMLTree(mxml_node_t *tree, const std::string& configPath)
         result = result && parsePipelineNode(pipelineNode, configPath);
     }
 
+    mxmlRelease(tree);
     return result;
 }
 
