@@ -87,9 +87,6 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
     layout->setRowStretch(2, 1);
     setLayout(layout);
 
-    // Make connections
-    mDownloadButton->clicked().connect(SLOT(this, FilePreviewBox::downloadClicked));
-
     resetAll();
 }
 
@@ -190,11 +187,4 @@ std::string FilePreviewBox::imageExtension(const std::string& fileName)
   return std::string();
 }
 
-///
-//   Handle download button clicked [slot]
-//
-void FilePreviewBox::downloadClicked()
-{
-
-}
 
