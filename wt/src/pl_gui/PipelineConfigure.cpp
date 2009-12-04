@@ -109,6 +109,22 @@ void PipelineConfigure::updateAll()
     }
 }
 
+
+///
+//  Check whether the options are valid
+//
+bool PipelineConfigure::validate() const
+{
+    if (mPipelineType == Enums::PIPELINE_TYPE_TRACT)
+    {
+        return mPipelineOptionsTract->validate();
+    }
+    else
+    {
+        return mPipelineOptionsFS->validate();
+    }
+}
+
 ///
 //  Generate command-line options string based on user choices
 //

@@ -199,6 +199,13 @@ void SubjectPage::nextClicked()
 
     case PIPELINE_CONFIGURE:
     default:
+
+        // Make sure the input validates before submitting
+        if (!mPipelineConfigure->validate())
+        {
+            return;
+        }
+
         StandardButton result = WMessageBox::show("Submit Scans",
                                                   "Are you sure that you want to submit for processing?",
                                                   Wt::Yes | Wt::No);

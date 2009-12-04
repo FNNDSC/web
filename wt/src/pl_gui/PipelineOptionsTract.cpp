@@ -23,6 +23,9 @@
 #include <Wt/WButtonGroup>
 #include <Wt/WCheckBox>
 #include <Wt/WComboBox>
+#include <Wt/WDoubleValidator>
+#include <Wt/WLineEdit>
+#include <Wt/WMessageBox>
 #include <vector>
 
 ///
@@ -80,11 +83,30 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 
     mEddyCurrentCheckBox = new WCheckBox("Perform Eddy Current Correction (ECC)");
     mSettingsGroupBoxLayout->addWidget(mEddyCurrentCheckBox, 0, 0, Wt::AlignMiddle);
-    mSettingsGroupBoxLayout->addLayout(comboBoxLayout, 1, 0);
+    mFAVolumeMaskCheckBox = new WCheckBox("Use FA volume as mask filter?");
+    mSettingsGroupBoxLayout->addWidget(mFAVolumeMaskCheckBox, 1, 0, Wt::AlignMiddle);
+
+    WGridLayout *lineEditLayout = new WGridLayout();
+    mFAThresholdLineEdit = new WLineEdit("0.0");
+    WDoubleValidator *validator = new WDoubleValidator();
+    validator->setRange(0.0, 1.0);
+    mFAThresholdLineEdit->setValidator(validator);
+
+    mFAThresholdLabel = new WLabel("Lower threshold value for mask:");
+    lineEditLayout->addWidget(mFAThresholdLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    lineEditLayout->addWidget(mFAThresholdLineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    lineEditLayout->setColumnStretch(1, 1);
+    mSettingsGroupBoxLayout->addLayout(lineEditLayout, 2, 0, Wt::AlignMiddle);
+
+    mSettingsGroupBoxLayout->addLayout(comboBoxLayout, 3, 0);
+    mSettingsGroupBoxLayout->setRowStretch(3, 1);
 
     // Add to the base class layout
     mPipelineOptionsBoxLayout->addWidget(mSettingsGroupBox, 1, 0);
     mPipelineOptionsBoxLayout->addWidget(mDirectoryGroupBox, 2, 0);
+
+    // Connection
+    mFAVolumeMaskCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::volumeMaskClicked));
 
     resetAll();
 }
@@ -115,6 +137,31 @@ void PipelineOptionsTract::resetAll()
     }
 
     mEddyCurrentCheckBox->setChecked(false);
+    mFAVolumeMaskCheckBox->setChecked(false);
+    mFAThresholdLineEdit->setText("0.0");
+    mFAThresholdLineEdit->disable();
+    mFAThresholdLabel->disable();
+
+}
+
+///
+//  Check whether the options are valid
+//
+bool PipelineOptionsTract::validate() const
+{
+    if (mFAVolumeMaskCheckBox->isChecked())
+    {
+        if (!mFAThresholdLineEdit->validate())
+        {
+            WMessageBox::show("Invalid Input",
+                              "Threshold value for mask must be in the range [0.0, 1.0].  Please correct it.",
+                              Wt::Ok);
+
+            return false;
+        }
+    }
+
+    return true;
 }
 
 ///
@@ -156,6 +203,11 @@ std::string PipelineOptionsTract::getCommandLineString() const
         args += " -I hardi";
     }
 
+    if (mFAVolumeMaskCheckBox->isChecked())
+    {
+        args += " -F " + mFAThresholdLineEdit->text().toUTF8();
+    }
+
     return args + " " + PipelineOptions::getCommandLineString();
 }
 
@@ -165,4 +217,19 @@ std::string PipelineOptionsTract::getCommandLineString() const
 //
 //
 
-
+///
+//  FA Volume mask checkbox clicked [slot]
+//
+void PipelineOptionsTract::volumeMaskClicked()
+{
+    if (mFAVolumeMaskCheckBox->isChecked())
+    {
+        mFAThresholdLineEdit->enable();
+        mFAThresholdLabel->enable();
+    }
+    else
+    {
+        mFAThresholdLineEdit->disable();
+        mFAThresholdLabel->disable();
+    }
+}

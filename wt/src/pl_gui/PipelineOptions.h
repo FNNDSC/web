@@ -53,6 +53,12 @@ public:
     ///
     void resetAll();
 
+
+    ///
+    /// Check whether the options are valid
+    ///
+    virtual bool validate() const { return true; }
+
     ///
     ///  Generate command-line options string based on user choices
     ///

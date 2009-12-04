@@ -27,6 +27,7 @@ namespace Wt
 {
     class WCheckBox;
     class WComboBox;
+    class WLineEdit;
 };
 
 ///
@@ -52,12 +53,21 @@ public:
     void resetAll();
 
     ///
+    /// Check whether the options are valid
+    ///
+    bool validate() const;
+
+    ///
     /// Generate command-line options string based on user choices
     ///
     std::string getCommandLineString() const;
 
 private:
 
+    ///
+    ///  FA Volume mask checkbox clicked [slot]
+    ///
+    void volumeMaskClicked();
 
 private:
 
@@ -73,7 +83,14 @@ private:
     /// Image model
     WComboBox *mImageModelComboBox;
 
+    /// Checkbox for whether to use FA volume as mask filter
+    WCheckBox *mFAVolumeMaskCheckBox;
 
+    /// Volume mask threshold
+    WLineEdit *mFAThresholdLineEdit;
+
+    /// FA Treshold label
+    WLabel *mFAThresholdLabel;
 };
 
 #endif // PIPELINEOPTIONSTRACT_H

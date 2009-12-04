@@ -59,6 +59,11 @@ public:
     void updateAll();
 
     ///
+    /// Check whether the options are valid
+    ///
+    bool validate() const;
+
+    ///
     ///  Generate command-line options string based on user choices
     ///
     virtual std::string getCommandLineString() const;
