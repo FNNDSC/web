@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <Results>
+	<TextFilePattern pattern=".*\.stats" />
+	<ImageFilePattern pattern=".*\.((png)|(gif)|(jpeg)|(jpg)|(ico))" />
 	<Pipeline name="tract_meta.bash" tag="tract" desc="Tractography">
 		<FilePatterns>
 			<FilePattern dir="true" name=".*-stage-2-.*">

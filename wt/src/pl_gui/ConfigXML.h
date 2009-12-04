@@ -71,6 +71,16 @@ public:
     ///
     WStandardItemModel* getResultsPipelineTree(const std::string& pipelineName);
 
+    ///
+    /// Get the pattern to use to match files as text files
+    ///
+    std::string getTextFilePattern() const;
+
+    ///
+    /// Get the pattern to use to match files as image files
+    ///
+    std::string getImageFilePattern() const;
+
 protected:
 
     /// Pipeline structure
@@ -107,9 +117,19 @@ protected:
     bool parseFilePatternNode(WStandardItem *item, mxml_node_t *filePatternNode,
                                const std::string& configPath, int indent);
 
+    ///
+    ///  Parse <[Text|Image]FilePattern> node
+    ///
+    std::string parsePatternNode(mxml_node_t *baseNode, std::string nodeName) const;
 
     /// Map relating pipeline by string to a tree of entries
     std::map<std::string, PipelineConf*> mPipelineMap;
+
+    /// Text file pattern
+    std::string mTextFilePattern;
+
+    /// ImageFilePattern
+    std::string mImageFilePattern;
 };
 
 #endif // CONFIGXML_H

@@ -18,6 +18,8 @@
 
 using namespace Wt;
 
+class ArchiveFileResource;
+
 namespace Wt
 {
     class WPushButton;
@@ -101,6 +103,9 @@ private:
 
     /// Pipeline name
     std::string mPipelineName;
+
+    /// Archive file resource
+    ArchiveFileResource *mArchiveFileResource;
 
 };
 

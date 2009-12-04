@@ -90,6 +90,22 @@ WStandardItemModel* ConfigXML::getResultsPipelineTree(const std::string& pipelin
     return (mPipelineMap[pipelineName]->mModel);
 }
 
+///
+//  Get the pattern to use to match files as text files
+//
+std::string ConfigXML::getTextFilePattern() const
+{
+    return mTextFilePattern;
+}
+
+///
+//  Get the pattern to use to match files as image files
+//
+std::string ConfigXML::getImageFilePattern() const
+{
+    return mImageFilePattern;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -115,6 +131,9 @@ bool ConfigXML::parseXMLTree(mxml_node_t *tree, const std::string& configPath)
         WApplication::instance()->log("error") << "No <Results> node found in : " << configPath;
         return false;
     }
+
+    mTextFilePattern = parsePatternNode(resultsNode, "TextFilePattern");
+    mImageFilePattern = parsePatternNode(resultsNode, "ImageFilePattern");
 
     mxml_node_t *pipelineNode;
 
@@ -254,6 +273,32 @@ bool ConfigXML::parseFilePatternNode(WStandardItem *item, mxml_node_t *filePatte
                                         MXML_NO_DESCEND))
     {
         result = result && parseFilePatternNode(newItem, curNode, configPath, indent + 1);
+    }
+
+    return result;
+}
+
+///
+//  Parse <[Text|Image]FilePattern> node
+//
+std::string ConfigXML::parsePatternNode(mxml_node_t *baseNode, std::string nodeName) const
+{
+    std::string result;
+    mxml_node_t *node = mxmlFindElement(baseNode, baseNode, nodeName.c_str(),
+                                        NULL, NULL, MXML_DESCEND);
+
+    if (node != NULL)
+    {
+        const char *patternText = mxmlElementGetAttr(node, "pattern");
+
+        if (patternText != NULL)
+        {
+            result = patternText;
+        }
+        else
+        {
+            WApplication::instance()->log("error") << "No pattern tag for " << nodeName << ". Ignoring.";
+        }
     }
 
     return result;

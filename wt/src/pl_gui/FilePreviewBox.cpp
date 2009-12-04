@@ -9,8 +9,10 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "FilePreviewBox.h"
 #include "ConfigOptions.h"
+#include "ConfigXML.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -18,6 +20,7 @@
 #include <Wt/WGridLayout>
 #include <Wt/WImage>
 #include <Wt/WText>
+#include <Wt/WTextArea>
 #include <Wt/WLabel>
 #include <Wt/WStandardItem>
 #include <Wt/WGroupBox>
@@ -29,16 +32,19 @@
 #include <Wt/WFileResource>
 #include <Wt/WAnchor>
 #include <Wt/WFileResource>
+#include <Wt/WStackedWidget>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 
 ///
 //  Namespaces
 //
 using namespace Wt;
 using namespace std;
+using namespace boost;
 using namespace boost::filesystem;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,6 +63,14 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
     setTitle("File Info");
 
     mImagePreview = new WImage();
+    mTextPreview = new WTextArea();
+    mTextPreview->setStyleClass("logdiv");
+    mTextPreview->decorationStyle().font().setFamily(WFont::Monospace);
+
+    mPreviewStack = new WStackedWidget();
+    mPreviewStack->addWidget(mImagePreview);
+    mPreviewStack->addWidget(mTextPreview);
+
 
     // Create an anchor that references a URL
     mDownloadFileResource = new WFileResource("application/octet-stream", "");
@@ -83,7 +97,7 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
 
     layout->addLayout(fileInfoLayout, 0, 0);
     layout->addLayout(hbox, 1, 0);
-    layout->addWidget(mImagePreview, 2, 0, Wt::AlignCenter);
+    layout->addWidget(mPreviewStack, 2, 0, Wt::AlignCenter);
     layout->setRowStretch(2, 1);
     setLayout(layout);
 
@@ -113,7 +127,7 @@ void FilePreviewBox::resetAll()
     mFileName->setText("");
     mFileDir->setText("");
     mFileSize->setText("");
-    mImagePreview->hide();
+    mPreviewStack->hide();
 }
 
 ///
@@ -132,12 +146,11 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
 
         mFileSize->setText(WString("{1} Bytes").arg((int)file_size(filePath)));
 
-        if (!imageExtension(filePathStr).empty())
+        if (fileMatchesExpression(filePathStr, getConfigXMLPtr()->getImageFilePattern()))
         {
             if (mImageResource == NULL)
             {
-                mImageResource = new WFileResource("mime/" + imageExtension(filePathStr),
-                                                   filePathStr);
+                mImageResource = new WFileResource("image/" + filePath.extension(), filePathStr);
             }
             else
             {
@@ -145,11 +158,31 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
             }
             mImagePreview->setResource(mImageResource);
             mImagePreview->setMaximumSize(650, 532);
-            mImagePreview->show();
+            mPreviewStack->setCurrentIndex(0);
+            mPreviewStack->show();
+        }
+        else if(fileMatchesExpression(filePathStr, getConfigXMLPtr()->getTextFilePattern()))
+        {
+            std::ifstream inFile(filePathStr.c_str(), ios::in);
+            if (inFile.is_open())
+            {
+                ostringstream oss;
+                oss << inFile.rdbuf();
+
+                mTextPreview->setText(oss.str().c_str());
+                mTextPreview->setMinimumSize(650, 532);
+
+                mPreviewStack->setCurrentIndex(1);
+                mPreviewStack->show();
+            }
+            else
+            {
+                mPreviewStack->hide();
+            }
         }
         else
         {
-            mImagePreview->hide();
+            mPreviewStack->hide();
         }
     }
     catch (...)
@@ -168,23 +201,23 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
 //
 
 ///
-//  Return the image extension of the file (if it is an image file)
+//  Check whether file matches regular expression
 //
-std::string FilePreviewBox::imageExtension(const std::string& fileName)
+bool FilePreviewBox::fileMatchesExpression(const std::string& filePathStr, const std::string &filePatternExpr) const
 {
-  static const char *imageExtensions[] =
-  {
-    ".png", ".gif", ".jpg", "jpeg", ".ico", 0
-  };
+    regex regEx;
+    try
+    {
+        regEx = regex(filePatternExpr);
+    }
+    catch(...)
+    {
+        WApplication::instance()->log("error") << "Invalid regular expression '" << filePatternExpr << "' in config XML file";
+        return false;
+    }
 
-  path p(fileName);
-  std::string extension = boost::filesystem::extension(p);
-
-  for (const char **s = imageExtensions; *s != 0; ++s)
-    if (*s == extension)
-      return extension.substr(1);
-
-  return std::string();
+    boost::smatch what;
+    return (boost::regex_match( filePathStr, what, regEx ));
 }
 
 

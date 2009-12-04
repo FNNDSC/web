@@ -1,4 +1,5 @@
 ADD_EXECUTABLE(pl_gui.wt
+  ArchiveFileResource.cpp
   ConfigOptions.cpp
   ConfigXML.cpp
   ClusterJobBrowser.cpp

@@ -14,6 +14,7 @@
 #include "ResultsBrowser.h"
 #include "ConfigOptions.h"
 #include "ConfigXML.h"
+#include "ArchiveFileResource.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -23,8 +24,10 @@
 #include <Wt/WText>
 #include <Wt/WLabel>
 #include <Wt/WStandardItem>
+#include <Wt/WHBoxLayout>
 #include <Wt/WVBoxLayout>
 #include <Wt/WPushButton>
+#include <Wt/WAnchor>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/regex.hpp>
@@ -56,10 +59,16 @@ ResultsBrowser::ResultsBrowser(WContainerWidget *parent) :
     mTreeView->selectionChanged().connect(SLOT(this, ResultsBrowser::resultChanged));
     mTreeView->setMinimumSize(400, WLength::Auto);
 
+    mArchiveFileResource = new ArchiveFileResource("");
+    WAnchor *downloadAnchor = new WAnchor(mArchiveFileResource);
+    downloadAnchor->setTarget(TargetThisWindow);
+    WPushButton *downloadTarButton = new WPushButton("Download All Results", downloadAnchor);
+
     mRefreshButton = new WPushButton("Refresh Available Results");
     WGridLayout *layout = new WGridLayout();
     layout->addWidget(mTreeView, 0, 0);
-    layout->addWidget(mRefreshButton, 1, 0);
+    layout->addWidget(mRefreshButton, 1, 0, AlignCenter);
+    layout->addWidget(downloadAnchor, 2, 0, AlignCenter);
     layout->setRowStretch(0, 1);
     setLayout(layout);
 
@@ -110,6 +119,10 @@ void ResultsBrowser::resetAll()
 void ResultsBrowser::setResultsBaseDir(const std::string& baseDir)
 {
     mResultsBaseDir = baseDir;
+    mArchiveFileResource->setDirPath(mResultsBaseDir);
+    mArchiveFileResource->suggestFileName(path(mResultsBaseDir).leaf() + ".tar.gz");
+    mArchiveFileResource->setChanged();
+
 }
 
 ///

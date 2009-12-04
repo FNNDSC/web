@@ -25,6 +25,8 @@ namespace Wt
     class WImage;
     class WFileResource;
     class WPushButton;
+    class WStackedWidget;
+    class WTextArea;
 }
 
 using namespace Wt;
@@ -60,14 +62,9 @@ public:
 private:
 
     ///
-    /// Handle download button clicked [slot]
+    ///  Check whether file matches regular expression
     ///
-    void downloadClicked();
-
-    ///
-    ///  Return the image extension of the file (if it is an image file)
-    ///
-    std::string imageExtension(const std::string& fileName);
+    bool fileMatchesExpression(const std::string& filePathStr, const std::string &filePatternExpr) const;
 
 private:
 
@@ -83,6 +80,9 @@ private:
     /// Image preview (for image files)
     WImage *mImagePreview;
 
+    /// Text preview (for text files)
+    WTextArea *mTextPreview;
+
     /// Image resource
     WFileResource *mImageResource;
 
@@ -94,6 +94,9 @@ private:
 
     /// Download anchor
     WAnchor *mDownloadAnchor;
+
+    /// Stacked widget to hold image/text preview
+    WStackedWidget *mPreviewStack;
 };
 
 #endif // FILEPREVIEWBOX_H
