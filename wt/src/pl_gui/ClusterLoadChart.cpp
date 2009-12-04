@@ -65,7 +65,8 @@ const int NUM_SAMPLES = 40;
 //
 ClusterLoadChart::ClusterLoadChart(WContainerWidget *parent) :
     WContainerWidget(parent),
-    mStopRequested(true),
+    mStopUpdateThread(false),
+    mUpdateChart(false),
     mThread(NULL)
 {
     mApp = WApplication::instance();
@@ -116,14 +117,19 @@ ClusterLoadChart::ClusterLoadChart(WContainerWidget *parent) :
     layout->addWidget(mChart, AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
+
+    mThread = new boost::thread(boost::bind(&ClusterLoadChart::updateChart, this));
 }
+
 
 ///
 //  Destructor
 //
 ClusterLoadChart::~ClusterLoadChart()
 {
-    stopUpdate();
+    mStopUpdateThread = true;
+    mThread->join();
+    delete mThread;
 }
 
 ///
@@ -145,11 +151,7 @@ void ClusterLoadChart::resetAll()
 //
 void ClusterLoadChart::startUpdate()
 {
-    mStopRequested = false;
-    if (mThread == NULL)
-    {
-        mThread = new boost::thread(boost::bind(&ClusterLoadChart::updateChart, this));
-    }
+    mUpdateChart = true;
 }
 
 ///
@@ -157,12 +159,7 @@ void ClusterLoadChart::startUpdate()
 //
 void ClusterLoadChart::stopUpdate()
 {
-    mStopRequested = true;
-    if (mThread != NULL)
-    {
-        delete mThread;
-        mThread = NULL;
-    }
+    mUpdateChart = false;
 }
 
 ///
@@ -230,63 +227,66 @@ void ClusterLoadChart::addCPUReading(float value)
 //
 void ClusterLoadChart::updateChart()
 {
-    while(!mStopRequested)
+    while (!mStopUpdateThread)
     {
-        std::ifstream inFile(getConfigOptionsPtrTS(mApp)->GetProcStatFile().c_str());
-        while (!inFile.eof())
+        if (mUpdateChart)
         {
-            char buf[1024] = {0};
-
-            inFile.getline( buf, sizeof(buf));
-            std::string token;
-
-            istringstream istr( string(buf), ios_base::out);
-            istr >> token;
-
-            if (token == "cpu")
+            std::ifstream inFile(getConfigOptionsPtrTS(mApp)->GetProcStatFile().c_str());
+            while (!inFile.eof())
             {
-                unsigned int cpuUtilization[4];
+                char buf[1024] = {0};
 
-                for (int i = 0; i < 4; i++)
+                inFile.getline( buf, sizeof(buf));
+                std::string token;
+
+                istringstream istr( string(buf), ios_base::out);
+                istr >> token;
+
+                if (token == "cpu")
                 {
-                    string cpuUtilizationStr;
-                    istr >> cpuUtilizationStr;
+                    unsigned int cpuUtilization[4];
 
-                    cpuUtilization[i] = atoi(cpuUtilizationStr.c_str());
+                    for (int i = 0; i < 4; i++)
+                    {
+                        string cpuUtilizationStr;
+                        istr >> cpuUtilizationStr;
+
+                        cpuUtilization[i] = atoi(cpuUtilizationStr.c_str());
+                    }
+
+                    // 0 - user time
+                    // 1 - nice time
+                    // 2 - system time
+                    // 3 - idle time
+                    unsigned int usageTime = (cpuUtilization[0] - mCPUUtilization[0]) + (cpuUtilization[1] - mCPUUtilization[1]) +
+                                             (cpuUtilization[2] - mCPUUtilization[2]);
+                    unsigned int totalTime = usageTime + (cpuUtilization[3] - mCPUUtilization[3]);
+                    float cpuPercent;
+
+                    if (totalTime != 0)
+                    {
+                        cpuPercent = (float)usageTime / (float)totalTime;
+                    }
+
+                    // First, take the lock to safely manipulate the UI outside of the
+                    // normal event loop, by having exclusive access to the session.
+                    WApplication::UpdateLock lock = mApp->getUpdateLock();
+
+                    if (mCPUUtilization[0] != 0)
+                    {
+                        addCPUReading(cpuPercent);
+                    }
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        mCPUUtilization[i] = cpuUtilization[i];
+                    }
+
+                    mChart->update();
+                    mApp->triggerUpdate();
+
+                    break;
                 }
-
-                // 0 - user time
-                // 1 - nice time
-                // 2 - system time
-                // 3 - idle time
-                unsigned int usageTime = (cpuUtilization[0] - mCPUUtilization[0]) + (cpuUtilization[1] - mCPUUtilization[1]) +
-                                         (cpuUtilization[2] - mCPUUtilization[2]);
-                unsigned int totalTime = usageTime + (cpuUtilization[3] - mCPUUtilization[3]);
-                float cpuPercent;
-
-                if (totalTime != 0)
-                {
-                    cpuPercent = (float)usageTime / (float)totalTime;
-                }
-
-                // First, take the lock to safely manipulate the UI outside of the
-                // normal event loop, by having exclusive access to the session.
-                WApplication::UpdateLock lock = mApp->getUpdateLock();
-
-                if (mCPUUtilization[0] != 0)
-                {
-                    addCPUReading(cpuPercent);
-                }
-
-                for (int i = 0; i < 4; i++)
-                {
-                    mCPUUtilization[i] = cpuUtilization[i];
-                }
-
-                mChart->update();
-                mApp->triggerUpdate();
-
-                break;
             }
         }
 

@@ -99,7 +99,10 @@ private:
     boost::thread *mThread;
 
     /// Stop requested
-    volatile bool mStopRequested;
+   volatile bool mStopUpdateThread;
+
+   /// Update chart
+   volatile bool mUpdateChart;
 
 };
 

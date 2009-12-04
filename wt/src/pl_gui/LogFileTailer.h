@@ -90,7 +90,10 @@ private:
     boost::thread  *mThread;
 
     /// Stop requested
-    volatile bool mStopRequested;
+    volatile bool mStopUpdateThread;
+
+    /// Update log
+    volatile bool mUpdateLog;
 
     /// Update milliseconds
     int mUpdateMS;
