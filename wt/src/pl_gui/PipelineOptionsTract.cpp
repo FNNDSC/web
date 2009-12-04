@@ -91,6 +91,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     WDoubleValidator *validator = new WDoubleValidator();
     validator->setRange(0.0, 1.0);
     mFAThresholdLineEdit->setValidator(validator);
+    mFAThresholdLineEdit->setToolTip("Enter a lower threshold value between 0.0 and 1.0. A value of 0.0 will use the entire FA volume.");
 
     mFAThresholdLabel = new WLabel("Lower threshold value for mask:");
     lineEditLayout->addWidget(mFAThresholdLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
