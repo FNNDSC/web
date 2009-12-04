@@ -104,9 +104,6 @@ LogFileTailer::LogFileTailer(const std::string& logFileName,
 //
 LogFileTailer::~LogFileTailer()
 {
-    mStopUpdateThread = true;
-    mThread->join();
-    delete mThread;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -138,6 +135,21 @@ void LogFileTailer::stopUpdate()
 {
     mUpdateLog = false;
 }
+
+///
+// Finalize the widget (pre-destruction)
+//
+void LogFileTailer::finalize()
+{
+    if (mThread != NULL)
+    {
+        mStopUpdateThread = true;
+        mThread->join();
+        delete mThread;
+        mThread = NULL;
+    }
+}
+
 
 ///
 //  Set lot file

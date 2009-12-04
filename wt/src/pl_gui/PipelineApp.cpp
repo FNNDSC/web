@@ -119,6 +119,16 @@ PipelineApp::~PipelineApp()
     delete mConfigXML;
 }
 
+///
+// Override finalize to handle destruction of threads
+//
+void PipelineApp::finalize()
+{
+    mSubjectPage->finalize();
+    mMonitorPage->finalize();
+    mClusterLoadPage->finalize();
+}
+
 
 ///
 //  Create the user interface widgets

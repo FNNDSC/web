@@ -49,6 +49,11 @@ public:
     void resetAll();
 
     ///
+    ///  Finalize the widget (pre-destruction)
+    ///
+    void finalize();
+
+    ///
     /// Signal accessor for scan added
     ///
     Wt::Signal<bool>& getScanAdded() { return mScanAdded; }

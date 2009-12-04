@@ -51,6 +51,11 @@ public:
     void resetAll();
 
     ///
+    /// Finalize the widget (pre-destruction)
+    ///
+    void finalize();
+
+    ///
     /// Set lot file
     ///
     void setLogFile(const std::string& logFileName);

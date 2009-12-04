@@ -127,9 +127,7 @@ ClusterLoadChart::ClusterLoadChart(WContainerWidget *parent) :
 //
 ClusterLoadChart::~ClusterLoadChart()
 {
-    mStopUpdateThread = true;
-    mThread->join();
-    delete mThread;
+
 }
 
 ///
@@ -160,6 +158,20 @@ void ClusterLoadChart::startUpdate()
 void ClusterLoadChart::stopUpdate()
 {
     mUpdateChart = false;
+}
+
+///
+// Finalize the widget (pre-destruction)
+//
+void ClusterLoadChart::finalize()
+{
+    if (mThread != NULL)
+    {
+        mStopUpdateThread = true;
+        mThread->join();
+        delete mThread;
+        mThread = NULL;
+    }
 }
 
 ///

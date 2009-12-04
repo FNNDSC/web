@@ -86,6 +86,15 @@ void ClusterLoadPage::resetAll()
 }
 
 ///
+//  Finalize the widget (pre-destruction)
+//
+void ClusterLoadPage::finalize()
+{
+    mTopFileTailer->finalize();
+    mClusterLoadChart->finalize();
+}
+
+///
 //  Start updating logs
 //
 void ClusterLoadPage::startUpdate()

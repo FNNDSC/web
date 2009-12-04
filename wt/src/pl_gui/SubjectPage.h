@@ -65,6 +65,11 @@ public:
     void resetAll();
 
     ///
+    /// Finalize the widget (pre-destruction)
+    ///
+    void finalize();
+
+    ///
     /// Get the MRI browser
     ///
     const MRIBrowser* getMRIBrowser() const;

@@ -117,6 +117,15 @@ void MonitorLogTab::resetAll()
 }
 
 ///
+//  Finalize the widget (pre-destruction)
+//
+void MonitorLogTab::finalize()
+{
+    mLogStdOut->finalize();
+    mLogStdErr->finalize();
+}
+
+///
 //  Start updating logs
 //
 void MonitorLogTab::startUpdate()

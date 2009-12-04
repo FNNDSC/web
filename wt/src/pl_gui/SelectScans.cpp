@@ -107,6 +107,15 @@ void SelectScans::resetAll()
 }
 
 ///
+//  Finalize the widget (pre-destruction)
+//
+void SelectScans::finalize()
+{
+    mClusterLoadChart->finalize();
+}
+
+
+///
 //  Get pipeline type as string (for command line arg)
 //
 const std::string SelectScans::getCurrentPipelineAsString() const

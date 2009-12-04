@@ -42,6 +42,11 @@ public:
     virtual ~PipelineApp();
 
     ///
+    /// Override finalize to handle destruction of threads
+    ///
+    virtual void finalize();
+
+    ///
     /// Slot for handling when the main tab changes
     ///
     void mainTabChanged(int currentIndex);

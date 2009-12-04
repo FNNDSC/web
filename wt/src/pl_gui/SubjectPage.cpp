@@ -127,7 +127,13 @@ void SubjectPage::resetAll()
     mPipelineConfigure->resetAll();
 }
 
-
+///
+//  Finalize the widget (pre-destruction)
+//
+void SubjectPage::finalize()
+{
+    mSelectScans->finalize();
+}
 
 ///
 //  Get the MRI browser

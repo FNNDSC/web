@@ -44,6 +44,11 @@ public:
     void resetAll();
 
     ///
+    /// Finalize the widget (pre-destruction)
+    ///
+    void finalize();
+
+    ///
     ///  Start updating logs
     ///
     void startUpdate();
