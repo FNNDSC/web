@@ -28,7 +28,7 @@ public:
     ///
     /// Constructor
     ///
-    ArchiveFileResource(const std::string& directoryPath, WObject *parent = 0);
+    ArchiveFileResource(WObject *parent = 0);
 
     ///
     /// Destructor
@@ -36,9 +36,10 @@ public:
     virtual ~ArchiveFileResource();
 
     ///
-    /// Set directory path
+    /// Set data pointer.  Note this pointer is owned by the caller and will not
+    /// be freed or copied by this class.
     ///
-    void setDirPath(const std::string& dirPath) {   mDirPath = dirPath; }
+    void setData(const unsigned char *data, int size);
 
 protected:
 
@@ -49,8 +50,11 @@ protected:
 
 private:
 
-    /// Directory path
-    std::string mDirPath;
+    /// Pointer to data
+    const unsigned char *mData;
+
+    /// Data size
+    int mSize;
 };
 
 #endif // ARCHIVEFILERESOURCE_H

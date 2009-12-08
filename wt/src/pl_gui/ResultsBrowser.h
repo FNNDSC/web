@@ -15,6 +15,7 @@
 
 #include "FileBrowser.h"
 #include <vector>
+#include <boost/thread/thread.hpp>
 
 using namespace Wt;
 
@@ -22,8 +23,12 @@ class ArchiveFileResource;
 
 namespace Wt
 {
+    class WApplication;
     class WPushButton;
     class WStandardItem;
+    class WDialog;
+    class WMemoryResource;
+    class WStackedWidget;
 }
 
 ///
@@ -87,7 +92,21 @@ protected:
     ///
     void refreshResults();
 
+    ///
+    ///  Download results button clicked [slot]
+    ///
+    void downloadResults();
+
+    ///
+    ///  Create tar file for directory in a thread
+    ///
+    void createTarArchive();
+
+
 private:
+
+    /// Application instance
+    WApplication *mApp;
 
     /// Log file vector
     std::vector<std::string> mResultFileEntries;
@@ -95,8 +114,14 @@ private:
     /// Signal for when a result file is selected
     Wt::Signal<std::string> mResultFileSelected;
 
-    /// Refersh button
+    /// Refresh button
     WPushButton *mRefreshButton;
+
+    /// Download button
+    WPushButton *mDownloadButton;
+
+    /// Stacked widget for downloading tarball
+    WStackedWidget *mDownloadStack;
 
     /// Results base directory
     std::string mResultsBaseDir;
@@ -104,8 +129,14 @@ private:
     /// Pipeline name
     std::string mPipelineName;
 
-    /// Archive file resource
-    ArchiveFileResource *mArchiveFileResource;
+    /// Thread for running tar processing
+    boost::thread *mArchiveThread;
+
+    /// Memory resource to tarball
+    ArchiveFileResource *mTarMemResource;
+
+    /// Buffer holding tarball file
+    unsigned char *mTarBuffer;
 
 };
 

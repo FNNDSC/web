@@ -28,9 +28,15 @@
 #include <Wt/WVBoxLayout>
 #include <Wt/WPushButton>
 #include <Wt/WAnchor>
+#include <Wt/WMessageBox>
+#include <Wt/WDialog>
+#include <Wt/WStackedWidget>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/regex.hpp>
+#include <boost/process/process.hpp>
+#include <boost/process/child.hpp>
+#include <boost/process/launch_shell.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -42,6 +48,7 @@ using namespace Wt;
 using namespace std;
 using namespace boost;
 using namespace boost::filesystem;
+using namespace boost::processes;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,25 +61,42 @@ using namespace boost::filesystem;
 //  Constructor
 //
 ResultsBrowser::ResultsBrowser(WContainerWidget *parent) :
-    FileBrowser(parent)
+    FileBrowser(parent),
+    mApp(WApplication::instance()),
+    mTarBuffer(NULL)
 {
     mTreeView->selectionChanged().connect(SLOT(this, ResultsBrowser::resultChanged));
     mTreeView->setMinimumSize(400, WLength::Auto);
 
-    mArchiveFileResource = new ArchiveFileResource("");
-    WAnchor *downloadAnchor = new WAnchor(mArchiveFileResource);
+
+    mDownloadButton = new WPushButton("Download All Results");
+    WHBoxLayout *loadingLayout = new WHBoxLayout();
+    WContainerWidget *loadingContainer = new WContainerWidget;
+    WImage *loading = new WImage("icons/ajax-loader-trans.gif");
+    loadingLayout->addWidget(new WText("Creating tar file, please wait..."));
+    loadingLayout->addWidget(loading);
+    loadingContainer->setLayout(loadingLayout);
+
+    mTarMemResource = new ArchiveFileResource();
+    WAnchor *downloadAnchor = new WAnchor(mTarMemResource);
     downloadAnchor->setTarget(TargetThisWindow);
-    WPushButton *downloadTarButton = new WPushButton("Download All Results", downloadAnchor);
+    WPushButton *downloadTarButton = new WPushButton("Tar File Ready -- Click to Download", downloadAnchor);
+
+    mDownloadStack = new WStackedWidget();
+    mDownloadStack->addWidget(mDownloadButton);
+    mDownloadStack->addWidget(loadingContainer);
+    mDownloadStack->addWidget(downloadAnchor);
 
     mRefreshButton = new WPushButton("Refresh Available Results");
     WGridLayout *layout = new WGridLayout();
     layout->addWidget(mTreeView, 0, 0);
     layout->addWidget(mRefreshButton, 1, 0, AlignCenter);
-    layout->addWidget(downloadAnchor, 2, 0, AlignCenter);
+    layout->addWidget(mDownloadStack, 2, 0, AlignCenter);
     layout->setRowStretch(0, 1);
     setLayout(layout);
 
     mRefreshButton->clicked().connect(SLOT(this, ResultsBrowser::refreshResults));
+    mDownloadButton->clicked().connect(SLOT(this, ResultsBrowser::downloadResults));
 
     resetAll();
 }
@@ -82,6 +106,11 @@ ResultsBrowser::ResultsBrowser(WContainerWidget *parent) :
 //
 ResultsBrowser::~ResultsBrowser()
 {
+    if (mTarBuffer != NULL)
+    {
+        delete [] mTarBuffer;
+        mTarBuffer = NULL;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -110,6 +139,13 @@ void ResultsBrowser::resetAll()
         newItem->setIcon("icons/folder.gif");
         mModel->appendRow(newItem);
     }
+
+    mDownloadStack->setCurrentIndex(0);
+    if (mTarBuffer != NULL)
+    {
+        delete [] mTarBuffer;
+        mTarBuffer = NULL;
+    }
 }
 
 
@@ -119,10 +155,6 @@ void ResultsBrowser::resetAll()
 void ResultsBrowser::setResultsBaseDir(const std::string& baseDir)
 {
     mResultsBaseDir = baseDir;
-    mArchiveFileResource->setDirPath(mResultsBaseDir);
-    mArchiveFileResource->suggestFileName(path(mResultsBaseDir).leaf() + ".tar.gz");
-    mArchiveFileResource->setChanged();
-
 }
 
 ///
@@ -257,3 +289,90 @@ void ResultsBrowser::refreshResults()
     }
 }
 
+///
+//  Download results button clicked [slot]
+//
+void ResultsBrowser::downloadResults()
+{
+    mApp->log("info") << "Starting thread";
+
+    mDownloadStack->setCurrentIndex(1);
+    mArchiveThread = new boost::thread(boost::bind(&ResultsBrowser::createTarArchive, this));
+}
+
+///
+//  Create tar file for directory in a thread
+//
+void ResultsBrowser::createTarArchive()
+{
+    char *tmpName = strdup("/tmp/archive_XXXXXX");
+
+    if (mkstemp(tmpName) == -1)
+    {
+        WApplication::instance()->log("error") << "Error creating file on server: " << tmpName;
+        return;
+    }
+
+    path dirPath = path(mResultsBaseDir);
+    string cmdToExecute;
+    cmdToExecute = string("tar cvzf ") + tmpName + " -C " + dirPath.branch_path().string() + " " + dirPath.leaf();
+
+    context ctx;
+    child c = launch_shell(cmdToExecute.c_str(), ctx);
+    boost::processes::status s = c.wait();
+
+    // Now read the temp file and delete it
+    FILE *fp = fopen(tmpName, "rb");
+    if (fp != NULL)
+    {
+        long curPos = ftell(fp);
+        long size;
+
+        fseek(fp, 0, SEEK_END);
+        size = ftell(fp);
+        fseek(fp, curPos, SEEK_SET);
+
+        if (mTarBuffer != NULL)
+        {
+            delete [] mTarBuffer;
+        }
+
+
+        mTarBuffer = new unsigned char [size];
+
+        if (fread(mTarBuffer, 1, size, fp) != size)
+        {
+            mApp->log("error") << "Error reading bytes of tar file " << tmpName;
+        }
+        fclose(fp);
+
+        mTarMemResource->setData(mTarBuffer, size);
+        mTarMemResource->suggestFileName(path(mResultsBaseDir).leaf() + ".tar.gz");
+
+        // Remove the temp file
+        cmdToExecute = string("rm -rf ") + tmpName;
+        context ctx;
+        child c = launch_shell(cmdToExecute.c_str(), ctx);
+        boost::processes::status s = c.wait();
+
+        // First, take the lock to safely manipulate the UI outside of the
+        // normal event loop, by having exclusive access to the session.
+        WApplication::UpdateLock lock = mApp->getUpdateLock();
+
+        mTarMemResource->setChanged();
+
+        // Set to download tarball button
+        mDownloadStack->setCurrentIndex(2);
+
+        mApp->triggerUpdate();
+    }
+    else
+    {
+        // First, take the lock to safely manipulate the UI outside of the
+        // normal event loop, by having exclusive access to the session.
+        WApplication::UpdateLock lock = mApp->getUpdateLock();
+        mApp->log("error") << "Error opening tar file " << tmpName;
+        mDownloadStack->setCurrentIndex(0);
+        mApp->triggerUpdate();
+    }
+}

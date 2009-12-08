@@ -44,9 +44,10 @@ using namespace boost::processes;
 ///
 //  Constructor
 //
-ArchiveFileResource::ArchiveFileResource(const std::string& directoryPath, WObject *parent) :
+ArchiveFileResource::ArchiveFileResource(WObject *parent) :
     WResource(parent),
-    mDirPath(directoryPath)
+    mData(NULL),
+    mSize(0)
 {
 }
 
@@ -66,6 +67,16 @@ ArchiveFileResource::~ArchiveFileResource()
 //
 //
 
+///
+//  Set data pointer.  Note this pointer is owned by the caller and will not
+//  be freed or copied by this class.
+//
+void ArchiveFileResource::setData(const unsigned char *data, int size)
+{
+    mData = data;
+    mSize = size;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -79,36 +90,9 @@ ArchiveFileResource::~ArchiveFileResource()
 void ArchiveFileResource::handleRequest(const Http::Request& request,
                                         Http::Response& response)
 {
-    char *tmpName = strdup("/tmp/archive_XXXXXX");
-
-    if (mkstemp(tmpName) == -1)
+    if (mData != NULL && mSize > 0)
     {
-        WApplication::instance()->log("error") << "Error creating file on server: " << tmpName;
-        return;
-    }
-
-    path dirPath = path(mDirPath);
-    string cmdToExecute;
-    cmdToExecute = string("tar cvzf ") + tmpName + " -C " + dirPath.branch_path().string() + " " + dirPath.leaf();
-
-    context ctx;
-    child c = launch_shell(cmdToExecute.c_str(), ctx);
-    boost::processes::status s = c.wait();
-
-    ifstream inFile(tmpName, ios::in);
-    if (inFile.is_open())
-    {
-        ostringstream oss;
-        oss << inFile.rdbuf();
-
         response.setMimeType("application/x-compressed");
-        response.out() << oss.str();
-        inFile.close();
-
-        // Remove the temp file
-        cmdToExecute = string("rm -rf ") + tmpName;
-        context ctx;
-        child c = launch_shell(cmdToExecute.c_str(), ctx);
-        boost::processes::status s = c.wait();
+        response.out().write((const char*)mData, mSize);
     }
 }
