@@ -111,6 +111,8 @@ ResultsBrowser::~ResultsBrowser()
         delete [] mTarBuffer;
         mTarBuffer = NULL;
     }
+
+    delete mTarMemResource;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -165,6 +167,12 @@ void ResultsBrowser::setPipelineName(const std::string& pipelineName)
     mPipelineName = pipelineName;
 }
 
+///
+// Finalize the widget (pre-destruction)
+//
+void ResultsBrowser::finalize()
+{
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -294,10 +302,8 @@ void ResultsBrowser::refreshResults()
 //
 void ResultsBrowser::downloadResults()
 {
-    mApp->log("info") << "Starting thread";
-
     mDownloadStack->setCurrentIndex(1);
-    mArchiveThread = new boost::thread(boost::bind(&ResultsBrowser::createTarArchive, this));
+    mArchiveThread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&ResultsBrowser::createTarArchive, this)));
 }
 
 ///
@@ -310,6 +316,7 @@ void ResultsBrowser::createTarArchive()
     if (mkstemp(tmpName) == -1)
     {
         WApplication::instance()->log("error") << "Error creating file on server: " << tmpName;
+        free(tmpName);
         return;
     }
 
@@ -351,9 +358,8 @@ void ResultsBrowser::createTarArchive()
 
         // Remove the temp file
         cmdToExecute = string("rm -rf ") + tmpName;
-        context ctx;
-        child c = launch_shell(cmdToExecute.c_str(), ctx);
-        boost::processes::status s = c.wait();
+        c = launch_shell(cmdToExecute.c_str(), ctx);
+        s = c.wait();
 
         // First, take the lock to safely manipulate the UI outside of the
         // normal event loop, by having exclusive access to the session.
@@ -375,4 +381,6 @@ void ResultsBrowser::createTarArchive()
         mDownloadStack->setCurrentIndex(0);
         mApp->triggerUpdate();
     }
+
+    free(tmpName);
 }

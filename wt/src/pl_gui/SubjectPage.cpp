@@ -291,6 +291,7 @@ bool SubjectPage::submitForProcessing()
         StandardButton result = WMessageBox::show("ERROR",
                                                   string("Error creating file on server: ") + string(tmpName),
                                                   Wt::Ok);
+        free(tmpName);
 
         return false;
     }
@@ -305,6 +306,7 @@ bool SubjectPage::submitForProcessing()
         StandardButton result = WMessageBox::show("ERROR",
                                                   string("Error creating file on server: ") + string(tmpName),
                                                   Wt::Ok);
+        free(tmpName);
 
         return false;
     }
@@ -394,9 +396,11 @@ bool SubjectPage::submitForProcessing()
         StandardButton result = WMessageBox::show("ERROR",
                                                   string("Error occurred in adding files to cluster schedule."),
                                                   Wt::Ok);
+        free(tmpName);
         return false;
     }
 
+    free(tmpName);
     return true;
 }
 

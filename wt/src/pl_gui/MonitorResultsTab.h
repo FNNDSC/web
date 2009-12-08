@@ -52,6 +52,11 @@ public:
     void resetAll();
 
     ///
+    /// Finalize the widget (pre-destruction)
+    ///
+    void finalize();
+
+    ///
     /// Handle job selection changes
     ///
     void jobSelectedChanged(std::string jobSelectedFile);

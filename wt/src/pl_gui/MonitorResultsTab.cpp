@@ -104,6 +104,15 @@ void MonitorResultsTab::resetAll()
 }
 
 ///
+//  Finalize the widget (pre-destruction)
+//
+void MonitorResultsTab::finalize()
+{
+    mResultsBrowser->finalize();
+}
+
+
+///
 //  Handle job selection changes
 //
 void MonitorResultsTab::jobSelectedChanged(std::string jobSelectedFile)

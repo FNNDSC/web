@@ -16,6 +16,7 @@
 #include "FileBrowser.h"
 #include <vector>
 #include <boost/thread/thread.hpp>
+#include <boost/shared_ptr.hpp>
 
 using namespace Wt;
 
@@ -53,6 +54,11 @@ public:
     /// Reset to the default state
     ///
     void resetAll();
+
+    ///
+    /// Finalize the widget (pre-destruction)
+    ///
+    void finalize();
 
     ///
     ///  Set the base directory for the results
@@ -130,7 +136,7 @@ private:
     std::string mPipelineName;
 
     /// Thread for running tar processing
-    boost::thread *mArchiveThread;
+    boost::shared_ptr<boost::thread> mArchiveThread;
 
     /// Memory resource to tarball
     ArchiveFileResource *mTarMemResource;

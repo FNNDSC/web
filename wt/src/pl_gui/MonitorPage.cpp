@@ -137,6 +137,7 @@ void MonitorPage::resetAll()
 void MonitorPage::finalize()
 {
     mMonitorLogTab->finalize();
+    mMonitorResultsTab->finalize();
 }
 
 ///
