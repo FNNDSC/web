@@ -31,6 +31,7 @@
 #include <boost/process/child.hpp>
 #include <boost/process/launch_shell.hpp>
 #include <boost/filesystem.hpp>
+#include <sys/time.h>
 #include <stdlib.h>
 #include <fstream>
 #include <iostream>
@@ -321,8 +322,7 @@ bool SubjectPage::submitForProcessing()
     time( &curTime );
     t = localtime( &curTime );
 
-    std::string curDate = (WDate::currentDate().toString("yyyyMMdd") +
-                           WString("-{1}{2}{3}").arg(t->tm_hour).arg(t->tm_min).arg(t->tm_sec)).toUTF8();
+    std::string curDate = (WDate::currentDate().toString("yyyyMMdd")).toUTF8();
 
     const std::vector<ScanBrowser::ScanData>& scansToProcess = mSelectScans->getScansToProcess();
 
@@ -349,10 +349,15 @@ bool SubjectPage::submitForProcessing()
         std::string age = scansToProcess[i].mAge;
         std::string date = scansToProcess[i].mScanDate;
 
-        tmpFile << path(scansToProcess[i].mScanDir).leaf() << ";"
+        // Use real-time clock to get a unique time value
+       timespec timeSpec;
+       clock_gettime(CLOCK_REALTIME, &timeSpec);
+
+
+       tmpFile << path(scansToProcess[i].mScanDir).leaf() << ";"
                 << scansToProcess[i].mDicomFile << ";"
-                << "-" << date << "_" << age << "-" << curDate << "-" << mPipelineConfigure->getOutputFileSuffix() << ";"
-                << "-" << date << "_" << age << "-" << curDate << "-" << mPipelineConfigure->getOutputDirSuffix() << endl;
+                << "-" << date << "_" << age << "-" << curDate << "-" << timeSpec.tv_sec << timeSpec.tv_nsec << "-" << mPipelineConfigure->getOutputFileSuffix() << ";"
+                << "-" << date << "_" << age << "-" << curDate << "-" << timeSpec.tv_sec << timeSpec.tv_nsec << "-" << mPipelineConfigure->getOutputDirSuffix() << endl;
 
     }
     tmpFile.close();
