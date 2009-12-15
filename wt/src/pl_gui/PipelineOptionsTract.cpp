@@ -11,6 +11,10 @@
 //
 #include "PipelineOptionsTract.h"
 #include "GlobalEnums.h"
+#include "PipelineApp.h"
+#include "ConfigOptions.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
@@ -26,6 +30,9 @@
 #include <Wt/WDoubleValidator>
 #include <Wt/WLineEdit>
 #include <Wt/WMessageBox>
+#include <Wt/WFileUpload>
+#include <Wt/WDate>
+#include <boost/filesystem.hpp>
 #include <vector>
 
 ///
@@ -33,6 +40,7 @@
 //
 using namespace Wt;
 using namespace std;
+using namespace boost::filesystem;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -61,8 +69,29 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
         mStageButtonGroupLayout->addWidget(mStageBoxes[i]);
     }
 
-    // Settings box configuration
-    mSettingsGroupBox->show();
+    WGroupBox *processingBox = new WGroupBox("Processing");
+    processingBox->setStyleClass("optiongroupdiv");
+    WGridLayout *processingBoxLayout = new WGridLayout();
+
+    mEddyCurrentCheckBox = new WCheckBox("Perform Eddy Current Correction (ECC)");
+    mFAVolumeMaskCheckBox = new WCheckBox("Use FA volume as mask filter?");
+
+
+    WGridLayout *lineEditLayout = new WGridLayout();
+    mFAThresholdLineEdit = new WLineEdit("0.0");
+    WDoubleValidator *validator = new WDoubleValidator();
+    validator->setRange(0.0, 1.0);
+    mFAThresholdLineEdit->setValidator(validator);
+
+    mFAThresholdLineEdit->setToolTip("Enter a lower threshold value between 0.0 and 1.0. A value of 0.0 will use the entire FA volume.");
+    mFAThresholdLabel = new WLabel("Lower threshold value for mask:");
+    lineEditLayout->addWidget(mFAThresholdLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    lineEditLayout->addWidget(mFAThresholdLineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    lineEditLayout->setColumnStretch(1, 1);
+
+    WVBoxLayout *vboxFALayout = new WVBoxLayout();
+    vboxFALayout->addWidget(mFAVolumeMaskCheckBox);
+    vboxFALayout->addLayout(lineEditLayout);
 
     WGridLayout *comboBoxLayout = new WGridLayout();
 
@@ -81,33 +110,44 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     comboBoxLayout->addWidget(mImageModelComboBox, 1, 1, Wt::AlignLeft | Wt::AlignMiddle);
     comboBoxLayout->setColumnStretch(1, 1);
 
-    mEddyCurrentCheckBox = new WCheckBox("Perform Eddy Current Correction (ECC)");
-    mSettingsGroupBoxLayout->addWidget(mEddyCurrentCheckBox, 0, 0, Wt::AlignMiddle);
-    mFAVolumeMaskCheckBox = new WCheckBox("Use FA volume as mask filter?");
-    mSettingsGroupBoxLayout->addWidget(mFAVolumeMaskCheckBox, 1, 0, Wt::AlignMiddle);
 
-    WGridLayout *lineEditLayout = new WGridLayout();
-    mFAThresholdLineEdit = new WLineEdit("0.0");
-    WDoubleValidator *validator = new WDoubleValidator();
-    validator->setRange(0.0, 1.0);
-    mFAThresholdLineEdit->setValidator(validator);
-    mFAThresholdLineEdit->setToolTip("Enter a lower threshold value between 0.0 and 1.0. A value of 0.0 will use the entire FA volume.");
+    // Processing group box layout
+    processingBoxLayout->addWidget(mEddyCurrentCheckBox, 0, 0, Wt::AlignMiddle);
+    processingBoxLayout->addLayout(vboxFALayout, 1, 0, Wt::AlignMiddle);
+    processingBoxLayout->addLayout(comboBoxLayout, 2, 0, Wt::AlignTop);
+    processingBox->setLayout(processingBoxLayout);
 
-    mFAThresholdLabel = new WLabel("Lower threshold value for mask:");
-    lineEditLayout->addWidget(mFAThresholdLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
-    lineEditLayout->addWidget(mFAThresholdLineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
-    lineEditLayout->setColumnStretch(1, 1);
-    mSettingsGroupBoxLayout->addLayout(lineEditLayout, 2, 0, Wt::AlignMiddle);
+    WGroupBox *gradientTableBox = new WGroupBox("Gradient Table");
+    gradientTableBox->setStyleClass("optiongroupdiv");
+    WGridLayout *gradientLayout = new WGridLayout();
 
-    mSettingsGroupBoxLayout->addLayout(comboBoxLayout, 3, 0);
-    mSettingsGroupBoxLayout->setRowStretch(3, 1);
+    // Gradient File
+    mGradientFileCheckBox = new WCheckBox("Manually upload gradient file?");
+    mGradientFileUpload = new WFileUpload();
+    gradientLayout->addWidget(mGradientFileCheckBox, 0, 0, Wt::AlignMiddle);
+    gradientLayout->addWidget(mGradientFileUpload, 1, 0, Wt::AlignMiddle);
+    gradientTableBox->setLayout(gradientLayout);
+
+    WVBoxLayout *rightSettingsLayout = new WVBoxLayout();
+    rightSettingsLayout->addWidget(gradientTableBox);
+    rightSettingsLayout->addStretch();
+
+    WGridLayout *settingsGridLayout = new WGridLayout();
+    settingsGridLayout->addWidget(processingBox, 0, 0);
+    settingsGridLayout->addLayout(rightSettingsLayout, 0, 1);
+    settingsGridLayout->setRowStretch(0, -1);
 
     // Add to the base class layout
-    mPipelineOptionsBoxLayout->addWidget(mSettingsGroupBox, 1, 0);
+    mPipelineOptionsBoxLayout->addLayout(settingsGridLayout, 1, 0);
     mPipelineOptionsBoxLayout->addWidget(mDirectoryGroupBox, 2, 0);
+    mPipelineOptionsBoxLayout->setRowStretch(0, -1);
+    mPipelineOptionsBoxLayout->setRowStretch(1, 1);
+    mPipelineOptionsBoxLayout->setRowStretch(2, -1);
 
     // Connection
     mFAVolumeMaskCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::volumeMaskClicked));
+    mGradientFileUpload->changed().connect(SLOT(mGradientFileUpload, WFileUpload::upload));
+    mGradientFileUpload->uploaded().connect(SLOT(this, PipelineOptionsTract::fileUploaded));
 
     resetAll();
 }
@@ -142,7 +182,8 @@ void PipelineOptionsTract::resetAll()
     mFAThresholdLineEdit->setText("0.0");
     mFAThresholdLineEdit->disable();
     mFAThresholdLabel->disable();
-
+    mGradientFileCheckBox->setChecked(false);
+    mGradientServerFile = "";
 }
 
 ///
@@ -158,6 +199,17 @@ bool PipelineOptionsTract::validate() const
                               "Threshold value for mask must be in the range [0.0, 1.0].  Please correct it.",
                               Wt::Ok);
 
+            return false;
+        }
+    }
+
+    if (mGradientFileCheckBox->isChecked())
+    {
+        if (mGradientServerFile == "")
+        {
+            WMessageBox::show("Gradient File",
+                              "If you want to manually provide a gradient file, you must upload it.  Please upload the file first.",
+                              Wt::Ok);
             return false;
         }
     }
@@ -209,6 +261,11 @@ std::string PipelineOptionsTract::getCommandLineString() const
         args += " -F " + mFAThresholdLineEdit->text().toUTF8();
     }
 
+    if (mGradientFileCheckBox->isChecked())
+    {
+        args += " -g \"" + mGradientServerFile + "\"";
+    }
+
     return args + " " + PipelineOptions::getCommandLineString();
 }
 
@@ -232,5 +289,57 @@ void PipelineOptionsTract::volumeMaskClicked()
     {
         mFAThresholdLineEdit->disable();
         mFAThresholdLabel->disable();
+    }
+}
+
+///
+//  Gradient file uploaded
+//
+void PipelineOptionsTract::fileUploaded()
+{
+    if (!mGradientFileUpload->emptyFileName())
+    {
+        // Check the upload check box if it is not already checked
+        mGradientFileCheckBox->setChecked(true);
+
+        // Grab the file from the upload widget
+        const WString& clientFileName = mGradientFileUpload->clientFileName();
+        const std::string& spoolFileName = mGradientFileUpload->spoolFileName();
+        mGradientFileUpload->stealSpooledFile();
+
+        // Copy it out to our directory for storing gradient table files
+        std::string gradientFileDir = getConfigOptionsPtr()->GetOutGradientDir();
+        std::string gradientFile;
+
+        // Create unique identifier for gradient file based on date/time
+        time_t curTime;
+        tm *t;
+        time( &curTime );
+        t = localtime( &curTime );
+
+        std::string curDate = (WDate::currentDate().toString("yyyyMMdd") +
+                               WString("-{1}{2}{3}").arg(t->tm_hour).arg(t->tm_min).arg(t->tm_sec)).toUTF8();
+
+        gradientFileDir = gradientFileDir + "/" + curDate;
+        try
+        {
+            // Create the directory
+            create_directory(path(gradientFileDir));
+
+            // Copy the file
+            gradientFile = gradientFileDir + "/" + clientFileName.toUTF8();
+            copy_file(spoolFileName, gradientFile);
+
+            // Remove the uploaded copy
+            remove(spoolFileName);
+        }
+        catch(...)
+        {
+            WApplication::instance()->log("error") << "Error copying gradient file " << spoolFileName << " to " << gradientFile;
+            mGradientServerFile = "";
+            return;
+        }
+
+        mGradientServerFile = gradientFile;
     }
 }

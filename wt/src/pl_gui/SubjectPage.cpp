@@ -317,11 +317,6 @@ bool SubjectPage::submitForProcessing()
     tmpFile << "DEFAULTCOM = " << mPipelineConfigure->getCommandLineString() << endl;
     tmpFile << "DEFAULTDIR = " << getConfigOptionsPtr()->GetDicomDir() << endl;
 
-    time_t curTime;
-    tm *t;
-    time( &curTime );
-    t = localtime( &curTime );
-
     std::string curDate = (WDate::currentDate().toString("yyyyMMdd")).toUTF8();
 
     const std::vector<ScanBrowser::ScanData>& scansToProcess = mSelectScans->getScansToProcess();

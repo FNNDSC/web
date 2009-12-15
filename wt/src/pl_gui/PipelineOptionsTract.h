@@ -13,6 +13,7 @@
 #define PIPELINEOPTIONSTRACT_H
 
 #include "PipelineOptions.h"
+#include <string>
 
 ///
 //  Constants
@@ -28,6 +29,7 @@ namespace Wt
     class WCheckBox;
     class WComboBox;
     class WLineEdit;
+    class WFileUpload;
 };
 
 ///
@@ -69,6 +71,11 @@ private:
     ///
     void volumeMaskClicked();
 
+    ///
+    ///  Gradient file uploaded [slot]
+    ///
+    void fileUploaded();
+
 private:
 
     /// Buttons for pipeline stages
@@ -91,6 +98,15 @@ private:
 
     /// FA Treshold label
     WLabel *mFAThresholdLabel;
+
+    /// Upload Gradient file check box
+    WCheckBox *mGradientFileCheckBox;
+
+    /// Gradient Table File upload
+    WFileUpload *mGradientFileUpload;
+
+    /// Name of uploaded gradient file on server
+    std::string mGradientServerFile;
 };
 
 #endif // PIPELINEOPTIONSTRACT_H

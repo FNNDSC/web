@@ -45,6 +45,7 @@ public:
     // Accessors
     const std::string& GetDicomDir()            const { return mDicomDir; }
     const std::string& GetOutDir()              const { return mOutDir; }
+    const std::string& GetOutGradientDir()      const { return mOutGradientDir; }
     const std::string& GetSeriesListTract()     const { return mSeriesListTract; }
     const std::string& GetSeriesListFS()        const { return mSeriesListFS; }
     const std::string& GetScriptDir()           const { return mScriptDir; }
@@ -72,6 +73,9 @@ private:
 
     /// Output directory
     std::string mOutDir;
+
+    /// Output gradient directory
+    std::string mOutGradientDir;
 
     /// Cluster name
     std::string mClusterName;

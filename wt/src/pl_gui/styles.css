@@ -69,6 +69,12 @@ div.Wt-popupmenu .separator {
     border: 1px solid #C3D9FF;
 }
 
+.optiongroupdiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+}
+
+
 .smallgroupdiv {
     background-color: white;
     border: 1px solid #C3D9FF;

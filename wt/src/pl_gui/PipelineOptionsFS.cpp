@@ -66,7 +66,6 @@ PipelineOptionsFS::PipelineOptionsFS(WContainerWidget *parent) :
 //
 PipelineOptionsFS::~PipelineOptionsFS()
 {
-    delete mSettingsGroupBox; // Not added to layout, so it has no parent
 }
 
 
