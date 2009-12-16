@@ -319,11 +319,7 @@ void PipelineOptionsTract::fileUploaded()
 
         std::string curDate = (WDate::currentDate().toString("yyyyMMdd") +
                                WString("-{1}{2}{3}").arg(t->tm_hour).arg(t->tm_min).arg(t->tm_sec)).toUTF8();
-        std::string clientBaseName = path(clientFileName.toUTF8()).leaf();
-        if (clientBaseName == "")
-        {
-            clientBaseName = "default.txt";
-        }
+        std::string clientBaseName = "uploaded_gradient_file.txt";
 
         gradientFileDir = gradientFileDir + "/" + curDate;
         try
