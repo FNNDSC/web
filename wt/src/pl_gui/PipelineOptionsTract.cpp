@@ -209,6 +209,7 @@ void PipelineOptionsTract::resetAll()
     mFAThresholdLineEdit->setText("0.0");
     mFAThresholdLineEdit->disable();
     mFAThresholdLabel->disable();
+    mB0VolumesCheckBox->setChecked(false);
     mB0VolumesLineEdit->setText("1");
     mB0VolumesLineEdit->disable();
     mB0VolumesLabel->disable();
