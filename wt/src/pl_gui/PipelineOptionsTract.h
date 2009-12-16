@@ -72,6 +72,11 @@ private:
     void volumeMaskClicked();
 
     ///
+    ///  B0 Volumes checkbox clicked [slot]
+    ///
+    void b0VolumeClicked();
+
+    ///
     ///  Gradient file uploaded [slot]
     ///
     void fileUploaded();
@@ -107,6 +112,15 @@ private:
 
     /// Name of uploaded gradient file on server
     std::string mGradientServerFile;
+
+    /// Manually set B0 volumes check box
+    WCheckBox *mB0VolumesCheckBox;
+
+    /// Number of B0 volumes label
+    WLabel *mB0VolumesLabel;
+
+    /// Number of B0 Volumes
+    WLineEdit *mB0VolumesLineEdit;
 };
 
 #endif // PIPELINEOPTIONSTRACT_H

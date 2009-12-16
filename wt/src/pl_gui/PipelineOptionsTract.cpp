@@ -27,6 +27,7 @@
 #include <Wt/WButtonGroup>
 #include <Wt/WCheckBox>
 #include <Wt/WComboBox>
+#include <Wt/WIntValidator>
 #include <Wt/WDoubleValidator>
 #include <Wt/WLineEdit>
 #include <Wt/WMessageBox>
@@ -71,7 +72,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 
     WGroupBox *processingBox = new WGroupBox("Processing");
     processingBox->setStyleClass("optiongroupdiv");
-    WGridLayout *processingBoxLayout = new WGridLayout();
+    WVBoxLayout *processingBoxLayout = new WVBoxLayout();
 
     mEddyCurrentCheckBox = new WCheckBox("Perform Eddy Current Correction (ECC)");
     mFAVolumeMaskCheckBox = new WCheckBox("Use FA volume as mask filter?");
@@ -92,6 +93,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     WVBoxLayout *vboxFALayout = new WVBoxLayout();
     vboxFALayout->addWidget(mFAVolumeMaskCheckBox);
     vboxFALayout->addLayout(lineEditLayout);
+    vboxFALayout->addStretch(100);
 
     WGridLayout *comboBoxLayout = new WGridLayout();
 
@@ -112,25 +114,49 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 
 
     // Processing group box layout
-    processingBoxLayout->addWidget(mEddyCurrentCheckBox, 0, 0, Wt::AlignMiddle);
-    processingBoxLayout->addLayout(vboxFALayout, 1, 0, Wt::AlignMiddle);
-    processingBoxLayout->addLayout(comboBoxLayout, 2, 0, Wt::AlignTop);
+    processingBoxLayout->addWidget(mEddyCurrentCheckBox, Wt::AlignTop);
+    processingBoxLayout->addLayout(vboxFALayout, Wt::AlignTop);
+    processingBoxLayout->addLayout(comboBoxLayout,Wt::AlignTop);
+    processingBoxLayout->addStretch(100);
     processingBox->setLayout(processingBoxLayout);
 
-    WGroupBox *gradientTableBox = new WGroupBox("Gradient Table");
+    WGroupBox *gradientTableBox = new WGroupBox("Gradients");
     gradientTableBox->setStyleClass("optiongroupdiv");
-    WGridLayout *gradientLayout = new WGridLayout();
+    WVBoxLayout *gradientLayout = new WVBoxLayout();
 
     // Gradient File
     mGradientFileCheckBox = new WCheckBox("Manually upload gradient file?");
     mGradientFileUpload = new WFileUpload();
-    gradientLayout->addWidget(mGradientFileCheckBox, 0, 0, Wt::AlignMiddle);
-    gradientLayout->addWidget(mGradientFileUpload, 1, 0, Wt::AlignMiddle);
+
+    mB0VolumesCheckBox = new WCheckBox("Manually specify the number of B0 volumes?");
+    WGridLayout *b0LineEditLayout = new WGridLayout();
+    mB0VolumesLineEdit = new WLineEdit("1");
+    WIntValidator *intValidator = new WIntValidator();
+    validator->setRange(1, 1000);
+    mB0VolumesLineEdit->setValidator(intValidator);
+    mB0VolumesLineEdit->setToolTip("Enter the number of B0 volumes.  This must match the number of B0 volumes in the MRI.");
+    mB0VolumesLabel = new WLabel("Number of B0 volumes:");
+    b0LineEditLayout->addWidget(mB0VolumesLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    b0LineEditLayout->addWidget(mB0VolumesLineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    b0LineEditLayout->setColumnStretch(1, 1);
+
+    WVBoxLayout *vboxB0Layout = new WVBoxLayout();
+    vboxB0Layout->addWidget(mB0VolumesCheckBox);
+    vboxB0Layout->addLayout(b0LineEditLayout);
+    vboxB0Layout->addStretch(100);
+
+    WVBoxLayout *uploadLayout = new WVBoxLayout();
+    uploadLayout->addWidget(mGradientFileCheckBox);
+    uploadLayout->addWidget(mGradientFileUpload);
+    uploadLayout->addStretch(100);
+
+    gradientLayout->addLayout(uploadLayout, Wt::AlignTop);
+    gradientLayout->addLayout(vboxB0Layout, Wt::AlignTop);
+    gradientLayout->addStretch(100);
     gradientTableBox->setLayout(gradientLayout);
 
     WVBoxLayout *rightSettingsLayout = new WVBoxLayout();
     rightSettingsLayout->addWidget(gradientTableBox);
-    rightSettingsLayout->addStretch();
 
     WGridLayout *settingsGridLayout = new WGridLayout();
     settingsGridLayout->addWidget(processingBox, 0, 0);
@@ -146,6 +172,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 
     // Connection
     mFAVolumeMaskCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::volumeMaskClicked));
+    mB0VolumesCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::b0VolumeClicked));
     mGradientFileUpload->changed().connect(SLOT(mGradientFileUpload, WFileUpload::upload));
     mGradientFileUpload->uploaded().connect(SLOT(this, PipelineOptionsTract::fileUploaded));
 
@@ -182,6 +209,9 @@ void PipelineOptionsTract::resetAll()
     mFAThresholdLineEdit->setText("0.0");
     mFAThresholdLineEdit->disable();
     mFAThresholdLabel->disable();
+    mB0VolumesLineEdit->setText("1");
+    mB0VolumesLineEdit->disable();
+    mB0VolumesLabel->disable();
     mGradientFileCheckBox->setChecked(false);
     mGradientServerFile = "";
 }
@@ -197,6 +227,18 @@ bool PipelineOptionsTract::validate() const
         {
             WMessageBox::show("Invalid Input",
                               "Threshold value for mask must be in the range [0.0, 1.0].  Please correct it.",
+                              Wt::Ok);
+
+            return false;
+        }
+    }
+
+    if (mB0VolumesCheckBox->isChecked())
+    {
+        if (!mB0VolumesLineEdit->validate())
+        {
+            WMessageBox::show("Invalid Input",
+                              "Number of B0 volumes must be an integer number greater than 1.  Please correct it.",
                               Wt::Ok);
 
             return false;
@@ -266,6 +308,11 @@ std::string PipelineOptionsTract::getCommandLineString() const
         args += " -g \"" + mGradientServerFile + "\"";
     }
 
+    if (mB0VolumesCheckBox->isChecked())
+    {
+        args += " -B " + mB0VolumesLineEdit->text().toUTF8();
+    }
+
     return args + " " + PipelineOptions::getCommandLineString();
 }
 
@@ -289,6 +336,23 @@ void PipelineOptionsTract::volumeMaskClicked()
     {
         mFAThresholdLineEdit->disable();
         mFAThresholdLabel->disable();
+    }
+}
+
+///
+//  B0 Volumes checkbox clicked [slot]
+//
+void PipelineOptionsTract::b0VolumeClicked()
+{
+    if (mB0VolumesCheckBox->isChecked())
+    {
+        mB0VolumesLineEdit->enable();
+        mB0VolumesLabel->enable();
+    }
+    else
+    {
+        mB0VolumesLineEdit->disable();
+        mB0VolumesLabel->disable();
     }
 }
 
