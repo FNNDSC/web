@@ -142,23 +142,23 @@ void PatientInfoBox::setScanDir(std::string scanDir)
 
                 if (secondToken == "ID")
                 {
-                    mPatientID->setText(str);
+                    setInfoLabel(mPatientID, str);
                 }
                 else if (secondToken == "Name")
                 {
-                    mPatientName->setText(str);
+                    setInfoLabel(mPatientName, str);
                 }
                 else if (secondToken == "Age")
                 {
-                    mPatientAge->setText(str);
+                    setInfoLabel(mPatientAge, str);
                 }
                 else if (secondToken == "Sex")
                 {
-                    mPatientSex->setText(str);
+                	setInfoLabel(mPatientSex, str);
                 }
                 else if (secondToken == "Birthday")
                 {
-                    mPatientBirthday->setText(str);
+                    setInfoLabel(mPatientBirthday, str);
                 }
             }
             else if (firstToken == "Image")
@@ -171,7 +171,7 @@ void PatientInfoBox::setScanDir(std::string scanDir)
                     string scanDate;
 
                     istr >> scanDate;
-                    mImageScanDate->setText(scanDate);
+                    setInfoLabel(mImageScanDate, scanDate);
                 }
             }
             else if (firstToken == "Scanner")
@@ -189,11 +189,11 @@ void PatientInfoBox::setScanDir(std::string scanDir)
 
                 if (secondToken == "Manufacturer")
                 {
-                    mScannerManufacturer->setText(str);
+                    setInfoLabel(mScannerManufacturer, str);
                 }
                 else if (secondToken == "Model")
                 {
-                    mScannerModel->setText(str);
+                	setInfoLabel(mScannerModel, str);
                 }
             }
             else if (firstToken == "Software")
@@ -209,7 +209,7 @@ void PatientInfoBox::setScanDir(std::string scanDir)
                     str += tmp + " ";
                 }
 
-                mSoftwareVer->setText(str);
+                setInfoLabel(mSoftwareVer, str);
             }
         }
         tocFile.close();
@@ -222,3 +222,18 @@ void PatientInfoBox::setScanDir(std::string scanDir)
 //  Private Members
 //
 //
+
+///
+//	Set the patient information text, do not display "ERROR:" if that is what is present
+//
+void PatientInfoBox::setInfoLabel(WLabel* label, const std::string &str)
+{
+	if (str.find("ERROR") == string::npos)
+	{
+		label->setText(str);
+	}
+	else
+	{
+		label->setText("Unknown");
+	}
+}

@@ -55,6 +55,11 @@ public:
 
 private:
 
+    ///
+    ///	Set the patient information text, do not display "ERROR:" if that is what is present
+    ///
+    void setInfoLabel(WLabel* label, const std::string &str);
+
 private:
 
     /// Patient ID
