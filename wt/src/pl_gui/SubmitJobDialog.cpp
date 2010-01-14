@@ -55,6 +55,7 @@ SubmitJobDialog::SubmitJobDialog(const WString &windowTitle) :
     WPushButton *yesButton = new WPushButton("Yes");
     WPushButton *noButton = new WPushButton("No");
     mAdvancedButton = new WPushButton("Edit Command");
+    mAdvancedButton->setToolTip("This is for advanced use only, the default command line should work correctly.");
 
     WHBoxLayout *buttonLayout = new WHBoxLayout();
     buttonLayout->addStretch(100);

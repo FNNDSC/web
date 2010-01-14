@@ -132,7 +132,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     WGridLayout *b0LineEditLayout = new WGridLayout();
     mB0VolumesLineEdit = new WLineEdit("1");
     WIntValidator *intValidator = new WIntValidator();
-    validator->setRange(1, 1000);
+    intValidator->setRange(1, 1000);
     mB0VolumesLineEdit->setValidator(intValidator);
     mB0VolumesLineEdit->setToolTip("Enter the number of B0 volumes.  This must match the number of B0 volumes in the MRI.");
     mB0VolumesLabel = new WLabel("Number of B0 volumes:");
