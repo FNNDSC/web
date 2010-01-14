@@ -27,6 +27,9 @@
 #include <Wt/WSelectionBox>
 #include <Wt/WPushButton>
 #include <Wt/WMessageBox>
+#include <Wt/WButtonGroup>
+#include <Wt/WRadioButton>
+#include <Wt/WDialog>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -66,6 +69,7 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     mScansToProcessList->setSelectionMode(Wt::ExtendedSelection);
 
     mPipelineModeLabel = new WLabel("");
+    mPipelineOverrideButton = new WPushButton("Override");
 
     mAddScanButton = new WPushButton("Add");
     mRemoveScanButton = new WPushButton("Remove");
@@ -85,9 +89,13 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     hBox->addLayout(scanLayout);
     hBox->addLayout(scansToProcessLayout);
 
+    WHBoxLayout *pipelineTypeLayout = new WHBoxLayout();
+    pipelineTypeLayout->addWidget(mPipelineModeLabel);
+    pipelineTypeLayout->addWidget(mPipelineOverrideButton);
+
     WGridLayout *scansToProcessBoxLayout = new WGridLayout();
     scansToProcessBoxLayout->addLayout(hBox, 0, 0);
-    scansToProcessBoxLayout->addWidget(mPipelineModeLabel, 1, 0, Wt::AlignCenter);
+    scansToProcessBoxLayout->addLayout(pipelineTypeLayout, 1, 0, Wt::AlignCenter);
     scansToProcessBoxLayout->setRowStretch(0, 1);
     mScansToProcessBox->setLayout(scansToProcessBoxLayout);
 
@@ -108,7 +116,7 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     mScansSelectionBox->activated().connect(SLOT(this, ScanBrowser::scanSelectionChanged));
     mAddScanButton->clicked().connect(SLOT(this, ScanBrowser::addScanClicked));
     mRemoveScanButton->clicked().connect(SLOT(this, ScanBrowser::removeScanClicked));
-
+    mPipelineOverrideButton->clicked().connect(SLOT(this, ScanBrowser::pipelineOverrideClicked));
 
     setLayout(layout);
 
@@ -361,6 +369,55 @@ void ScanBrowser::removeScanClicked()
     if (mScansToProcessData.empty())
     {
         setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
+    }
+}
+
+///
+//  Pipeline override clicked [slot]
+//
+void ScanBrowser::pipelineOverrideClicked()
+{
+	WDialog pipelineDialog("Select Pipeline:");
+
+    WText *text = new WText(
+                            "The pipeline type is automatically detected based on the name of the sequence.<BR/>"
+                                "  If you need to override the automatically detected pipeline, select it below:",
+                            pipelineDialog.contents());
+
+    new WBreak(pipelineDialog.contents());
+    new WBreak(pipelineDialog.contents());
+
+    // Use a button group to logically group the 3 options
+    WButtonGroup *group = new WButtonGroup(pipelineDialog.contents());
+    WRadioButton *structButton = new WRadioButton("Structural Reconstruction",
+            pipelineDialog.contents());
+    group->addButton(structButton, Enums::PIPELINE_TYPE_FS + 1);
+    new WBreak(pipelineDialog.contents());
+
+    WRadioButton *tractButton = new WRadioButton("Tractography",
+            pipelineDialog.contents());
+    group->addButton(tractButton, Enums::PIPELINE_TYPE_TRACT + 1);
+    new WBreak(pipelineDialog.contents());
+
+    WRadioButton *unknownButton = new WRadioButton("Unknown",
+            pipelineDialog.contents());
+    group->addButton(unknownButton, Enums::PIPELINE_UNKNOWN + 1);
+    new WBreak(pipelineDialog.contents());
+
+    group->setCheckedButton(group->button(mPipelineType + 1));
+
+    new WBreak(pipelineDialog.contents());
+
+    WPushButton *ok = new WPushButton("OK", pipelineDialog.contents());
+    WPushButton *cancel = new WPushButton("Cancel", pipelineDialog.contents());
+
+    ok->clicked().connect(SLOT(&pipelineDialog, WDialog::accept));
+    cancel->clicked().connect(SLOT(&pipelineDialog, WDialog::reject));
+
+    // If OK was clicked, change the pipeline type
+    if (pipelineDialog.exec() == WDialog::Accepted)
+    {
+        setCurrentPipeline((Enums::PipelineType)(group->checkedId() - 1));
     }
 }
 

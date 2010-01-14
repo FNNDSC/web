@@ -130,6 +130,11 @@ private:
     void removeScanClicked();
 
     ///
+    ///	Pipeline override clicked [slot]
+    ///
+    void pipelineOverrideClicked();
+
+    ///
     //  Scan selection changed
     //
     void scanSelectionChanged(int index);
@@ -162,6 +167,9 @@ private:
 
     /// Current pipeline mode
     WLabel *mPipelineModeLabel;
+
+    /// Override pipeline button
+    WPushButton *mPipelineOverrideButton;
 
     /// Current pipeline type
     Enums::PipelineType mPipelineType;
