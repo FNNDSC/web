@@ -244,7 +244,7 @@ void ClusterLoadChart::updateChart()
         if (mUpdateChart)
         {
             std::ifstream inFile(getConfigOptionsPtrTS(mApp)->GetProcStatFile().c_str());
-            while (!inFile.eof())
+            while (inFile.is_open() && !inFile.eof())
             {
                 char buf[1024] = {0};
 

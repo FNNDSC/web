@@ -25,6 +25,7 @@ ADD_EXECUTABLE(pl_gui.wt
   ScanBrowser.cpp
   SelectScans.cpp
   SubjectPage.cpp
+  SubmitJobDialog.cpp
 )
 TARGET_LINK_LIBRARIES(pl_gui.wt wt ${EXAMPLES_CONNECTOR} ${BOOST_WT_LIBRARIES} ${BOOST_FS_LIB_MT} mxml)
 

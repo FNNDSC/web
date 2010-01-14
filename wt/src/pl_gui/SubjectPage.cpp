@@ -16,6 +16,7 @@
 #include "SelectScans.h"
 #include "PipelineConfigure.h"
 #include "ConfigOptions.h"
+#include "SubmitJobDialog.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -207,13 +208,13 @@ void SubjectPage::nextClicked()
             return;
         }
 
-        StandardButton result = WMessageBox::show("Submit Scans",
-                                                  "Are you sure that you want to submit for processing?",
-                                                  Wt::Yes | Wt::No);
+        SubmitJobDialog jobDialog("Submit Scans");
+        jobDialog.setCommandLine(mPipelineConfigure->getCommandLineString());
+        WDialog::DialogCode result = jobDialog.exec();
 
-        if (result == Wt::Yes)
+        if (result == WDialog::Accepted)
         {
-            if(submitForProcessing())
+            if(submitForProcessing(jobDialog.getCommandLine()))
             {
                 std::string logEntriesToDisplay;
                 std::string scheduleFileName = getConfigOptionsPtr()->GetOutDir() +
@@ -282,7 +283,7 @@ void SubjectPage::backClicked()
 //  Submit scans for processing.  This function will generate the file and
 //  execute pl_batch.bash on it to put it into the processing queue.
 //
-bool SubjectPage::submitForProcessing()
+bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineString)
 {
     char *tmpName = strdup("/tmp/pl_gui_tmpXXXXXX");
 
@@ -314,7 +315,7 @@ bool SubjectPage::submitForProcessing()
 
     // plBatch_create outputs command line options and then a list
     // of files to process
-    tmpFile << "DEFAULTCOM = " << mPipelineConfigure->getCommandLineString() << endl;
+    tmpFile << "DEFAULTCOM = " << pipelineCommandLineString << endl;
     tmpFile << "DEFAULTDIR = " << getConfigOptionsPtr()->GetDicomDir() << endl;
 
     std::string curDate = (WDate::currentDate().toString("yyyyMMdd")).toUTF8();

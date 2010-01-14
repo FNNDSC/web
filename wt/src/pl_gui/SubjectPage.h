@@ -100,7 +100,7 @@ private:
     ///  Submit scans for processing.  This function will generate the file and
     ///  execute pl_batch.bash on it to put it into the processing queue.
     ///
-    bool submitForProcessing();
+    bool submitForProcessing(const std::string& pipelineCommandLineString);
 
     ///
     ///  Return the number of lines in a file
