@@ -192,6 +192,17 @@ void SubjectPage::nextClicked()
     {
     // Go to config state
     case SCAN_SELECT:
+        if (mSelectScans->getCurrentPipeline() == Enums::PIPELINE_UNKNOWN)
+        {
+            StandardButton result = WMessageBox::show("Error",
+                                                      "Pipeline Type is UNKNOWN.  If a pipeline type was not detected automatically, "\
+                                                      "please override it using the 'Override' button.",
+                                                      Wt::Ok);
+
+            return;
+        }
+
+
         mBackButton->enable();
         mStackedStage->setCurrentIndex((int)PIPELINE_CONFIGURE);
         mPipelineConfigure->updateAll();

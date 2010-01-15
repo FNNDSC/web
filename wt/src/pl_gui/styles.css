@@ -61,6 +61,7 @@ div.Wt-popupmenu .separator {
     border: 1px solid #C3D9FF;
     font-family: verdana,helvetica,tahoma,sans-serif;
     font-size: 8pt;
+    white-space: nowrap;
 
 }
 
