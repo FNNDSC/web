@@ -294,7 +294,7 @@ std::string PipelineOptionsTract::getCommandLineString() const
     }
 
     // Non-default image model (-I <imageModel>)
-    if (mReconAlgorithmComboBox->currentIndex() == 1)
+    if (mImageModelComboBox->currentIndex() == 1)
     {
         args += " -I hardi";
     }
