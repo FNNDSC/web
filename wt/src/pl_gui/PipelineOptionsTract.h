@@ -113,6 +113,15 @@ private:
     /// Name of uploaded gradient file on server
     std::string mGradientServerFile;
 
+    /// Gradient invert X
+    WCheckBox *mGradientInvertX;
+
+    /// Gradient invert Y
+    WCheckBox *mGradientInvertY;
+
+    /// Gradient invert X
+    WCheckBox *mGradientInvertZ;
+
     /// Manually set B0 volumes check box
     WCheckBox *mB0VolumesCheckBox;
 

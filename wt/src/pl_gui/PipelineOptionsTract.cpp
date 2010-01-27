@@ -139,6 +139,9 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     b0LineEditLayout->addWidget(mB0VolumesLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
     b0LineEditLayout->addWidget(mB0VolumesLineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
     b0LineEditLayout->setColumnStretch(1, 1);
+    mGradientInvertX = new WCheckBox("X");
+    mGradientInvertY = new WCheckBox("Y");
+    mGradientInvertZ = new WCheckBox("Z");
 
     WVBoxLayout *vboxB0Layout = new WVBoxLayout();
     vboxB0Layout->addWidget(mB0VolumesCheckBox);
@@ -150,8 +153,19 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     uploadLayout->addWidget(mGradientFileUpload);
     uploadLayout->addStretch(100);
 
+    WHBoxLayout *invertCheckBoxes = new WHBoxLayout;
+    invertCheckBoxes->addWidget(mGradientInvertX);
+    invertCheckBoxes->addWidget(mGradientInvertY);
+    invertCheckBoxes->addWidget(mGradientInvertZ);
+
+    WGridLayout *invertLayout = new WGridLayout();
+    invertLayout->addWidget(new WLabel("Invert Gradients: "), 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    invertLayout->addLayout(invertCheckBoxes, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    invertLayout->setColumnStretch(1, 1);
+
     gradientLayout->addLayout(uploadLayout, Wt::AlignTop);
     gradientLayout->addLayout(vboxB0Layout, Wt::AlignTop);
+    gradientLayout->addLayout(invertLayout, Wt::AlignTop);
     gradientLayout->addStretch(100);
     gradientTableBox->setLayout(gradientLayout);
 
@@ -215,6 +229,9 @@ void PipelineOptionsTract::resetAll()
     mB0VolumesLabel->disable();
     mGradientFileCheckBox->setChecked(false);
     mGradientServerFile = "";
+    mGradientInvertX->setChecked(false);
+    mGradientInvertY->setChecked(false);
+    mGradientInvertZ->setChecked(false);
 }
 
 ///
@@ -312,6 +329,21 @@ std::string PipelineOptionsTract::getCommandLineString() const
     if (mB0VolumesCheckBox->isChecked())
     {
         args += " -B " + mB0VolumesLineEdit->text().toUTF8();
+    }
+
+    if (mGradientInvertX->isChecked())
+    {
+        args += " -X";
+    }
+
+    if (mGradientInvertY->isChecked())
+    {
+        args += " -Y";
+    }
+
+    if (mGradientInvertZ->isChecked())
+    {
+        args += " -Z";
     }
 
     return args + " " + PipelineOptions::getCommandLineString();
