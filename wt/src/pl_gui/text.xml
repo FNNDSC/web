@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<messages>
+  <message id="page-title">
+        CHB Neuroimaging Pipeline
+  </message>
+  
+  <message id="page-top-text">
+        Neuroimaging Pipeline
+  </message>
+  
+  <message id="file-bug">
+        <font size="1">
+                Please report all issues in <a href="http://durban.tch.harvard.edu/bugzilla/">bugzilla</a>.
+        </font>
+  </message>
+</messages>

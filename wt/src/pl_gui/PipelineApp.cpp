@@ -105,7 +105,11 @@ PipelineApp::PipelineApp(const WEnvironment &env) :
         this->log("error") << "Loading results configuration XML file" << getConfigOptionsPtr()->GetConfigXML();
     }
 
+    // Use XML resource bundle containing text
+    messageResourceBundle().use("text");
+
     createUI();
+
 
     enableUpdates(true);
 }
@@ -148,7 +152,7 @@ void PipelineApp::createUI()
     WImage *brainImage = new WImage("icons/mri.gif");
     chbLogo->setStyleClass("titlediv");
     topLayout->addWidget(chbLogo, 0, 0, Wt::AlignLeft);
-    WLabel *titleLabel = new WLabel("Neuroimaging Pipeline");
+    WLabel *titleLabel = new WLabel(w->tr("page-top-text"));
     titleLabel->setStyleClass("titlediv");
     topLayout->addWidget(titleLabel, 0, 1, Wt::AlignCenter | Wt::AlignMiddle);
     topLayout->addWidget(brainImage, 0, 2, Wt::AlignRight);
@@ -167,6 +171,7 @@ void PipelineApp::createUI()
 
     layout->addWidget(topContainer, 0, 0);
     layout->addWidget(topTab, 1, 0);
+    layout->addWidget(new WLabel(w->tr("file-bug")), 2, 0, Wt::AlignCenter);
     layout->setRowStretch(1, 1);
 
     // All items in the tabbed widget need to be resized to 100% to
@@ -182,6 +187,8 @@ void PipelineApp::createUI()
     w->setLayout(layout);
 
     requestTooLarge().connect(SLOT(this, PipelineApp::largeRequest));
+
+    setTitle(w->tr("page-title"));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -241,7 +248,6 @@ WApplication *createApplication(const WEnvironment& env)
 {
     PipelineApp *app = new PipelineApp(env);
     app->setTwoPhaseRenderingThreshold(0);
-    app->setTitle("CHB Neuroimaging Pipeline");
     app->useStyleSheet("styles.css");
     app->refresh();
 
