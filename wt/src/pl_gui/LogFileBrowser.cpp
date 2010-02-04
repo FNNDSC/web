@@ -217,10 +217,11 @@ void LogFileBrowser::addLogEntriesFromDir(const path& logDir, bool rootDir, int 
 
                     // Determine the root directory
                     path rootLogPath = path(baseLogDir);
-                    while (depth > 0)
+                    int curDepth = depth;
+                    while (curDepth > 0)
                     {
                         rootLogPath = rootLogPath.branch_path();
-                        depth--;
+                        curDepth--;
                     }
                     newEntry.mRootLogDir = rootLogPath.string();
 
