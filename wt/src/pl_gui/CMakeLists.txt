@@ -9,6 +9,7 @@ ADD_EXECUTABLE(pl_gui.wt
   FilePreviewBox.cpp
   LogFileBrowser.cpp
   LogFileTailer.cpp
+  LoginPage.cpp
   MonitorLogTab.cpp
   MonitorPage.cpp
   MonitorResultsTab.cpp 

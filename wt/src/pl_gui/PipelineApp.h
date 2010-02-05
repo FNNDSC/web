@@ -16,6 +16,13 @@
 
 #include <Wt/WApplication>
 
+
+namespace Wt
+{
+	class WStackedWidget;
+	class WContainerWidget;
+}
+
 using namespace Wt;
 
 class MonitorPage;
@@ -73,6 +80,11 @@ private:
     ///
     void largeRequest(int size);
 
+    ///
+    ///	User logged in succesfully [slot]
+    ///
+    void userLoggedIn(std::string userName);
+
 private:
     /// Monitor page
     MonitorPage *mMonitorPage;
@@ -88,6 +100,12 @@ private:
 
     /// Configuration XML
     ConfigXML *mConfigXML;
+
+    /// Stacked widget
+    WStackedWidget *mStackedWidget;
+
+    /// Main site widget
+    WContainerWidget *mMainSiteWidget;
 };
 
 ///

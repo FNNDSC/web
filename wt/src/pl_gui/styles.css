@@ -56,6 +56,17 @@ div.Wt-popupmenu .separator {
     font-size: 18px;
 }
 
+.logintitlediv {
+    color: #00539b;
+    font-size: 18px;
+}
+
+.logindiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+}
+
+
 .Wt-treeview {
     background-color: white;
     border: 1px solid #C3D9FF;
@@ -113,6 +124,10 @@ div.Wt-popupmenu .separator {
 
 .title {
     font-weight: bold;
+}
+
+.redtext {
+    color: red;
 }
 
 .about {

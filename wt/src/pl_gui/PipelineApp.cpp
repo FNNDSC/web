@@ -17,9 +17,12 @@
 #include "ClusterLoadPage.h"
 #include "ConfigOptions.h"
 #include "ConfigXML.h"
+#include "LoginPage.h"
 #include <Wt/WContainerWidget>
+#include <Wt/WStackedWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
+#include <Wt/WVBoxLayout>
 #include <Wt/WImage>
 #include <Wt/WText>
 #include <Wt/WLabel>
@@ -174,6 +177,8 @@ void PipelineApp::createUI()
     layout->addWidget(new WLabel(w->tr("file-bug")), 2, 0, Wt::AlignCenter);
     layout->setRowStretch(1, 1);
 
+    mMainSiteWidget = new WContainerWidget();
+
     // All items in the tabbed widget need to be resized to 100% to
     // fill the contents.  This trick came from the Wt WTabWidget
     // documentation and took me a good half a day to figure out.
@@ -184,7 +189,20 @@ void PipelineApp::createUI()
     mClusterLoadPage->resize(WLength(100.0, WLength::Percentage),
                              WLength(100.0, WLength::Percentage));
 
-    w->setLayout(layout);
+    mMainSiteWidget->setLayout(layout);
+
+    LoginPage *loginPage = new LoginPage();
+    loginPage->userLoggedIn().connect(SLOT(this, PipelineApp::userLoggedIn));
+
+    mStackedWidget = new WStackedWidget();
+    mStackedWidget->addWidget(loginPage);
+    //mStackedWidget->addWidget(mainSite);
+    mStackedWidget->setCurrentIndex(0);
+
+    WVBoxLayout *primaryLayout = new WVBoxLayout();
+    primaryLayout->addWidget(mStackedWidget);
+
+    w->setLayout(primaryLayout);
 
     requestTooLarge().connect(SLOT(this, PipelineApp::largeRequest));
 
@@ -233,6 +251,21 @@ void PipelineApp::mainTabChanged(int currentIndex)
 void PipelineApp::largeRequest(int size)
 {
     this->log("notice") << "Request too large: " << size;
+}
+
+///
+//	Private slots
+//
+
+///
+//	User logged in succesfully [slot]
+//
+void PipelineApp::userLoggedIn(std::string userName)
+{
+    this->log("debug") << "PipelineApp::userLoggedIn";
+
+    mStackedWidget->addWidget(mMainSiteWidget);
+    mStackedWidget->setCurrentIndex(1);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
