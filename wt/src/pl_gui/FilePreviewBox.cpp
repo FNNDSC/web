@@ -138,9 +138,10 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
     try
     {
         path filePath = path(filePathStr);
+        path fileDir = filePath.branch_path();
 
         mFileName->setText(filePath.leaf());
-        mFileDir->setText(filePath.branch_path().string());
+        mFileDir->setText(fileDir.string());
         mDownloadFileResource->setFileName(filePathStr);
         mDownloadFileResource->suggestFileName(filePath.leaf());
 
@@ -182,7 +183,51 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
         }
         else
         {
-            mPreviewStack->hide();
+            bool previewFound = false;
+            const std::list<ConfigXML::PreviewPatternNode> &previewPatternList = getConfigXMLPtr()->getPreviewPatterns();
+            std::list<ConfigXML::PreviewPatternNode>::const_iterator iter = previewPatternList.begin();
+
+            while (iter != previewPatternList.end() && !previewFound)
+            {
+                if (fileMatchesExpression(filePathStr, (*iter).mExpression))
+                {
+                    // See if a file matching the preview expression exists
+                    for(directory_iterator dirIter(fileDir); dirIter != directory_iterator(); ++dirIter)
+                    {
+                        const string& fileName = dirIter->path().filename();
+
+                        // Skip if no match
+                        if( !fileMatchesExpression( fileName, (*iter).mPreviewExpression ) )
+                            continue;
+
+                        if (!is_directory(dirIter->path()))
+                        {
+                            if (mImageResource == NULL)
+                            {
+                                mImageResource = new WFileResource("image/" + dirIter->path().extension(), dirIter->path().string());
+                            }
+                            else
+                            {
+                                mImageResource->setFileName(dirIter->path().string());
+                            }
+                            mImagePreview->setResource(mImageResource);
+                            mImagePreview->setMaximumSize(1000, 820);
+                            mPreviewStack->setCurrentIndex(0);
+                            mPreviewStack->show();
+                            previewFound = true;
+                            break;
+                        }
+                    }
+                }
+
+                iter++;
+            }
+
+            // No preview available
+            if (!previewFound)
+            {
+                mPreviewStack->hide();
+            }
         }
     }
     catch (...)

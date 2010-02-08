@@ -45,6 +45,17 @@ public:
 
     } FilePatternNode;
 
+    /// Preview pattern node
+    typedef struct
+    {
+        /// Expression for matching files
+        std::string mExpression;
+
+        /// Expression for preview files
+        std::string mPreviewExpression;
+
+    } PreviewPatternNode;
+
     ///
     /// Constructor
     ///
@@ -81,6 +92,13 @@ public:
     ///
     std::string getImageFilePattern() const;
 
+    ///
+    /// Get the list of preview patterns which specify patterns
+    /// of files to preview another file (for example, .png images
+    /// as preview of a .trk file
+    ///
+    const std::list<PreviewPatternNode>& getPreviewPatterns() const;
+
 protected:
 
     /// Pipeline structure
@@ -112,6 +130,11 @@ protected:
     bool parsePipelineNode(mxml_node_t *pipelineNode, const std::string& configPath);
 
     ///
+    ///  Parse <PreviewPattern> node
+    ///
+    bool parsePreviewPatternNode(mxml_node_t *previewPatternNode, const std::string& configPath);
+
+    ///
     ///  Parse <FilePattern> node
     ///
     bool parseFilePatternNode(WStandardItem *item, mxml_node_t *filePatternNode,
@@ -130,6 +153,9 @@ protected:
 
     /// ImageFilePattern
     std::string mImageFilePattern;
+
+    /// List of preview patterns
+    std::list<PreviewPatternNode> mPreviewPatterns;
 };
 
 #endif // CONFIGXML_H

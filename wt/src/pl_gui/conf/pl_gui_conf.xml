@@ -2,6 +2,7 @@
 <Results>
 	<TextFilePattern pattern=".*\.stats" />
 	<ImageFilePattern pattern=".*\.((png)|(gif)|(jpeg)|(jpg)|(ico))" />
+	<PreviewPattern pattern=".*\.trk" files=".*\.png"/>
 	<Pipeline name="tract_meta.bash" tag="tract" desc="Tractography">
 		<FilePatterns>
 			<FilePattern dir="true" name=".*-stage-2-.*">

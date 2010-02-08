@@ -107,6 +107,16 @@ std::string ConfigXML::getImageFilePattern() const
 }
 
 
+///
+/// Get the list of preview patterns which specify patterns
+/// of files to preview another file (for example, .png images
+/// as preview of a .trk file
+///
+const std::list<ConfigXML::PreviewPatternNode>& ConfigXML::getPreviewPatterns() const
+{
+    return mPreviewPatterns;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Protected Members
@@ -135,10 +145,26 @@ bool ConfigXML::parseXMLTree(mxml_node_t *tree, const std::string& configPath)
     mTextFilePattern = parsePatternNode(resultsNode, "TextFilePattern");
     mImageFilePattern = parsePatternNode(resultsNode, "ImageFilePattern");
 
+    // Iterate over <PreviewPattern> nodes
+    bool result = true;
+    mxml_node_t *previewPatternNode;
+    for (previewPatternNode = mxmlFindElement(resultsNode, resultsNode,
+                                              "PreviewPattern",
+                                              NULL, NULL,
+                                              MXML_DESCEND);
+        previewPatternNode != NULL;
+        previewPatternNode = mxmlFindElement(previewPatternNode, resultsNode,
+                                             "PreviewPattern",
+                                             NULL, NULL,
+                                             MXML_NO_DESCEND))
+    {
+        result = result && parsePreviewPatternNode(previewPatternNode, configPath);
+    }
+
+
     mxml_node_t *pipelineNode;
 
     // Iterate over the <Pipeline> nodes
-    bool result = true;
     for (pipelineNode = mxmlFindElement(resultsNode, resultsNode,
                                         "Pipeline",
                                         NULL, NULL,
@@ -151,6 +177,7 @@ bool ConfigXML::parseXMLTree(mxml_node_t *tree, const std::string& configPath)
     {
         result = result && parsePipelineNode(pipelineNode, configPath);
     }
+
 
     mxmlRelease(tree);
     return result;
@@ -215,6 +242,26 @@ bool ConfigXML::parsePipelineNode(mxml_node_t *pipelineNode, const std::string& 
     }
 
     return result;
+}
+
+///
+//  Parse <PreviewPattern> node
+//
+bool ConfigXML::parsePreviewPatternNode(mxml_node_t *previewPatternNode, const std::string& configPath)
+{
+    if (previewPatternNode == NULL)
+    {
+        return false;
+    }
+
+    PreviewPatternNode newNode;
+
+    newNode.mExpression = mxmlElementGetAttr(previewPatternNode, "pattern");
+    newNode.mPreviewExpression = mxmlElementGetAttr(previewPatternNode, "files");
+
+    mPreviewPatterns.push_back(newNode);
+
+    return true;
 }
 
 ///
