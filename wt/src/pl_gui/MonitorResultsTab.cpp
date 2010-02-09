@@ -93,6 +93,22 @@ MonitorResultsTab::~MonitorResultsTab()
 //
 //
 
+///
+//  Create Qt objects
+//
+void MonitorResultsTab::createQt()
+{
+    mResultsBrowser->createQt();
+}
+
+///
+//  Destroy Qt objects()
+//
+void MonitorResultsTab::destroyQt()
+{
+    mResultsBrowser->destroyQt();
+}
+
 
 ///
 //  Reset all widgets to the default state
@@ -102,6 +118,7 @@ void MonitorResultsTab::resetAll()
     mResultsBrowser->hide();
     mFilePreviewBox->hide();
 }
+
 
 ///
 //  Finalize the widget (pre-destruction)

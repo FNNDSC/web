@@ -12,6 +12,8 @@
 //
 #include "LogFileBrowser.h"
 #include "ConfigOptions.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
@@ -79,6 +81,11 @@ LogFileBrowser::~LogFileBrowser()
 //
 void LogFileBrowser::resetAll()
 {
+    FileBrowser::resetAll();
+
+    addWatchPath(mBaseLogDir);
+    addWatchPath(mPostProcDir);
+
     WModelIndexSet noSelection;
     mTreeView->setSelectedIndexes(noSelection);
     mModel->clear();
@@ -95,7 +102,6 @@ void LogFileBrowser::resetAll()
     }
 }
 
-
 ///
 //  Set the log base directory
 //
@@ -111,6 +117,15 @@ void LogFileBrowser::setPostProcDir(const std::string& postProcDir)
 {
     mPostProcDir = postProcDir;
 }
+
+///
+//  Handle async changes to directory
+//
+void LogFileBrowser::directoryChanged()
+{
+    refreshLogs();
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -256,10 +271,14 @@ void LogFileBrowser::logChanged()
 //
 void LogFileBrowser::refreshLogs()
 {
-    mModel->clear();
-    populateBrowser();
-    mTreeView->expandToDepth(4);
+    WStandardItemModel *oldModel = mModel;
+    mModel = new WStandardItemModel();
+    mTreeView->setModel(mModel);
+    delete oldModel;
 
+    populateBrowser();
+
+    mTreeView->expandToDepth(4);
 
     if (mModel->rowCount() == 0)
     {

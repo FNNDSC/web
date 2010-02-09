@@ -53,12 +53,7 @@ public:
     ///
     /// Reset to the default state
     ///
-    void resetAll();
-
-    ///
-    /// Finalize the widget (pre-destruction)
-    ///
-    void finalize();
+    virtual void resetAll();
 
     ///
     ///  Set the base directory for the results
@@ -69,6 +64,11 @@ public:
     /// Set the name of the pipeline
     ///
     void setPipelineName(const std::string& pipelineName);
+
+    ///
+    /// Handle async changes to directory
+    ///
+    virtual void directoryChanged();
 
     ///
     /// Signal accessor for result file selection

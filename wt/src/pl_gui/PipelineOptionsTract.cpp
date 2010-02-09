@@ -184,6 +184,10 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     mPipelineOptionsBoxLayout->setRowStretch(1, 1);
     mPipelineOptionsBoxLayout->setRowStretch(2, -1);
 
+    /// Create message box with no parent
+    mMessageBox = new WMessageBox();
+    mMessageBox->buttonClicked().connect(SLOT(this, PipelineOptionsTract::handleMessageBoxFinished));
+
     // Connection
     mFAVolumeMaskCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::volumeMaskClicked));
     mB0VolumesCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::b0VolumeClicked));
@@ -198,6 +202,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 //
 PipelineOptionsTract::~PipelineOptionsTract()
 {
+    delete mMessageBox;
 }
 
 
@@ -243,10 +248,10 @@ bool PipelineOptionsTract::validate() const
     {
         if (!mFAThresholdLineEdit->validate())
         {
-            WMessageBox::show("Invalid Input",
-                              "Threshold value for mask must be in the range [0.0, 1.0].  Please correct it.",
-                              Wt::Ok);
-
+            mMessageBox->setWindowTitle("Invalid Input");
+            mMessageBox->setText("Threshold value for mask must be in the range [0.0, 1.0].  Please correct it.");
+            mMessageBox->setButtons(Wt::Ok);
+            mMessageBox->show();
             return false;
         }
     }
@@ -255,10 +260,10 @@ bool PipelineOptionsTract::validate() const
     {
         if (!mB0VolumesLineEdit->validate())
         {
-            WMessageBox::show("Invalid Input",
-                              "Number of B0 volumes must be an integer number greater than 1.  Please correct it.",
-                              Wt::Ok);
-
+            mMessageBox->setWindowTitle("Invalid Input");
+            mMessageBox->setText("Number of B0 volumes must be an integer number greater than 1.  Please correct it.");
+            mMessageBox->setButtons(Wt::Ok);
+            mMessageBox->show();
             return false;
         }
     }
@@ -267,9 +272,10 @@ bool PipelineOptionsTract::validate() const
     {
         if (mGradientServerFile == "")
         {
-            WMessageBox::show("Gradient File",
-                              "If you want to manually provide a gradient file, you must upload it.  Please upload the file first.",
-                              Wt::Ok);
+            mMessageBox->setWindowTitle("Gradient File");
+            mMessageBox->setText("If you want to manually provide a gradient file, you must upload it.  Please upload the file first.");
+            mMessageBox->setButtons(Wt::Ok);
+            mMessageBox->show();
             return false;
         }
     }
@@ -441,3 +447,13 @@ void PipelineOptionsTract::fileUploaded()
         mGradientServerFile = gradientFile;
     }
 }
+
+
+///
+/// Handle message box finished [slot]
+///
+void PipelineOptionsTract::handleMessageBoxFinished(StandardButton)
+{
+    mMessageBox->hide();
+}
+

@@ -72,7 +72,7 @@ public:
     ///
     /// Reset to the default state
     ///
-    void resetAll();
+    virtual void resetAll();
 
     ///
     ///  Set the log base directory
@@ -88,6 +88,11 @@ public:
     /// Signal accessor for log file selection
     ///
     Wt::Signal<LogFileEntry>& logFileSelected() { return mLogFileSelected; }
+
+    ///
+    /// Handle async changes to directory
+    ///
+    virtual void directoryChanged();
 
 protected:
 
@@ -105,7 +110,6 @@ protected:
     ///  Add log files from a base directory
     ///
     void addLogEntriesFromDir(const boost::filesystem::path& logDir, bool rootDir, int depth = -1);
-
 
     ///
     ///  Handle refresh log button clicked [slot]

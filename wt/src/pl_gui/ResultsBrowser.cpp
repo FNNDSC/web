@@ -126,6 +126,10 @@ ResultsBrowser::~ResultsBrowser()
 //
 void ResultsBrowser::resetAll()
 {
+    FileBrowser::resetAll();
+
+    addWatchPath(mResultsBaseDir);
+
     WModelIndexSet noSelection;
     mTreeView->setSelectedIndexes(noSelection);
     mModel->clear();
@@ -150,6 +154,13 @@ void ResultsBrowser::resetAll()
     }
 }
 
+///
+//  Handle async changes to directory
+//
+void ResultsBrowser::directoryChanged()
+{
+    refreshResults();
+}
 
 ///
 //  Set the base directory for the results
@@ -167,12 +178,6 @@ void ResultsBrowser::setPipelineName(const std::string& pipelineName)
     mPipelineName = pipelineName;
 }
 
-///
-// Finalize the widget (pre-destruction)
-//
-void ResultsBrowser::finalize()
-{
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -282,11 +287,14 @@ void ResultsBrowser::resultChanged()
 //
 void ResultsBrowser::refreshResults()
 {
-    mModel->clear();
+    WStandardItemModel *oldModel = mModel;
+    mModel = new WStandardItemModel();
+    mTreeView->setModel(mModel);
+    delete oldModel;
 
     populateBrowser();
-    mTreeView->expandToDepth(4);
 
+    mTreeView->expandToDepth(4);
 
     if (mModel->rowCount() == 0)
     {

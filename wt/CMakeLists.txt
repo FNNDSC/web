@@ -94,7 +94,9 @@ INCLUDE(cmake/WtFindAsio.txt)
 INCLUDE(cmake/WtFindSsl.txt)
 INCLUDE(cmake/WtFindMysqlpp.txt)
 
-FIND_PACKAGE(Qt4)
+FIND_PACKAGE(Qt4 REQUIRED)
+
+INCLUDE(${QT_USE_FILE})
 
 # Boost is used nearly everywhere, so we can put these here
 INCLUDE_DIRECTORIES(${BOOST_INCLUDE_DIRS})

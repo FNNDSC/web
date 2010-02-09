@@ -105,6 +105,21 @@ MonitorLogTab::~MonitorLogTab()
 //
 //
 
+///
+//  Create Qt objects
+//
+void MonitorLogTab::createQt()
+{
+    mLogFileBrowser->createQt();
+}
+
+///
+//  Destroy Qt objects()
+//
+void MonitorLogTab::destroyQt()
+{
+    mLogFileBrowser->destroyQt();
+}
 
 ///
 // Reset all widgets to the default state
@@ -121,6 +136,7 @@ void MonitorLogTab::resetAll()
 //
 void MonitorLogTab::finalize()
 {
+    mLogFileBrowser->finalize();
     mLogStdOut->finalize();
     mLogStdErr->finalize();
 }

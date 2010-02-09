@@ -13,6 +13,7 @@
 #define SCANBROWSER_H
 
 #include <Wt/WContainerWidget>
+#include <Wt/WDialog>
 #include <vector>
 #include <string>
 #include "GlobalEnums.h"
@@ -23,6 +24,8 @@ namespace Wt
     class WLabel;
     class WSelectionBox;
     class WPushButton;
+    class WButtonGroup;
+    class WMessageBox;
 }
 
 class MRIInfoBox;
@@ -139,6 +142,21 @@ private:
     //
     void scanSelectionChanged(int index);
 
+    ///
+    /// Handle pipeline dialog closed [slot]
+    ///
+    void handlePipelineDialogClosed(WDialog::DialogCode dialogCode);
+
+    ///
+    /// Handle message box finished [slot]
+    ///
+    void handleMessageBoxFinished(StandardButton dialogCode);
+
+    ///
+    /// Handle message box finished [slot]
+    ///
+    void handleAddScanFinished(StandardButton dialogCode);
+
 private:
 
     /// Signal for when scan is add
@@ -192,6 +210,20 @@ private:
     /// Current age
     std::string mCurAge;
 
+    /// Current scan to add
+    ScanData mNewScanData;
+
+    /// Pipeline select dialog
+    WDialog *mPipelineDialog;
+
+    /// Pipline dialog group
+    WButtonGroup *mPipelineDialogGroup;
+
+    /// Message box
+    WMessageBox *mMessageBox;
+
+    /// Add scan message box
+    WMessageBox *mAddScanMessageBox;
 };
 
 #endif // SCANBROWSER_H

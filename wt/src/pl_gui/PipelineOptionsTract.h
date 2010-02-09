@@ -30,6 +30,7 @@ namespace Wt
     class WComboBox;
     class WLineEdit;
     class WFileUpload;
+    class WMessageBox;
 };
 
 ///
@@ -81,6 +82,11 @@ private:
     ///
     void fileUploaded();
 
+    ///
+    /// Handle message box finished [slot]
+    ///
+    void handleMessageBoxFinished(StandardButton dialogCode);
+
 private:
 
     /// Buttons for pipeline stages
@@ -130,6 +136,9 @@ private:
 
     /// Number of B0 Volumes
     WLineEdit *mB0VolumesLineEdit;
+
+    /// Message box dialog
+    WMessageBox *mMessageBox;
 };
 
 #endif // PIPELINEOPTIONSTRACT_H

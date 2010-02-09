@@ -25,6 +25,7 @@ using namespace Wt;
 
 class MRIBrowser;
 class ClusterLoadChart;
+class SubmitJobDialog;
 
 ///
 /// \class SelectScans

@@ -119,6 +119,23 @@ MonitorPage::~MonitorPage()
 //
 //
 
+///
+//  Create Qt objects
+//
+void MonitorPage::createQt()
+{
+    mMonitorLogTab->createQt();
+    mMonitorResultsTab->createQt();
+}
+
+///
+//  Destroy Qt objects
+//
+void MonitorPage::destroyQt()
+{
+    mMonitorLogTab->destroyQt();
+    mMonitorResultsTab->destroyQt();
+}
 
 ///
 // Reset all widgets to the default state

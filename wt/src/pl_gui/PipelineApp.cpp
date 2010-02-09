@@ -28,6 +28,7 @@
 #include <Wt/WLabel>
 #include <Wt/WOverlayLoadingIndicator>
 #include <Wt/WLogger>
+#include <QApplication>
 
 ///
 //  Namespaces
@@ -92,27 +93,30 @@ ConfigOptions* getConfigOptionsPtr()
 //  Constructor
 //
 PipelineApp::PipelineApp(const WEnvironment &env) :
-    WApplication(env)
+    WQApplication(env, true)
 {
+    /*
+     * Note: do not create any Qt objects from here. Initialize your
+     * application from within the virtual create() method.
+     */
     mConfigOptions = new ConfigOptions();
     mConfigXML = new ConfigXML();
 
     // Start by loading configuration options
     if(!mConfigOptions->LoadFromFile("conf/pl_gui.conf"))
     {
-        this->log("error") << "Loading configuration file 'conf/pl_gui.conf'";
+       this->log("error") << "Loading configuration file 'conf/pl_gui.conf'";
     }
 
     if(!mConfigXML->loadFromFile(mConfigOptions->GetConfigXML()))
     {
-        this->log("error") << "Loading results configuration XML file" << getConfigOptionsPtr()->GetConfigXML();
+       this->log("error") << "Loading results configuration XML file" << getConfigOptionsPtr()->GetConfigXML();
     }
 
     // Use XML resource bundle containing text
     messageResourceBundle().use("text");
 
     createUI();
-
 
     enableUpdates(true);
 }
@@ -124,6 +128,25 @@ PipelineApp::~PipelineApp()
 {
     delete mConfigOptions;
     delete mConfigXML;
+}
+
+///
+//  Callback for creating Qt objects (see libwtwithqt)
+//
+void PipelineApp::create()
+{
+    // Create all Qt Objects
+    mMonitorPage->createQt();
+}
+
+///
+//  Callback for destroying Qt objects (see libwtwithqt)
+//
+void PipelineApp::destroy()
+{
+    // Destroy Qt Objects
+    mMonitorPage->destroyQt();
+
 }
 
 ///
@@ -170,7 +193,7 @@ void PipelineApp::createUI()
     topTab->addTab(mSubjectPage, "Subjects");
     topTab->addTab(mMonitorPage, "Monitor Cluster");
     topTab->addTab(mClusterLoadPage, "Cluster Load");
-    topTab->currentChanged().connect(SLOT(this, PipelineApp::mainTabChanged));;
+    topTab->currentChanged().connect(this, &PipelineApp::mainTabChanged);
 
     layout->addWidget(topContainer, 0, 0);
     layout->addWidget(topTab, 1, 0);
@@ -192,7 +215,7 @@ void PipelineApp::createUI()
     mMainSiteWidget->setLayout(layout);
 
     LoginPage *loginPage = new LoginPage();
-    loginPage->userLoggedIn().connect(SLOT(this, PipelineApp::userLoggedIn));
+    loginPage->userLoggedIn().connect(this, &PipelineApp::userLoggedIn);
 
     mStackedWidget = new WStackedWidget();
     mStackedWidget->addWidget(loginPage);
@@ -204,7 +227,7 @@ void PipelineApp::createUI()
 
     w->setLayout(primaryLayout);
 
-    requestTooLarge().connect(SLOT(this, PipelineApp::largeRequest));
+    requestTooLarge().connect(this, &PipelineApp::largeRequest);
 
     setTitle(w->tr("page-title"));
 }
@@ -295,5 +318,9 @@ WApplication *createApplication(const WEnvironment& env)
 //
 int main(int argc, char **argv)
 {
+    // This must be created to use Qt exec() event loop in libwtwithqt.a
+    QApplication app(argc, argv);
+
     return WRun(argc, argv, &createApplication);
 }
+

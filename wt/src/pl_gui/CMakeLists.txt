@@ -1,3 +1,8 @@
+SUBDIRS(lib)
+
+QT4_GENERATE_MOC(${CMAKE_CURRENT_SOURCE_DIR}/QtFileSystemWatcher.h
+                 ${CMAKE_CURRENT_BINARY_DIR}/moccedQtFileSystemWatcher.cpp)
+                 
 ADD_EXECUTABLE(pl_gui.wt
   ArchiveFileResource.cpp
   ConfigOptions.cpp
@@ -27,11 +32,16 @@ ADD_EXECUTABLE(pl_gui.wt
   SelectScans.cpp
   SubjectPage.cpp
   SubmitJobDialog.cpp
+  QtFileSystemWatcher.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/moccedQtFileSystemWatcher.cpp
 )
-TARGET_LINK_LIBRARIES(pl_gui.wt wt ${EXAMPLES_CONNECTOR} ${BOOST_WT_LIBRARIES} ${BOOST_FS_LIB_MT} ${SSL_LIBRARIES} mxml)
+
+TARGET_LINK_LIBRARIES(pl_gui.wt wt ${EXAMPLES_CONNECTOR} ${QT_LIBRARIES} wtwithqt ${BOOST_WT_LIBRARIES} ${BOOST_FS_LIB_MT} ${SSL_LIBRARIES} mxml)
 
 INCLUDE_DIRECTORIES(
   ${WT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib
+  ${QT_QTCORE_INCLUDE_DIR} ${QT_INCLUDE_DIR}
 )
 
 #

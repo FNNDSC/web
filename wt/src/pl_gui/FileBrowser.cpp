@@ -12,6 +12,7 @@
 //
 #include "FileBrowser.h"
 #include "ConfigOptions.h"
+#include <Wt/WApplication>
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
@@ -20,11 +21,14 @@
 #include <Wt/WLabel>
 #include <Wt/WStandardItem>
 #include <Wt/WVBoxLayout>
+#include <Wt/WLogger>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include "QtFileSystemWatcher.h"
+#include <QStringList>
 
 ///
 //  Namespaces
@@ -43,7 +47,11 @@ using namespace boost::filesystem;
 //  Constructor
 //
 FileBrowser::FileBrowser(WContainerWidget *parent) :
-    WContainerWidget(parent)
+    WContainerWidget(parent),
+    mQtFileSystemWatcher(NULL),
+    mStopUpdateThread(false),
+    mUpdateBrowser(false),
+    mApp(WApplication::instance())
 {
     mTreeView = new WTreeView();
     mModel = new WStandardItemModel(this);
@@ -54,6 +62,8 @@ FileBrowser::FileBrowser(WContainerWidget *parent) :
     mTreeView->setModel(mModel);
     mTreeView->setSelectionMode(SingleSelection);
     mTreeView->setHeaderHeight(0);
+
+    mThread = new boost::thread(boost::bind(&FileBrowser::updateBrowser, this));
 }
 
 ///
@@ -70,13 +80,85 @@ FileBrowser::~FileBrowser()
 //
 //
 
+///
+/// Reset to default state
+///
+void FileBrowser::resetAll()
+{
+    if (mQtFileSystemWatcher != NULL)
+    {
+        QStringList dirList = mQtFileSystemWatcher->directories();
 
+        if (dirList.size() > 0)
+        {
+            mQtFileSystemWatcher->removePaths(dirList);
+        }
+    }
+}
+
+///
+//  Do an update on the log
+//
+void FileBrowser::doUpdate()
+{
+    boost::mutex::scoped_lock lock(mDoUpdateMutex);
+    mUpdateBrowser = true;
+    mDoUpdateCondition.notify_one();
+}
+
+///
+// Finalize the widget (pre-destruction)
+//
+void FileBrowser::finalize()
+{
+    if (mThread != NULL)
+    {
+        mStopUpdateThread = true;
+        mUpdateBrowser = false;
+        mDoUpdateCondition.notify_one();
+        mThread->join();
+        delete mThread;
+        mThread = NULL;
+    }
+}
+
+///
+//  Create Qt objects
+//
+void FileBrowser::createQt()
+{
+    mQtFileSystemWatcher = new QtFileSystemWatcher(this);
+}
+
+///
+//  Destroy Qt objects()
+//
+void FileBrowser::destroyQt()
+{
+    delete mQtFileSystemWatcher;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Protected Members
 //
 //
+
+///
+//  Add directory to be watched
+//
+void FileBrowser::addWatchPath(const std::string& path)
+{
+    if (mQtFileSystemWatcher != NULL)
+    {
+        QStringList dirList = mQtFileSystemWatcher->directories();
+        if (!dirList.contains(path.c_str()))
+        {
+            WApplication::instance()->log("debug") << "Watching: " << path;
+            mQtFileSystemWatcher->addPath(path.c_str());
+        }
+    }
+}
 
 ///
 //  Add an entry to the browser
@@ -239,6 +321,9 @@ bool FileBrowser::addEntry(bool rootDir, int entryDepth,
         }
     }
 
+    // Add the directory to the watch list
+    addWatchPath(baseDir);
+
     return true;
 }
 
@@ -258,3 +343,34 @@ WStandardItem* FileBrowser::createEntry(const std::string& baseName, int index)
     return result;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Private Members
+//
+//
+
+///
+//  Update thread for checking directory changes
+//
+void FileBrowser::updateBrowser()
+{
+    boost::mutex::scoped_lock lock(mDoUpdateMutex);
+
+    while (!mStopUpdateThread)
+    {
+        mDoUpdateCondition.wait(lock);
+
+        if (mUpdateBrowser)
+        {
+
+            // First, take the lock to safely manipulate the UI outside of the
+            // normal event loop, by having exclusive access to the session.
+            WApplication::UpdateLock lock = mApp->getUpdateLock();
+
+            directoryChanged();
+
+            mApp->triggerUpdate();
+        }
+    }
+}

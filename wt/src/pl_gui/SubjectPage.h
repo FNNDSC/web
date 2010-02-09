@@ -17,12 +17,14 @@
 #include <Wt/WContainerWidget>
 #include <Wt/WString>
 #include <Wt/WText>
+#include <Wt/WDialog>
 #include <string>
 
 namespace Wt
 {
     class WPushButton;
     class WStackedWidget;
+    class WMessageBox;
 }
 
 using namespace Wt;
@@ -30,6 +32,7 @@ using namespace Wt;
 class SelectScans;
 class PipelineConfigure;
 class MRIBrowser;
+class SubmitJobDialog;
 
 ///
 /// \class SubjectPage
@@ -107,6 +110,15 @@ private:
     ///
     int getNumberOfLines(const char *fileName);
 
+    ///
+    ///  Handle message box finished [slot]
+    ///
+    void handleMessageBoxFinished(StandardButton);
+
+    ///
+    /// Handle submit scans to cluster [slot]
+    ///
+    void handleSubmitScans(WDialog::DialogCode dialogCode);
 
 private:
 
@@ -128,6 +140,11 @@ private:
     /// Back button (navigation)
     WPushButton *mBackButton;
 
+    /// Box for displaying messages
+    WMessageBox *mMessageBox;
+
+    /// Submit job dialog
+    SubmitJobDialog *mSubmitJobDialog;
 };
 
 #endif // SUBJECTPAGE

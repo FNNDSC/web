@@ -79,7 +79,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         return false;
     }
 
-    fstream configFile(configPath.c_str());
+    fstream configFile(configPath.c_str(), ios::in);
     if(!configFile.is_open())
     {
         cerr << "ERROR: Opening file for reading: " << configPath << endl;

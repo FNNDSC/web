@@ -47,6 +47,16 @@ public:
     virtual ~MonitorResultsTab();
 
     ///
+    ///  Create Qt objects
+    ///
+    void createQt();
+
+    ///
+    ///  Destroy Qt objects
+    ///
+    void destroyQt();
+
+    ///
     /// Reset all widgets to the default state
     ///
     void resetAll();

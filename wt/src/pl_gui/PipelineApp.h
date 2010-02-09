@@ -14,7 +14,7 @@
 #ifndef PIPELINEAPP_H
 #define PIPELINEAPP_H
 
-#include <Wt/WApplication>
+#include "WQApplication"
 
 
 namespace Wt
@@ -35,7 +35,7 @@ class ClusterLoadPage;
 /// \class PipelineApp
 /// \brief Main application class.
 ///
-class PipelineApp : public WApplication
+class PipelineApp : public WQApplication
 {
 public:
     ///
@@ -47,6 +47,16 @@ public:
     /// Destructor
     ///
     virtual ~PipelineApp();
+
+    ///
+    /// Callback for creating Qt objects
+    ///
+    virtual void create();
+
+    ///
+    /// Callback for destroying Qt objects
+    ///
+    virtual void destroy();
 
     ///
     /// Override finalize to handle destruction of threads
@@ -86,6 +96,7 @@ private:
     void userLoggedIn(std::string userName);
 
 private:
+
     /// Monitor page
     MonitorPage *mMonitorPage;
 

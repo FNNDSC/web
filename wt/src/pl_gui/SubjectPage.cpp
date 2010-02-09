@@ -90,6 +90,10 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
 
     setLayout(layout);
 
+    mMessageBox = new WMessageBox();
+    mMessageBox->buttonClicked().connect(SLOT(this, SubjectPage::handleMessageBoxFinished));
+    mSubmitJobDialog = new SubmitJobDialog("Submit Scans");
+    mSubmitJobDialog->finished().connect(SLOT(this, SubjectPage::handleSubmitScans));
 
     // Signal/slot connections
     mSelectScans->getScanAdded().connect(SLOT(this, SubjectPage::scanAdded));
@@ -104,6 +108,8 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
 //
 SubjectPage::~SubjectPage()
 {
+    delete mMessageBox;
+    delete mSubmitJobDialog;
 }
 
 
@@ -194,11 +200,11 @@ void SubjectPage::nextClicked()
     case SCAN_SELECT:
         if (mSelectScans->getCurrentPipeline() == Enums::PIPELINE_UNKNOWN)
         {
-            StandardButton result = WMessageBox::show("Error",
-                                                      "Pipeline Type is UNKNOWN.  If a pipeline type was not detected automatically, "\
-                                                      "please override it using the 'Override' button.",
-                                                      Wt::Ok);
-
+            mMessageBox->setWindowTitle("Error");
+            mMessageBox->setText("Pipeline Type is UNKNOWN.  If a pipeline type was not detected automatically, "\
+                                 "please override it using the 'Override' button.");
+            mMessageBox->setButtons(Wt::Ok);
+            mMessageBox->show();
             return;
         }
 
@@ -219,50 +225,8 @@ void SubjectPage::nextClicked()
             return;
         }
 
-        SubmitJobDialog jobDialog("Submit Scans");
-        jobDialog.setCommandLine(mPipelineConfigure->getCommandLineString());
-        WDialog::DialogCode result = jobDialog.exec();
-
-        if (result == WDialog::Accepted)
-        {
-            if(submitForProcessing(jobDialog.getCommandLine()))
-            {
-                std::string logEntriesToDisplay;
-                std::string scheduleFileName = getConfigOptionsPtr()->GetOutDir() +
-                                               "/" +  getConfigOptionsPtr()->GetClusterName() +
-                                               "/schedule.log";
-
-                ifstream ifs(scheduleFileName.c_str(), ios::in);
-
-                int linesInFile = getNumberOfLines(scheduleFileName.c_str());
-                int linesToRead = mSelectScans->getScansToProcess().size();
-                int startLine = (linesInFile - linesToRead) + 1;
-                int line = 0;
-
-                while (!ifs.eof())
-                {
-                    char buf[1024] = {0};
-                    ifs.getline( buf, sizeof(buf));
-                    line++;
-                    if (line >= startLine)
-                    {
-                        logEntriesToDisplay += string(buf) + "<br/>";
-                    }
-                }
-                ifs.close();
-
-
-                StandardButton result = WMessageBox::show("Success",
-                                                          "The following jobs were submitted successfully:<br/>" +
-                                                          logEntriesToDisplay,
-                                                          Wt::Ok);
-
-                // Reset everything to the default state
-                resetAll();
-
-
-            }
-        }
+        mSubmitJobDialog->setCommandLine(mPipelineConfigure->getCommandLineString());
+        mSubmitJobDialog->show();
         break;
     }
 }
@@ -301,9 +265,10 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
     if (mkstemp(tmpName) == -1)
     {
         WApplication::instance()->log("error") << "Error creating file on server: " << tmpName;
-        StandardButton result = WMessageBox::show("ERROR",
-                                                  string("Error creating file on server: ") + string(tmpName),
-                                                  Wt::Ok);
+        mMessageBox->setWindowTitle("ERROR");
+        mMessageBox->setText(string("Error creating file on server: ") + string(tmpName));
+        mMessageBox->setButtons(Wt::Ok);
+        mMessageBox->show();
         free(tmpName);
 
         return false;
@@ -316,9 +281,11 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
     {
 
         WApplication::instance()->log("error") << "Error opening file on server: " << tmpName;
-        StandardButton result = WMessageBox::show("ERROR",
-                                                  string("Error creating file on server: ") + string(tmpName),
-                                                  Wt::Ok);
+        mMessageBox->setWindowTitle("ERROR");
+        mMessageBox->setText(string("Error creating file on server: ") + string(tmpName));
+        mMessageBox->setButtons(Wt::Ok);
+        mMessageBox->show();
+
         free(tmpName);
 
         return false;
@@ -404,10 +371,11 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
     {
         WApplication::instance()->log("error") << "New lines: " << newScheduleLines << " Old lines: " << scheduleLines
                                                << "Scans to process: " << scansToProcess.size();
+        mMessageBox->setWindowTitle("ERROR");
+        mMessageBox->setText(string("Error occurred in adding files to cluster schedule."));
+        mMessageBox->setButtons(Wt::Ok);
+        mMessageBox->show();
 
-        StandardButton result = WMessageBox::show("ERROR",
-                                                  string("Error occurred in adding files to cluster schedule."),
-                                                  Wt::Ok);
         free(tmpName);
         return false;
     }
@@ -441,4 +409,60 @@ int SubjectPage::getNumberOfLines(const char *fileName)
     }
 
     return lineCount;
+}
+
+///
+//  Handle message box finished [slot]
+//
+void SubjectPage::handleMessageBoxFinished(StandardButton)
+{
+    mMessageBox->hide();
+}
+
+///
+//  Handle submit scans to cluster [slot]
+//
+void SubjectPage::handleSubmitScans(WDialog::DialogCode dialogCode)
+{
+    mSubmitJobDialog->hide();
+    if (dialogCode == WDialog::Accepted)
+    {
+        if(submitForProcessing(mSubmitJobDialog->getCommandLine()))
+        {
+            std::string logEntriesToDisplay;
+            std::string scheduleFileName = getConfigOptionsPtr()->GetOutDir() +
+                                           "/" +  getConfigOptionsPtr()->GetClusterName() +
+                                           "/schedule.log";
+
+            ifstream ifs(scheduleFileName.c_str(), ios::in);
+
+            int linesInFile = getNumberOfLines(scheduleFileName.c_str());
+            int linesToRead = mSelectScans->getScansToProcess().size();
+            int startLine = (linesInFile - linesToRead) + 1;
+            int line = 0;
+
+            while (!ifs.eof())
+            {
+                char buf[1024] = {0};
+                ifs.getline( buf, sizeof(buf));
+                line++;
+                if (line >= startLine)
+                {
+                    logEntriesToDisplay += string(buf) + "<br/>";
+                }
+            }
+            ifs.close();
+
+            mMessageBox->setWindowTitle("Success");
+            mMessageBox->setText("The following jobs were submitted successfully:<br/>" +
+                                 logEntriesToDisplay);
+            mMessageBox->setButtons(Wt::Ok);
+            mMessageBox->show();
+
+            // Reset everything to the default state
+            resetAll();
+
+
+        }
+    }
 }

@@ -17,12 +17,23 @@
 #include <Wt/WTreeView>
 #include <Wt/WStandardItemModel>
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/condition.hpp>
 
 #include <string>
 #include <vector>
 
-using namespace Wt;
+///
+//  Classes
+//
+class QtFileSystemWatcher;
+namespace Wt
+{
+    class WApplication;
+};
 
+
+using namespace Wt;
 
 ///
 /// \class FileBrowser
@@ -42,8 +53,43 @@ public:
     ///
     virtual ~FileBrowser();
 
+    ///
+    /// Reset to default state
+    ///
+    virtual void resetAll();
+
+    ///
+    /// Create Qt objects
+    ///
+    void createQt();
+
+    ///
+    /// Destroy Qt objects()
+    ///
+    void destroyQt();
+
+    ///
+    ///  Do an update on the browser
+    ///
+    void doUpdate();
+
+    ///
+    /// Finalize the widget (pre-destruction)
+    ///
+    void finalize();
+
+    ///
+    /// Handle async changes to directory
+    ///
+    virtual void directoryChanged() = 0;
+
 
 protected:
+
+    ///
+    /// Add directory to be watched
+    ///
+    void addWatchPath(const std::string& path);
 
     ///
     /// Add an entry to the browser
@@ -64,6 +110,13 @@ protected:
     //
     WStandardItem* createEntry(const std::string& baseName, int index);
 
+private:
+
+    ///
+    ///  Update thread for checking directory changes
+    ///
+    void updateBrowser();
+
 protected:
 
     /// Tree view
@@ -71,7 +124,29 @@ protected:
 
     /// Model
     WStandardItemModel *mModel;
+
+    /// File system watcher (using Qt)
+    QtFileSystemWatcher *mQtFileSystemWatcher;
+
+    /// Thread for background processing
+    boost::thread  *mThread;
+
+    /// Stop updating thread
+    volatile bool mStopUpdateThread;
+
+    /// Do update
+    volatile bool mUpdateBrowser;
+
+    /// Wait condition for do update
+    boost::condition mDoUpdateCondition;
+
+    /// Mutex
+    boost::mutex mDoUpdateMutex;
+
+    /// Application instance
+    WApplication *mApp;
+
 };
 
-#endif // LOGFILEBROWSER_H
+#endif // FILEBROWSER_H
 

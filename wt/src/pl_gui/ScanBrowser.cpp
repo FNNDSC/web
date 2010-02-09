@@ -51,7 +51,9 @@ using namespace std;
 //  Constructor
 //
 ScanBrowser::ScanBrowser(WContainerWidget *parent) :
-    WContainerWidget(parent)
+    WContainerWidget(parent),
+    mPipelineDialog(NULL),
+    mPipelineDialogGroup(NULL)
 {
     mPatientInfoBox = new PatientInfoBox();
     mMRIInfoBox = new MRIInfoBox();
@@ -112,6 +114,12 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     layout->setRowStretch(0, -1);
     layout->setRowStretch(1, -1);
 
+    mMessageBox = new WMessageBox();
+    mMessageBox->buttonClicked().connect(SLOT(this, ScanBrowser::handleMessageBoxFinished));
+    mAddScanMessageBox = new WMessageBox;
+    mAddScanMessageBox->buttonClicked().connect(SLOT(this, ScanBrowser::handleAddScanFinished));
+
+
     // Connect signals to slots
     mScansSelectionBox->activated().connect(SLOT(this, ScanBrowser::scanSelectionChanged));
     mAddScanButton->clicked().connect(SLOT(this, ScanBrowser::addScanClicked));
@@ -128,6 +136,8 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
 //
 ScanBrowser::~ScanBrowser()
 {
+    delete mMessageBox;
+    delete mAddScanMessageBox;
 }
 
 
@@ -263,28 +273,28 @@ void ScanBrowser::addScanClicked()
         return;
 
     WString curScanText = mScansSelectionBox->itemText(currentIndex);
-    ScanData newScanData;
 
-    newScanData.mMRID = mCurMRID;
-    newScanData.mDicomFile = mScansDicomFiles[currentIndex];
-    newScanData.mScanDate = mScansDate;
-    newScanData.mScanName = curScanText.toUTF8();
-    newScanData.mScanDir = mCurScanDir;
-    newScanData.mAge = mCurAge;
+    mNewScanData.mMRID = mCurMRID;
+    mNewScanData.mDicomFile = mScansDicomFiles[currentIndex];
+    mNewScanData.mScanDate = mScansDate;
+    mNewScanData.mScanName = curScanText.toUTF8();
+    mNewScanData.mScanDir = mCurScanDir;
+    mNewScanData.mAge = mCurAge;
 
     bool addScan = true;
     for (int i = 0; i < mScansToProcessData.size(); i++)
     {
         // Check to see if it has already been added, and if so display
         // a message to the user
-        if(newScanData.mMRID == mScansToProcessData[i].mMRID &&
-           newScanData.mDicomFile == mScansToProcessData[i].mDicomFile &&
-           newScanData.mScanName == mScansToProcessData[i].mScanName)
+        if(mNewScanData.mMRID == mScansToProcessData[i].mMRID &&
+           mNewScanData.mDicomFile == mScansToProcessData[i].mDicomFile &&
+           mNewScanData.mScanName == mScansToProcessData[i].mScanName)
         {
-            StandardButton result = WMessageBox::show("Scan Already Selected",
-                                                      "Can not add scan: [MRID:] " + newScanData.mMRID +
-                                                      " [Scan:] " + newScanData.mScanName + "\nIt has already been selected for processing.",
-                                                      Wt::Ok);
+            mMessageBox->setWindowTitle("Scan Already Selected");
+            mMessageBox->setText("Can not add scan: [MRID:] " + mNewScanData.mMRID +
+                                 " [Scan:] " + mNewScanData.mScanName + "\nIt has already been selected for processing.");
+            mMessageBox->setButtons(Wt::Ok);
+            mMessageBox->show();
             addScan = false;
             break;
         }
@@ -292,6 +302,8 @@ void ScanBrowser::addScanClicked()
 
     if (addScan)
     {
+        bool addScanWithoutResponse = true;
+
         Enums::PipelineType pipelineType = Enums::PIPELINE_UNKNOWN;
 
         if (findSeriesMatch(getConfigOptionsPtr()->GetSeriesListTract(), curScanText.toUTF8()))
@@ -313,34 +325,23 @@ void ScanBrowser::addScanClicked()
             {
                 if (pipelineType != mPipelineType)
                 {
-                    StandardButton result =
-                            WMessageBox::show("Pipeline Mismatch",
-                                              "[MRID:] " + newScanData.mMRID +
-                                              " [Scan:] " + newScanData.mScanName + " does not match current pipeline type." +
-                                              "\nAre you sure you want to add it?",
-                                              Wt::Yes | Wt::No);
+                    mAddScanMessageBox->setWindowTitle("Pipeline Mismatch");
+                    mAddScanMessageBox->setText("[MRID:] " + mNewScanData.mMRID +
+                                                " [Scan:] " + mNewScanData.mScanName + " does not match current pipeline type." +
+                                                "\nAre you sure you want to add it?");
+                    mAddScanMessageBox->setButtons(Wt::Yes | Wt::No);
+                    mAddScanMessageBox->show();
 
-                    if (result == Wt::No)
-                    {
-                        addScan = false;
-                    }
+                    addScanWithoutResponse = false;
                 }
             }
         }
 
-        if (addScan)
+        if (addScanWithoutResponse)
         {
-            mScansToProcessList->addItem("[MRID:] " + mCurMRID + " [Scan:] " + curScanText);
-            mScansToProcessData.push_back(newScanData);
+            // Force the scan to be added as if the user clicked "Yes"
+            handleAddScanFinished(Wt::Yes);
         }
-    }
-
-     // Emit a signal with whether a scan is selected
-    mScanAdded.emit(!mScansToProcessData.empty());
-
-    if (mScansToProcessData.empty())
-    {
-        setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
     }
 }
 
@@ -377,48 +378,68 @@ void ScanBrowser::removeScanClicked()
 //
 void ScanBrowser::pipelineOverrideClicked()
 {
-	WDialog pipelineDialog("Select Pipeline:");
+    if (mPipelineDialog != NULL)
+    {
+        delete mPipelineDialog;
+        delete mPipelineDialogGroup;
+    }
+
+    mPipelineDialog = new WDialog("Select Pipeline:");
+    mPipelineDialogGroup = new WButtonGroup(mPipelineDialog->contents());
 
     WText *text = new WText(
                             "The pipeline type is automatically detected based on the name of the sequence.<BR/>"
                                 "  If you need to override the automatically detected pipeline, select it below:",
-                            pipelineDialog.contents());
+                                mPipelineDialog->contents());
 
-    new WBreak(pipelineDialog.contents());
-    new WBreak(pipelineDialog.contents());
+    new WBreak(mPipelineDialog->contents());
+    new WBreak(mPipelineDialog->contents());
 
     // Use a button group to logically group the 3 options
-    WButtonGroup *group = new WButtonGroup(pipelineDialog.contents());
+    WButtonGroup *group = mPipelineDialogGroup;
     WRadioButton *structButton = new WRadioButton("Structural Reconstruction",
-            pipelineDialog.contents());
+            mPipelineDialog->contents());
     group->addButton(structButton, Enums::PIPELINE_TYPE_FS + 1);
-    new WBreak(pipelineDialog.contents());
+    new WBreak(mPipelineDialog->contents());
 
     WRadioButton *tractButton = new WRadioButton("Tractography",
-            pipelineDialog.contents());
+            mPipelineDialog->contents());
     group->addButton(tractButton, Enums::PIPELINE_TYPE_TRACT + 1);
-    new WBreak(pipelineDialog.contents());
+    new WBreak(mPipelineDialog->contents());
 
     WRadioButton *unknownButton = new WRadioButton("Unknown",
-            pipelineDialog.contents());
+            mPipelineDialog->contents());
     group->addButton(unknownButton, Enums::PIPELINE_UNKNOWN + 1);
-    new WBreak(pipelineDialog.contents());
+    new WBreak(mPipelineDialog->contents());
 
     group->setCheckedButton(group->button(mPipelineType + 1));
 
-    new WBreak(pipelineDialog.contents());
+    new WBreak(mPipelineDialog->contents());
 
-    WPushButton *ok = new WPushButton("OK", pipelineDialog.contents());
-    WPushButton *cancel = new WPushButton("Cancel", pipelineDialog.contents());
+    WPushButton *ok = new WPushButton("OK", mPipelineDialog->contents());
+    WPushButton *cancel = new WPushButton("Cancel", mPipelineDialog->contents());
 
-    ok->clicked().connect(SLOT(&pipelineDialog, WDialog::accept));
-    cancel->clicked().connect(SLOT(&pipelineDialog, WDialog::reject));
+    ok->clicked().connect(SLOT(mPipelineDialog, WDialog::accept));
+    cancel->clicked().connect(SLOT(mPipelineDialog, WDialog::reject));
 
-    // If OK was clicked, change the pipeline type
-    if (pipelineDialog.exec() == WDialog::Accepted)
+    mPipelineDialog->finished().connect(SLOT(this, ScanBrowser::handlePipelineDialogClosed));
+
+    mPipelineDialog->show();
+}
+
+///
+//  Handle pipeline dialog closed [slot]
+//
+void ScanBrowser::handlePipelineDialogClosed(WDialog::DialogCode dialogCode)
+{
+    if (dialogCode == WDialog::Accepted)
     {
-        setCurrentPipeline((Enums::PipelineType)(group->checkedId() - 1));
+        setCurrentPipeline((Enums::PipelineType)(mPipelineDialogGroup->checkedId() - 1));
     }
+
+    delete mPipelineDialog;
+    mPipelineDialog = NULL;
+    mPipelineDialogGroup = NULL;
 }
 
 
@@ -474,5 +495,35 @@ bool ScanBrowser::findSeriesMatch(const std::string& seriesList,
     }
 
     return false;
+}
+
+///
+//  Handle message box finished [slot]
+//
+void ScanBrowser::handleMessageBoxFinished(StandardButton)
+{
+    mMessageBox->hide();
+}
+
+///
+//  Handle message box finished [slot]
+//
+void ScanBrowser::handleAddScanFinished(StandardButton button)
+{
+    if (button == Wt::Yes)
+    {
+        mScansToProcessList->addItem("[MRID:] " + mNewScanData.mMRID + " [Scan:] " + mNewScanData.mScanName);
+        mScansToProcessData.push_back(mNewScanData);
+    }
+
+    // Emit a signal with whether a scan is selected
+    mScanAdded.emit(!mScansToProcessData.empty());
+
+    if (mScansToProcessData.empty())
+    {
+        setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
+    }
+
+    mAddScanMessageBox->hide();
 }
 
