@@ -271,12 +271,27 @@ void LogFileBrowser::logChanged()
 //
 void LogFileBrowser::refreshLogs()
 {
+    // Save the selection to restore it on refresh
+    LogFileEntry savedLogEntry;
+    WModelIndex selected = *mTreeView->selectedIndexes().begin();
+    boost::any logEntryDataIndex = selected.data(UserRole);
+
+    if (!logEntryDataIndex.empty())
+    {
+        int logFileEntryIndex = boost::any_cast<int>(logEntryDataIndex);
+
+        savedLogEntry = mLogFileEntries[logFileEntryIndex];
+    }
+
     WStandardItemModel *oldModel = mModel;
     mModel = new WStandardItemModel();
     mTreeView->setModel(mModel);
     delete oldModel;
 
     populateBrowser();
+
+    // Restore saved entry if it is possible
+    selectLogEntry(savedLogEntry, mModel->invisibleRootItem());
 
     mTreeView->expandToDepth(4);
 
@@ -289,3 +304,41 @@ void LogFileBrowser::refreshLogs()
     }
 }
 
+///
+//  Find the log entry, and if found, select it
+//
+void LogFileBrowser::selectLogEntry(const LogFileEntry& logEntry, WStandardItem *item)
+{
+    if (item == NULL)
+        return;
+
+    for(int row = 0; row < item->rowCount(); row++)
+    {
+        if (item->child(row) != NULL)
+        {
+            boost::any logEntryDataIndex = item->child(row)->data(UserRole);
+
+            if (!logEntryDataIndex.empty())
+            {
+                int index = boost::any_cast<int>(logEntryDataIndex);
+
+                if (index >= 0 && index < mLogFileEntries.size())
+                {
+                    if (logEntry.mRootDir == mLogFileEntries[index].mRootDir &&
+                        logEntry.mHasStdOut == mLogFileEntries[index].mHasStdOut &&
+                        logEntry.mHasStdErr == mLogFileEntries[index].mHasStdErr &&
+                        logEntry.mBaseLogName == mLogFileEntries[index].mBaseLogName &&
+                        logEntry.mBaseLogDir == mLogFileEntries[index].mBaseLogDir &&
+                        logEntry.mRootLogDir == mLogFileEntries[index].mRootLogDir &&
+                        logEntry.mDepth == mLogFileEntries[index].mDepth)
+                    {
+                        mTreeView->select(mModel->indexFromItem(item->child(row)));
+                        return;
+                    }
+                }
+            }
+
+            selectLogEntry(logEntry, item->child(row));
+        }
+    }
+}

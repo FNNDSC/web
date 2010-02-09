@@ -116,6 +116,12 @@ protected:
     ///
     void refreshLogs();
 
+
+    ///
+    ///  Find the log entry, and if found, select it
+    ///
+    void selectLogEntry(const LogFileEntry& logEntry, WStandardItem *item);
+
 private:
 
     /// Log file vector
