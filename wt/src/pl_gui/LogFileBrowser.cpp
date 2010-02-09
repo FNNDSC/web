@@ -274,15 +274,19 @@ void LogFileBrowser::refreshLogs()
     // Save the selection to restore it on refresh
     bool restoreEntry = false;
     LogFileEntry savedLogEntry;
-    WModelIndex selected = *mTreeView->selectedIndexes().begin();
-    boost::any logEntryDataIndex = selected.data(UserRole);
 
-    if (!logEntryDataIndex.empty())
+    if (mTreeView->selectedIndexes().size() > 0)
     {
-        int logFileEntryIndex = boost::any_cast<int>(logEntryDataIndex);
+        WModelIndex selected = *mTreeView->selectedIndexes().begin();
+        boost::any logEntryDataIndex = selected.data(UserRole);
 
-        savedLogEntry = mLogFileEntries[logFileEntryIndex];
-        restoreEntry = true;
+        if (!logEntryDataIndex.empty())
+        {
+            int logFileEntryIndex = boost::any_cast<int>(logEntryDataIndex);
+
+            savedLogEntry = mLogFileEntries[logFileEntryIndex];
+            restoreEntry = true;
+        }
     }
 
     WStandardItemModel *oldModel = mModel;
