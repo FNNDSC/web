@@ -28,7 +28,7 @@
 #include <Wt/WLabel>
 #include <Wt/WOverlayLoadingIndicator>
 #include <Wt/WLogger>
-#include <QApplication>
+#include <QCoreApplication>
 
 ///
 //  Namespaces
@@ -319,7 +319,7 @@ WApplication *createApplication(const WEnvironment& env)
 int main(int argc, char **argv)
 {
     // This must be created to use Qt exec() event loop in libwtwithqt.a
-    QApplication app(argc, argv);
+    QCoreApplication app(argc, argv);
 
     return WRun(argc, argv, &createApplication);
 }
