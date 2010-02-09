@@ -272,6 +272,7 @@ void LogFileBrowser::logChanged()
 void LogFileBrowser::refreshLogs()
 {
     // Save the selection to restore it on refresh
+    bool restoreEntry = false;
     LogFileEntry savedLogEntry;
     WModelIndex selected = *mTreeView->selectedIndexes().begin();
     boost::any logEntryDataIndex = selected.data(UserRole);
@@ -281,6 +282,7 @@ void LogFileBrowser::refreshLogs()
         int logFileEntryIndex = boost::any_cast<int>(logEntryDataIndex);
 
         savedLogEntry = mLogFileEntries[logFileEntryIndex];
+        restoreEntry = true;
     }
 
     WStandardItemModel *oldModel = mModel;
@@ -290,9 +292,6 @@ void LogFileBrowser::refreshLogs()
 
     populateBrowser();
 
-    // Restore saved entry if it is possible
-    selectLogEntry(savedLogEntry, mModel->invisibleRootItem());
-
     mTreeView->expandToDepth(4);
 
     if (mModel->rowCount() == 0)
@@ -301,6 +300,11 @@ void LogFileBrowser::refreshLogs()
         newItem->setFlags(newItem->flags().clear(ItemIsSelectable));
         newItem->setIcon("icons/folder.gif");
         mModel->appendRow(newItem);
+    }
+    else if (restoreEntry)
+    {
+        // Restore saved entry if it is possible
+        selectLogEntry(savedLogEntry, mModel->invisibleRootItem());
     }
 }
 
