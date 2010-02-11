@@ -24,6 +24,11 @@
 #include <vector>
 
 ///
+//  Macro options
+//
+// #define ENABLE_FILE_WATCHER 1 // Enable dynamic file watch updates.  This has proved problematic so disabling for now
+
+///
 //  Classes
 //
 class QtFileSystemWatcher;
@@ -125,6 +130,7 @@ protected:
     /// Model
     WStandardItemModel *mModel;
 
+#ifdef ENABLE_FILE_WATCHER
     /// File system watcher (using Qt)
     QtFileSystemWatcher *mQtFileSystemWatcher;
 
@@ -142,6 +148,7 @@ protected:
 
     /// Mutex
     boost::mutex mDoUpdateMutex;
+#endif
 
     /// Application instance
     WApplication *mApp;

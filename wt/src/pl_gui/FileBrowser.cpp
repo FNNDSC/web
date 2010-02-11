@@ -27,8 +27,11 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#ifdef ENABLE_FILE_WATCHER
 #include "QtFileSystemWatcher.h"
 #include <QStringList>
+#endif
+
 
 ///
 //  Namespaces
@@ -48,9 +51,11 @@ using namespace boost::filesystem;
 //
 FileBrowser::FileBrowser(WContainerWidget *parent) :
     WContainerWidget(parent),
+#ifdef ENABLE_FILE_WATCHER
     mQtFileSystemWatcher(NULL),
     mStopUpdateThread(false),
     mUpdateBrowser(false),
+#endif
     mApp(WApplication::instance())
 {
     mTreeView = new WTreeView();
@@ -63,7 +68,10 @@ FileBrowser::FileBrowser(WContainerWidget *parent) :
     mTreeView->setSelectionMode(SingleSelection);
     mTreeView->setHeaderHeight(0);
 
+
+#ifdef ENABLE_FILE_WATCHER
     mThread = new boost::thread(boost::bind(&FileBrowser::updateBrowser, this));
+#endif
 }
 
 ///
@@ -85,6 +93,7 @@ FileBrowser::~FileBrowser()
 ///
 void FileBrowser::resetAll()
 {
+#ifdef ENABLE_FILE_WATCHER
     if (mQtFileSystemWatcher != NULL)
     {
         QStringList dirList = mQtFileSystemWatcher->directories();
@@ -94,6 +103,7 @@ void FileBrowser::resetAll()
             mQtFileSystemWatcher->removePaths(dirList);
         }
     }
+#endif
 }
 
 ///
@@ -101,9 +111,11 @@ void FileBrowser::resetAll()
 //
 void FileBrowser::doUpdate()
 {
+#ifdef ENABLE_FILE_WATCHER
     boost::mutex::scoped_lock lock(mDoUpdateMutex);
     mUpdateBrowser = true;
     mDoUpdateCondition.notify_one();
+#endif
 }
 
 ///
@@ -111,6 +123,7 @@ void FileBrowser::doUpdate()
 //
 void FileBrowser::finalize()
 {
+#ifdef ENABLE_FILE_WATCHER
     if (mThread != NULL)
     {
         mStopUpdateThread = true;
@@ -120,6 +133,7 @@ void FileBrowser::finalize()
         delete mThread;
         mThread = NULL;
     }
+#endif
 }
 
 ///
@@ -127,7 +141,9 @@ void FileBrowser::finalize()
 //
 void FileBrowser::createQt()
 {
+#ifdef ENABLE_FILE_WATCHER
     mQtFileSystemWatcher = new QtFileSystemWatcher(this);
+#endif
 }
 
 ///
@@ -135,7 +151,9 @@ void FileBrowser::createQt()
 //
 void FileBrowser::destroyQt()
 {
+#ifdef ENABLE_FILE_WATCHER
     delete mQtFileSystemWatcher;
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -149,6 +167,7 @@ void FileBrowser::destroyQt()
 //
 void FileBrowser::addWatchPath(const std::string& path)
 {
+#ifdef ENABLE_FILE_WATCHER
     if (mQtFileSystemWatcher != NULL)
     {
         QStringList dirList = mQtFileSystemWatcher->directories();
@@ -158,6 +177,7 @@ void FileBrowser::addWatchPath(const std::string& path)
             mQtFileSystemWatcher->addPath(path.c_str());
         }
     }
+#endif
 }
 
 ///
@@ -355,6 +375,7 @@ WStandardItem* FileBrowser::createEntry(const std::string& baseName, int index)
 //
 void FileBrowser::updateBrowser()
 {
+#ifdef ENABLE_FILE_WATCHER
     boost::mutex::scoped_lock lock(mDoUpdateMutex);
 
     while (!mStopUpdateThread)
@@ -373,4 +394,5 @@ void FileBrowser::updateBrowser()
             mApp->triggerUpdate();
         }
     }
+#endif
 }
