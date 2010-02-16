@@ -44,19 +44,15 @@ PipelineOptionsFS::PipelineOptionsFS(WContainerWidget *parent) :
 {
     setStyleClass("tabdiv");
 
-    mStageBoxes[0] = new WCheckBox("1 - Collect DICOM from repository");
-    mStageBoxes[1] = new WCheckBox("2 - Initialize structural reconstruction");
-    mStageBoxes[2] = new WCheckBox("3 - Perform structural reconstruction");
+    mStageBoxes[0] = new WCheckBox("Perform structural reconstruction");
 
-    for (int i = 0; i < NUM_FS_STAGES; i++)
+    for (int i = 0; i < NUM_OPTIONAL_FS_STAGES; i++)
     {
         mStageBoxes[i]->setChecked(true);
         mStageButtonGroupLayout->addWidget(mStageBoxes[i]);
     }
 
-    // Add to the base class layout
-    mPipelineOptionsBoxLayout->addWidget(mDirectoryGroupBox, 1, 0);
-
+    mPipelineOptionsBoxLayout->setRowStretch(0, -1);
 
     resetAll();
 }
@@ -82,10 +78,11 @@ PipelineOptionsFS::~PipelineOptionsFS()
 void PipelineOptionsFS::resetAll()
 {
     PipelineOptions::resetAll();
-   for (int i = 0; i < NUM_FS_STAGES; i++)
-   {
+
+    for (int i = 0; i < NUM_OPTIONAL_FS_STAGES; i++)
+    {
        mStageBoxes[i]->setChecked(true);
-   }
+    }
 }
 
 ///
@@ -93,21 +90,23 @@ void PipelineOptionsFS::resetAll()
 //
 std::string PipelineOptionsFS::getCommandLineString() const
 {
-    std::string stageStr = "";
     std::string args;
+    ostringstream stageStrStream;
 
-    for (int i = 0; i < NUM_FS_STAGES; i++)
+    for (int i = 1; i < FIRST_OPTIONAL_FS_STAGE; i++)
+    {
+        stageStrStream << i;
+    }
+
+    for (int i = 0; i < NUM_OPTIONAL_FS_STAGES; i++)
     {
         if (mStageBoxes[i]->isChecked())
         {
-            ostringstream oss;
-
-            oss << (i + 1);
-            stageStr += oss.str();
+            stageStrStream << (i + FIRST_OPTIONAL_FS_STAGE);
         }
     }
 
-    args = "-t " + stageStr;
+    args = "-t " + stageStrStream.str();;
 
     return args + " " + PipelineOptions::getCommandLineString();
 }

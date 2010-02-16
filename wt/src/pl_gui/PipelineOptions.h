@@ -27,6 +27,8 @@ namespace Wt
     class WGridLayout;
     class WVBoxLayout;
     class WLineEdit;
+    class WCheckBox;
+    class WMessageBox;
 }
 
 using namespace Wt;
@@ -53,11 +55,10 @@ public:
     ///
     void resetAll();
 
-
     ///
     /// Check whether the options are valid
     ///
-    virtual bool validate() const { return true; }
+    virtual bool validate() const;
 
     ///
     ///  Generate command-line options string based on user choices
@@ -76,6 +77,10 @@ public:
 
 private:
 
+    ///
+    /// Handle message box finished [slot]
+    ///
+    void handleMessageBoxFinished(StandardButton);
 
 protected:
 
@@ -103,11 +108,14 @@ protected:
     /// Output directory suffix
     WLineEdit *mOutputDirSuffix;
 
-    /// Output file suffix
-    WLineEdit *mOutputFileSuffix;
-
     /// E-mail user
     WLineEdit *mEmailUser;
+
+    /// E-mail check box
+    WCheckBox *mEmailCheckBox;
+
+    /// Message box dialog
+    WMessageBox *mMessageBox;
 };
 
 #endif // PIPELINEOPTIONS_H

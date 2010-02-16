@@ -16,6 +16,7 @@
 #include "ConfigOptions.h"
 #include "GlobalEnums.h"
 #include <Wt/WContainerWidget>
+#include <Wt/WLogger>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
 #include <Wt/WLabel>
@@ -27,6 +28,9 @@
 #include <Wt/WButtonGroup>
 #include <Wt/WHBoxLayout>
 #include <Wt/WLineEdit>
+#include <Wt/WCheckBox>
+#include <Wt/WRegExpValidator>
+#include <Wt/WMessageBox>
 #include <vector>
 
 ///
@@ -51,43 +55,50 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
 
     WVBoxLayout *layout = new WVBoxLayout();
 
-    mStageButtonGroup = new WGroupBox("Stages");
+    mStageButtonGroup = new WGroupBox("Optional Stages");
     mStageButtonGroup->setStyleClass("groupdiv");
     mStageButtonGroupLayout = new WVBoxLayout();
-    mStageButtonGroup->setLayout(mStageButtonGroupLayout);
+    mStageButtonGroup->setLayout(mStageButtonGroupLayout, AlignTop);
 
-    mDirectoryGroupBox = new WGroupBox("Directory / File / E-mail");
+    mDirectoryGroupBox = new WGroupBox("Directory / E-mail");
     mDirectoryGroupBox->setStyleClass("groupdiv");
     mDirectoryGroupBoxLayout = new WGridLayout();
-    mDirectoryGroupBox->setLayout(mDirectoryGroupBoxLayout);
+    mDirectoryGroupBox->setLayout(mDirectoryGroupBoxLayout, AlignTop);
 
     // Output directory suffix
-    mDirectoryGroupBoxLayout->addWidget(new WLabel("Output Directory Suffix (Optional):"), 0, 0, Wt::AlignRight  | Wt::AlignMiddle);
-    mOutputDirSuffix = new WLineEdit();
+    WRegExpValidator *dirSuffixValidator = new WRegExpValidator("[a-zA-Z0-9_+-]+");
+    dirSuffixValidator->setMandatory(true);
+    mDirectoryGroupBoxLayout->addWidget(new WLabel("Directory Suffix:"), 0, 0, Wt::AlignRight  | Wt::AlignMiddle);
+    mOutputDirSuffix = new WLineEdit("");
+    mOutputDirSuffix->setValidator(dirSuffixValidator);
+    mOutputDirSuffix->setToolTip("This string will be appended to the directory name that is output for the scans.");
     mOutputDirSuffix->setMinimumSize(200, WLength::Auto);
     mDirectoryGroupBoxLayout->addWidget(mOutputDirSuffix, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
 
-    // Output file suffix
-    mDirectoryGroupBoxLayout->addWidget(new WLabel("Output File Suffix (Optional):"), 1, 0, Wt::AlignRight  | Wt::AlignMiddle);
-    mOutputFileSuffix = new WLineEdit();
-    mOutputFileSuffix->setMinimumSize(200, WLength::Auto);
-    mDirectoryGroupBoxLayout->addWidget(mOutputFileSuffix, 1, 1, Wt::AlignLeft | Wt::AlignMiddle);
-
     // E-mail user
-    mDirectoryGroupBoxLayout->addWidget(new WLabel("E-mail User (Optional):"), 2, 0, Wt::AlignRight  | Wt::AlignMiddle);
+    mEmailCheckBox = new WCheckBox("E-mail User:");
+    mEmailCheckBox->setToolTip("If checked, the specified E-mail address will receive an E-mail when each cluster job finishes.");
+    mDirectoryGroupBoxLayout->addWidget(mEmailCheckBox, 1, 0, Wt::AlignRight  | Wt::AlignMiddle);
     mEmailUser = new WLineEdit();
     mEmailUser->setMinimumSize(200, WLength::Auto);
-    mDirectoryGroupBoxLayout->addWidget(mEmailUser, 2, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    mDirectoryGroupBoxLayout->addWidget(mEmailUser, 1, 1, Wt::AlignLeft | Wt::AlignMiddle);
     mDirectoryGroupBoxLayout->setColumnStretch(1, 1);
+
+    WHBoxLayout *topHBox = new WHBoxLayout();
+    topHBox->addWidget(mDirectoryGroupBox);
+    topHBox->addWidget(mStageButtonGroup);
 
     // Pipeline options box
     mPipelineOptionsBox = new WGroupBox("Pipeline Options");
-    mPipelineOptionsBox->setStyleClass("groupdiv");
+    mPipelineOptionsBox->setStyleClass("pipelinediv");
     mPipelineOptionsBoxLayout = new WGridLayout();
-    mPipelineOptionsBoxLayout->addWidget(mStageButtonGroup, 0, 0);
+    mPipelineOptionsBoxLayout->addLayout(topHBox, 0, 0);
 
+    mPipelineOptionsBox->setLayout(mPipelineOptionsBoxLayout, AlignTop);
 
-    mPipelineOptionsBox->setLayout(mPipelineOptionsBoxLayout);
+    /// Create message box with no parent
+    mMessageBox = new WMessageBox();
+    mMessageBox->buttonClicked().connect(SLOT(this, PipelineOptions::handleMessageBoxFinished));
 
     layout->addWidget(mPipelineOptionsBox);
     setLayout(layout);
@@ -100,6 +111,7 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
 //
 PipelineOptions::~PipelineOptions()
 {
+    delete mMessageBox;
 }
 
 
@@ -115,9 +127,26 @@ PipelineOptions::~PipelineOptions()
 //
 void PipelineOptions::resetAll()
 {
-    mEmailUser->setText("");
+    std::string  currentEmail = getCurrentUserEmail();
+
+    mEmailCheckBox->setChecked(true);
+    mEmailUser->setText(currentEmail);
     mOutputDirSuffix->setText("");
-    mOutputFileSuffix->setText("");
+}
+
+///
+// Check whether the options are valid
+//
+bool PipelineOptions::validate() const
+{
+    if (mOutputDirSuffix->text().empty() || !mOutputDirSuffix->validate())
+    {
+        mMessageBox->setWindowTitle("Invalid Input");
+        mMessageBox->setText("You must enter a directory suffix.  It can contain any combination of the following characters (A-Z, a-z, 0-9, _, +, -).");
+        mMessageBox->setButtons(Wt::Ok);
+        mMessageBox->show();
+        return false;
+    }
 }
 
 
@@ -136,7 +165,7 @@ std::string PipelineOptions::getCommandLineString() const
     args += getConfigOptionsPtr()->GetClusterName();
     args += " -O " + getConfigOptionsPtr()->GetOutDir();
 
-    if (!mEmailUser->text().empty())
+    if (mEmailCheckBox->isChecked() && !mEmailUser->text().empty())
     {
         args += " -M " + mEmailUser->text().toUTF8();
     }
@@ -157,7 +186,7 @@ std::string PipelineOptions::getOutputDirSuffix() const
 //
 std::string PipelineOptions::getOutputFileSuffix() const
 {
-    return mOutputFileSuffix->text().toUTF8();
+    return mOutputDirSuffix->text().toUTF8();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -165,5 +194,14 @@ std::string PipelineOptions::getOutputFileSuffix() const
 //  Private Members
 //
 //
+
+///
+//  Handle message box finished [slot]
+//
+void PipelineOptions::handleMessageBoxFinished(StandardButton)
+{
+    mMessageBox->hide();
+}
+
 
 

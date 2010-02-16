@@ -17,7 +17,12 @@
 ///
 //  Constants
 //
-const int NUM_FS_STAGES = 3;
+const int FIRST_OPTIONAL_FS_STAGE = 3; // Stages 1 and 2 are required
+#if 0 // Temporarily disable stage 4 and 5
+    const int NUM_OPTIONAL_FS_STAGES = 3;
+#else
+    const int NUM_OPTIONAL_FS_STAGES = 1;
+#endif
 
 ///
 /// \class PipelineOptionsFS
@@ -52,7 +57,7 @@ private:
 private:
 
     /// Buttons for pipeline stages
-    WCheckBox *mStageBoxes[NUM_FS_STAGES];
+    WCheckBox *mStageBoxes[NUM_OPTIONAL_FS_STAGES];
 
 };
 

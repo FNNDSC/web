@@ -18,10 +18,11 @@
 ///
 //  Constants
 //
+const int FIRST_OPTIONAL_TRACT_STAGE = 3; // Stages 1 and 2 are required
 #if 0 // Temporarily disable stage 4 and 5
-    const int NUM_TRACT_STAGES = 5;
+    const int NUM_OPTIONAL_TRACT_STAGES = 3;
 #else
-    const int NUM_TRACT_STAGES = 3;
+    const int NUM_OPTIONAL_TRACT_STAGES = 1;
 #endif
 
 namespace Wt
@@ -58,7 +59,7 @@ public:
     ///
     /// Check whether the options are valid
     ///
-    bool validate() const;
+    virtual bool validate() const;
 
     ///
     /// Generate command-line options string based on user choices
@@ -90,7 +91,7 @@ private:
 private:
 
     /// Buttons for pipeline stages
-    WCheckBox *mStageBoxes[NUM_TRACT_STAGES];
+    WCheckBox *mStageBoxes[NUM_OPTIONAL_TRACT_STAGES];
 
     /// Checkbox for performing Eddy Current correction
     WCheckBox *mEddyCurrentCheckBox;
@@ -137,8 +138,6 @@ private:
     /// Number of B0 Volumes
     WLineEdit *mB0VolumesLineEdit;
 
-    /// Message box dialog
-    WMessageBox *mMessageBox;
 };
 
 #endif // PIPELINEOPTIONSTRACT_H

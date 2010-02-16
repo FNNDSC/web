@@ -50,7 +50,10 @@ public:
     ///
     /// User logged in [signal]
     ///
-    Wt::Signal<std::string>& userLoggedIn() { return mUserLoggedIn; }
+    Wt::Signal<std::string, std::string>& userLoggedIn() { return mUserLoggedIn; }
+
+    ///
+    /// Get current u
 
 private:
 
@@ -61,7 +64,7 @@ private:
 
 
     /// Signal for when user is logged on
-    Wt::Signal<std::string> mUserLoggedIn;
+    Wt::Signal<std::string, std::string> mUserLoggedIn;
 
     /// Line edit for username
     WLineEdit *mUserNameLineEdit;

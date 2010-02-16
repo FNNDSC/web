@@ -57,20 +57,19 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 {
     setStyleClass("tabdiv");
 
-    mStageBoxes[0] = new WCheckBox("1 - Collect DICOM from repository");
-    mStageBoxes[1] = new WCheckBox("2 - Construct tractograpy");
-    mStageBoxes[2] = new WCheckBox("3 - Slice 3D model along anatomical planes");
+
+    mStageBoxes[0] = new WCheckBox("Slice 3D model along anatomical planes");
 #if 0 // Temporarily disabled until we get MatLAB
-    mStageBoxes[3] = new WCheckBox("4 - Convert slices to DICOM");
-    mStageBoxes[4] = new WCheckBox("5 - Transmit slices to PACS");
+    mStageBoxes[1] = new WCheckBox("Convert slices to DICOM");
+    mStageBoxes[2] = new WCheckBox("Transmit slices to PACS");
 #endif
-    for (int i = 0; i < NUM_TRACT_STAGES; i++)
+    for (int i = 0; i < NUM_OPTIONAL_TRACT_STAGES; i++)
     {
         mStageBoxes[i]->setChecked(true);
         mStageButtonGroupLayout->addWidget(mStageBoxes[i]);
     }
 
-    WGroupBox *processingBox = new WGroupBox("Processing");
+    WGroupBox *processingBox = new WGroupBox("Tractography");
     processingBox->setStyleClass("optiongroupdiv");
     WVBoxLayout *processingBoxLayout = new WVBoxLayout();
 
@@ -93,7 +92,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     WVBoxLayout *vboxFALayout = new WVBoxLayout();
     vboxFALayout->addWidget(mFAVolumeMaskCheckBox);
     vboxFALayout->addLayout(lineEditLayout);
-    vboxFALayout->addStretch(100);
+    vboxFALayout->addSpacing(WLength(20.0, WLength::Pixel));
 
     WGridLayout *comboBoxLayout = new WGridLayout();
 
@@ -114,11 +113,11 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 
 
     // Processing group box layout
-    processingBoxLayout->addWidget(mEddyCurrentCheckBox, Wt::AlignTop);
-    processingBoxLayout->addLayout(vboxFALayout, Wt::AlignTop);
-    processingBoxLayout->addLayout(comboBoxLayout,Wt::AlignTop);
-    processingBoxLayout->addStretch(100);
-    processingBox->setLayout(processingBoxLayout);
+    processingBoxLayout->addWidget(mEddyCurrentCheckBox);
+    processingBoxLayout->addSpacing(WLength(20.0, WLength::Pixel));
+    processingBoxLayout->addLayout(vboxFALayout);
+    processingBoxLayout->addLayout(comboBoxLayout);
+    processingBox->setLayout(processingBoxLayout, AlignTop);
 
     WGroupBox *gradientTableBox = new WGroupBox("Gradients");
     gradientTableBox->setStyleClass("optiongroupdiv");
@@ -146,12 +145,12 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     WVBoxLayout *vboxB0Layout = new WVBoxLayout();
     vboxB0Layout->addWidget(mB0VolumesCheckBox);
     vboxB0Layout->addLayout(b0LineEditLayout);
-    vboxB0Layout->addStretch(100);
+    vboxB0Layout->addSpacing(WLength(20.0, WLength::Pixel));
 
     WVBoxLayout *uploadLayout = new WVBoxLayout();
     uploadLayout->addWidget(mGradientFileCheckBox);
     uploadLayout->addWidget(mGradientFileUpload);
-    uploadLayout->addStretch(100);
+    uploadLayout->addSpacing(WLength(20.0, WLength::Pixel));
 
     WHBoxLayout *invertCheckBoxes = new WHBoxLayout;
     invertCheckBoxes->addWidget(mGradientInvertX);
@@ -163,30 +162,23 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     invertLayout->addLayout(invertCheckBoxes, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
     invertLayout->setColumnStretch(1, 1);
 
-    gradientLayout->addLayout(uploadLayout, Wt::AlignTop);
-    gradientLayout->addLayout(vboxB0Layout, Wt::AlignTop);
-    gradientLayout->addLayout(invertLayout, Wt::AlignTop);
-    gradientLayout->addStretch(100);
-    gradientTableBox->setLayout(gradientLayout);
+    gradientLayout->addLayout(uploadLayout);
+    gradientLayout->addLayout(vboxB0Layout);
+    gradientLayout->addLayout(invertLayout);
+    gradientTableBox->setLayout(gradientLayout, AlignTop);
 
     WVBoxLayout *rightSettingsLayout = new WVBoxLayout();
     rightSettingsLayout->addWidget(gradientTableBox);
 
-    WGridLayout *settingsGridLayout = new WGridLayout();
-    settingsGridLayout->addWidget(processingBox, 0, 0);
-    settingsGridLayout->addLayout(rightSettingsLayout, 0, 1);
-    settingsGridLayout->setRowStretch(0, -1);
+    WHBoxLayout *settingsHBoxLayout = new WHBoxLayout();
+    settingsHBoxLayout->addWidget(processingBox);
+    settingsHBoxLayout->addLayout(rightSettingsLayout);
 
     // Add to the base class layout
-    mPipelineOptionsBoxLayout->addLayout(settingsGridLayout, 1, 0);
-    mPipelineOptionsBoxLayout->addWidget(mDirectoryGroupBox, 2, 0);
+    mPipelineOptionsBoxLayout->addLayout(settingsHBoxLayout, 1, 0);
     mPipelineOptionsBoxLayout->setRowStretch(0, -1);
     mPipelineOptionsBoxLayout->setRowStretch(1, 1);
-    mPipelineOptionsBoxLayout->setRowStretch(2, -1);
 
-    /// Create message box with no parent
-    mMessageBox = new WMessageBox();
-    mMessageBox->buttonClicked().connect(SLOT(this, PipelineOptionsTract::handleMessageBoxFinished));
 
     // Connection
     mFAVolumeMaskCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::volumeMaskClicked));
@@ -202,7 +194,6 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 //
 PipelineOptionsTract::~PipelineOptionsTract()
 {
-    delete mMessageBox;
 }
 
 
@@ -218,7 +209,7 @@ PipelineOptionsTract::~PipelineOptionsTract()
 void PipelineOptionsTract::resetAll()
 {
     PipelineOptions::resetAll();
-    for (int i = 0; i < NUM_TRACT_STAGES; i++)
+    for (int i = 0; i < NUM_OPTIONAL_TRACT_STAGES; i++)
     {
         mStageBoxes[i]->setChecked(true);
     }
@@ -244,6 +235,10 @@ void PipelineOptionsTract::resetAll()
 //
 bool PipelineOptionsTract::validate() const
 {
+    // Validate the base class first
+    if (!PipelineOptions::validate())
+        return false;
+
     if (mFAVolumeMaskCheckBox->isChecked())
     {
         if (!mFAThresholdLineEdit->validate())
@@ -288,21 +283,24 @@ bool PipelineOptionsTract::validate() const
 //
 std::string PipelineOptionsTract::getCommandLineString() const
 {
-    std::string stageStr = "";
+    ostringstream stageStrStream;
+
     std::string args;
 
-    for (int i = 0; i < NUM_TRACT_STAGES; i++)
+    for (int i = 1; i < FIRST_OPTIONAL_TRACT_STAGE; i++)
+    {
+        stageStrStream << i;
+    }
+
+    for (int i = 0; i < NUM_OPTIONAL_TRACT_STAGES; i++)
     {
         if (mStageBoxes[i]->isChecked())
         {
-            ostringstream oss;
-
-            oss << (i + 1);
-            stageStr += oss.str();
+            stageStrStream << (i + FIRST_OPTIONAL_TRACT_STAGE);
         }
     }
 
-    args = "-t " + stageStr;
+    args = "-t " + stageStrStream.str();
 
     // Skip eddy current correction (-k)
     if (!mEddyCurrentCheckBox->isChecked())
@@ -448,12 +446,4 @@ void PipelineOptionsTract::fileUploaded()
     }
 }
 
-
-///
-/// Handle message box finished [slot]
-///
-void PipelineOptionsTract::handleMessageBoxFinished(StandardButton)
-{
-    mMessageBox->hide();
-}
 

@@ -83,6 +83,38 @@ ConfigOptions* getConfigOptionsPtr()
     return getConfigOptionsPtrTS(WApplication::instance());
 }
 
+///
+//  Return the current logged in user name
+//
+const std::string getCurrentUserName()
+{
+    PipelineApp* instance = dynamic_cast<PipelineApp*>(WApplication::instance());
+
+    if (instance != NULL)
+    {
+        return instance->getCurrentUser();
+    }
+
+    return std::string();
+}
+
+///
+/// Return the current E-mail address
+///
+const std::string getCurrentUserEmail()
+{
+    PipelineApp* instance = dynamic_cast<PipelineApp*>(WApplication::instance());
+
+    if (instance != NULL)
+    {
+        return instance->getCurrentEmail();
+    }
+
+    return std::string();
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Constructor/Destructor
@@ -283,12 +315,13 @@ void PipelineApp::largeRequest(int size)
 ///
 //	User logged in succesfully [slot]
 //
-void PipelineApp::userLoggedIn(std::string userName)
+void PipelineApp::userLoggedIn(std::string userName, std::string email)
 {
-    this->log("debug") << "PipelineApp::userLoggedIn";
-
+    mCurrentUser = userName;
+    mCurrentEmail = email;
     mStackedWidget->addWidget(mMainSiteWidget);
     mStackedWidget->setCurrentIndex(1);
+    mSubjectPage->resetAll();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

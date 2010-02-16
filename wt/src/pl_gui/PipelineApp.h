@@ -78,6 +78,16 @@ public:
     ///
     ConfigOptions* getConfigOptions() const { return mConfigOptions; }
 
+    ///
+    /// Get the current user
+    ///
+    const std::string& getCurrentUser() const { return mCurrentUser; }
+
+    ///
+    /// Get the current E-mail
+    ///
+    const std::string& getCurrentEmail() const { return mCurrentEmail; }
+
 private:
 
     ///
@@ -93,7 +103,7 @@ private:
     ///
     ///	User logged in succesfully [slot]
     ///
-    void userLoggedIn(std::string userName);
+    void userLoggedIn(std::string userName, std::string email);
 
 private:
 
@@ -117,6 +127,13 @@ private:
 
     /// Main site widget
     WContainerWidget *mMainSiteWidget;
+
+    /// Current user name
+    std::string mCurrentUser;
+
+    /// Current E-mail
+    std::string mCurrentEmail;
+
 };
 
 ///
@@ -141,6 +158,16 @@ ConfigOptions* getConfigOptionsPtr();
 ///     THREAD-SAFE version of function
 ///
 ConfigOptions* getConfigOptionsPtrTS(WApplication *appInstance);
+
+///
+/// Return the current logged in user name
+///
+const std::string getCurrentUserName();
+
+///
+/// Return the current E-mail address
+///
+const std::string getCurrentUserEmail();
 
 
 #endif // PIPELINEAPP_H
