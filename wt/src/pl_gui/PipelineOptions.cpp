@@ -164,7 +164,7 @@ std::string PipelineOptions::getCommandLineString() const
 
     args += getConfigOptionsPtr()->GetClusterName();
     args += " -O " + getConfigOptionsPtr()->GetOutDir();
-
+    args += " -n " + getCurrentUserName();
     if (mEmailCheckBox->isChecked() && !mEmailUser->text().empty())
     {
         args += " -M " + mEmailUser->text().toUTF8();
