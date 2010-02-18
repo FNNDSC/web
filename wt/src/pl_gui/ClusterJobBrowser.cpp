@@ -165,6 +165,8 @@ bool ClusterJobBrowser::populateClusterJobs(const std::string& scheduleLogFile)
             string jobDate;
             string jobTime;
             string jobServer;
+            string userName;
+
             istringstream iss(jobDesc);
             int index = 0;
 
@@ -189,10 +191,14 @@ bool ClusterJobBrowser::populateClusterJobs(const std::string& scheduleLogFile)
                 {
                     jobServer = tmp;
                 }
+                else if (index == 7)
+                {
+                    userName = tmp;
+                }
                 index++;
             }
 
-            WStandardItem *newItem = new WStandardItem(jobDate + jobTime + " [" + jobServer + "]");
+            WStandardItem *newItem = new WStandardItem(jobDate + jobTime + " [" + userName + "]");
             newItem->setData(jobStage, UserRole);
             newItem->setData(jobBash, UserRole + 1);
             newItem->setIcon("icons/folder.gif");
