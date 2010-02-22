@@ -14,7 +14,9 @@
 #include "PipelineApp.h"
 #include "SubjectPage.h"
 #include "MonitorPage.h"
+#include "ResultsPage.h"
 #include "ClusterLoadPage.h"
+#include "ResultsPage.h"
 #include "ConfigOptions.h"
 #include "ConfigXML.h"
 #include "LoginPage.h"
@@ -169,6 +171,7 @@ void PipelineApp::create()
 {
     // Create all Qt Objects
     mMonitorPage->createQt();
+    mResultsPage->createQt();
 }
 
 ///
@@ -178,6 +181,7 @@ void PipelineApp::destroy()
 {
     // Destroy Qt Objects
     mMonitorPage->destroyQt();
+    mResultsPage->destroyQt();
 
 }
 
@@ -188,6 +192,7 @@ void PipelineApp::finalize()
 {
     mSubjectPage->finalize();
     mMonitorPage->finalize();
+    mResultsPage->finalize();
     mClusterLoadPage->finalize();
 }
 
@@ -220,9 +225,11 @@ void PipelineApp::createUI()
     WTabWidget *topTab = new WTabWidget();
     topTab->setStyleClass("toptabdiv");
     mSubjectPage = new SubjectPage();
+    mResultsPage = new ResultsPage(mSubjectPage->getMRIBrowser());
     mMonitorPage = new MonitorPage(mSubjectPage->getMRIBrowser());
     mClusterLoadPage = new ClusterLoadPage();
     topTab->addTab(mSubjectPage, "Subjects");
+    topTab->addTab(mResultsPage, "Results");
     topTab->addTab(mMonitorPage, "Monitor Cluster");
     topTab->addTab(mClusterLoadPage, "Cluster Load");
     topTab->currentChanged().connect(this, &PipelineApp::mainTabChanged);
@@ -238,6 +245,8 @@ void PipelineApp::createUI()
     // fill the contents.  This trick came from the Wt WTabWidget
     // documentation and took me a good half a day to figure out.
     mSubjectPage->resize(WLength(100.0, WLength::Percentage),
+                         WLength(100.0, WLength::Percentage));
+    mResultsPage->resize(WLength(100.0, WLength::Percentage),
                          WLength(100.0, WLength::Percentage));
     mMonitorPage->resize(WLength(100.0, WLength::Percentage),
                          WLength(100.0, WLength::Percentage));
@@ -275,22 +284,30 @@ void PipelineApp::createUI()
 //
 void PipelineApp::mainTabChanged(int currentIndex)
 {
-    if (currentIndex == 1)
+    switch (currentIndex)
     {
-        mMonitorPage->resetAll();
-    }
-    else
-    {
+    case SUBJECTS_TAB:
         mMonitorPage->stopUpdate();
-    }
-
-    if (currentIndex == 2)
-    {
-        mClusterLoadPage->startUpdate();
-    }
-    else
-    {
         mClusterLoadPage->stopUpdate();
+        mResultsPage->stopUpdate();
+        break;
+
+    case RESULTS_TAB:
+        mResultsPage->startUpdate();
+        mMonitorPage->stopUpdate();
+        mClusterLoadPage->stopUpdate();
+        break;
+
+    case MONITOR_CLUSTER_TAB:
+        mMonitorPage->resetAll();
+        mResultsPage->stopUpdate();
+        mClusterLoadPage->stopUpdate();
+        break;
+    case CLUSTER_LOAD_TAB:
+        mMonitorPage->stopUpdate();
+        mResultsPage->stopUpdate();
+        mClusterLoadPage->startUpdate();
+        break;
     }
 }
 
@@ -322,6 +339,7 @@ void PipelineApp::userLoggedIn(std::string userName, std::string email)
     mStackedWidget->addWidget(mMainSiteWidget);
     mStackedWidget->setCurrentIndex(1);
     mSubjectPage->resetAll();
+    mResultsPage->resetAll();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

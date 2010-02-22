@@ -30,6 +30,7 @@ class ConfigOptions;
 class ConfigXML;
 class SubjectPage;
 class ClusterLoadPage;
+class ResultsPage;
 
 ///
 /// \class PipelineApp
@@ -107,8 +108,19 @@ private:
 
 private:
 
+    typedef enum
+    {
+        SUBJECTS_TAB = 0,
+        RESULTS_TAB = 1,
+        MONITOR_CLUSTER_TAB = 2,
+        CLUSTER_LOAD_TAB = 3
+    } PageEnum;
+
     /// Monitor page
     MonitorPage *mMonitorPage;
+
+    /// Results page
+    ResultsPage *mResultsPage;
 
     /// Subject page
     SubjectPage *mSubjectPage;

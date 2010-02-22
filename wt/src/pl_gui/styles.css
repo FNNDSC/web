@@ -76,6 +76,17 @@ div.Wt-popupmenu .separator {
 
 }
 
+/*
+.Wt-treeview .Wt-tv-node .Wt-tv-row .Wt-tv-c:hover {
+     background-color: #FFFFAA;
+}
+
+.Wt-treeview .Wt-tv-node .Wt-tv-row:hover {
+    background-color: #FFFFAA;
+}
+*/
+
+
 .groupdiv {
     background-color: white;
     border: 1px solid #C3D9FF;

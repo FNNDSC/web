@@ -28,6 +28,9 @@ ADD_EXECUTABLE(pl_gui.wt
   PipelineOptionsTract.cpp
   PipelineStatus.cpp
   ResultsBrowser.cpp
+  ResultsFilterProxyModel.cpp
+  ResultsPage.cpp
+  ResultsTable.cpp
   ScanBrowser.cpp
   SelectScans.cpp
   SubjectPage.cpp
