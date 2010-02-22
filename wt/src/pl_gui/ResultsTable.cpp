@@ -213,7 +213,7 @@ bool ResultsTable::populateResultsTable()
         {
             const char *dateStr = dateNode->child->value.opaque;
             WDateTime dateTime = WDateTime::fromString(WString(dateStr),
-                                                       "MM/dd/yy hh:mm:ss ddd");
+                                                       "MM/dd/yy HH:mm:ss ddd");
             boost::any data = boost::any(dateTime);
 
             mModel->setData(row, 0,  data);
