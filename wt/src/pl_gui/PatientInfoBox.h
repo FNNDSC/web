@@ -20,7 +20,8 @@
 
 namespace Wt
 {
-    class WLabel;
+    class WTreeView;
+    class WStandardItemModel;
 }
 
 using namespace Wt;
@@ -54,40 +55,33 @@ public:
     void setScanDir(std::string scanDir);
 
 private:
+    typedef enum
+    {
+        PATIENT_ID = 0,
+        PATIENT_NAME = 1,
+        PATIENT_AGE = 2,
+        PATIENT_SEX = 3,
+        PATIENT_BIRTHDAY = 4,
+        IMAGE_SCAN_DATE = 5,
+        SCANNER_MANUFACTURER = 6,
+        SCANNER_MODEL = 7,
+        SOFTWARE_VERSION = 8,
+        NUM_ROWS
+    } PatientEnum;
 
     ///
     ///	Set the patient information text, do not display "ERROR:" if that is what is present
     ///
-    void setInfoLabel(WLabel* label, const std::string &str);
+    void setInfoData(PatientEnum patientEnum, const std::string& str);
 
 private:
 
-    /// Patient ID
-    WLabel *mPatientID;
 
-    /// Patient Name
-    WLabel *mPatientName;
+    /// Tree view of patient info
+    WTreeView *mTreeView;
 
-    /// Patient age
-    WLabel *mPatientAge;
-
-    /// Patient Sex
-    WLabel *mPatientSex;
-
-    /// Patient birthday
-    WLabel *mPatientBirthday;
-
-    /// Scan date
-    WLabel *mImageScanDate;
-
-    /// Scanner manufacturer
-    WLabel *mScannerManufacturer;
-
-    /// Scanner model
-    WLabel *mScannerModel;
-
-    /// Software version
-    WLabel *mSoftwareVer;
+    /// Model data
+    WStandardItemModel *mModel;
 };
 
 #endif // SCANBROWSER_H

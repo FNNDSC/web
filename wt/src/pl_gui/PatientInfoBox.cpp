@@ -12,12 +12,10 @@
 #include "PatientInfoBox.h"
 #include "ConfigOptions.h"
 #include <Wt/WContainerWidget>
-#include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
-#include <Wt/WImage>
-#include <Wt/WText>
-#include <Wt/WLabel>
 #include <Wt/WStandardItem>
+#include <Wt/WStandardItemModel>
+#include <Wt/WTreeView>
 #include <Wt/WGroupBox>
 #include <Wt/WVBoxLayout>
 #include <Wt/WSelectionBox>
@@ -48,26 +46,34 @@ PatientInfoBox::PatientInfoBox(WContainerWidget *parent) :
 {
     setTitle("Patient / Scanner");
 
+    mModel = new WStandardItemModel(this);
+    mModel->insertColumns(0, 2);
+    mModel->invisibleRootItem()->setRowCount(0);
+
+    mModel->insertRows(0, NUM_ROWS);
+    mModel->setData(PATIENT_ID, 0, boost::any(std::string("Patient ID")));
+    mModel->setData(PATIENT_NAME, 0, boost::any(std::string("Patient Name")));
+    mModel->setData(PATIENT_AGE, 0, boost::any(std::string("Patient Age")));
+    mModel->setData(PATIENT_SEX, 0, boost::any(std::string("Patient Sex")));
+    mModel->setData(PATIENT_BIRTHDAY, 0, boost::any(std::string("Patient Birthday")));
+    mModel->setData(IMAGE_SCAN_DATE, 0, boost::any(std::string("Image Scan Date")));
+    mModel->setData(SCANNER_MANUFACTURER, 0, boost::any(std::string("Scanner Manufacturer")));
+    mModel->setData(SCANNER_MODEL, 0, boost::any(std::string("Scanner Model")));
+    mModel->setData(SOFTWARE_VERSION, 0, boost::any(std::string("Software Version")));
+
+    mTreeView = new WTreeView();
+    mTreeView->setModel(mModel);
+    mTreeView->setRootIsDecorated(false);
+    mTreeView->setColumn1Fixed(true);
+    mTreeView->setSelectionMode(NoSelection);
+    mTreeView->setSortingEnabled(false);
+    mTreeView->setAlternatingRowColors(true);
+    mTreeView->setHeaderHeight(0);
+    mTreeView->setMinimumSize(300, WLength::Auto);
+
     // Create the patient info box
     WGridLayout *patientInfoLayout = new WGridLayout();
-    patientInfoLayout->addWidget(new WLabel("Patient ID:"), 0, 0);
-    patientInfoLayout->addWidget(mPatientID = new WLabel(""), 0, 1);
-    patientInfoLayout->addWidget(new WLabel("Patient Name:"), 1, 0);
-    patientInfoLayout->addWidget(mPatientName = new WLabel(""), 1, 1);
-    patientInfoLayout->addWidget(new WLabel("Patient Age:"), 2, 0);
-    patientInfoLayout->addWidget(mPatientAge = new WLabel(""), 2, 1);
-    patientInfoLayout->addWidget(new WLabel("Patient Sex:"), 3, 0);
-    patientInfoLayout->addWidget(mPatientSex = new WLabel(""), 3, 1);
-    patientInfoLayout->addWidget(new WLabel("Patient Birthday:"), 4, 0);
-    patientInfoLayout->addWidget(mPatientBirthday = new WLabel(""), 4, 1);
-    patientInfoLayout->addWidget(new WLabel("Image Scan-Date:"), 5, 0);
-    patientInfoLayout->addWidget(mImageScanDate = new WLabel(""), 5, 1);
-    patientInfoLayout->addWidget(new WLabel("Scanner Manufacturer:"), 6, 0);
-    patientInfoLayout->addWidget(mScannerManufacturer = new WLabel(""), 6, 1);
-    patientInfoLayout->addWidget(new WLabel("Scanner Model:"), 7, 0);
-    patientInfoLayout->addWidget(mScannerModel = new WLabel(""), 7, 1);
-    patientInfoLayout->addWidget(new WLabel("Software Version:"), 8, 0);
-    patientInfoLayout->addWidget(mSoftwareVer = new WLabel(""), 8, 1);
+    patientInfoLayout->addWidget(mTreeView, 0, 0);
     setLayout(patientInfoLayout);
 
     resetAll();
@@ -92,15 +98,10 @@ PatientInfoBox::~PatientInfoBox()
 //
 void PatientInfoBox::resetAll()
 {
-    mPatientID->setText("");
-    mPatientName->setText("");
-    mPatientAge->setText("");
-    mPatientSex->setText("");
-    mPatientBirthday->setText("");
-    mImageScanDate->setText("");
-    mScannerManufacturer->setText("");
-    mScannerModel->setText("");
-    mSoftwareVer->setText("");
+    for(int row = 0; row < NUM_ROWS; row++)
+    {
+        mModel->setData(row, 1, boost::any(std::string("")));
+    }
 }
 
 ///
@@ -142,23 +143,23 @@ void PatientInfoBox::setScanDir(std::string scanDir)
 
                 if (secondToken == "ID")
                 {
-                    setInfoLabel(mPatientID, str);
+                    setInfoData(PATIENT_ID, str);
                 }
                 else if (secondToken == "Name")
                 {
-                    setInfoLabel(mPatientName, str);
+                    setInfoData(PATIENT_NAME, str);
                 }
                 else if (secondToken == "Age")
                 {
-                    setInfoLabel(mPatientAge, str);
+                    setInfoData(PATIENT_AGE, str);
                 }
                 else if (secondToken == "Sex")
                 {
-                	setInfoLabel(mPatientSex, str);
+                    setInfoData(PATIENT_SEX, str);
                 }
                 else if (secondToken == "Birthday")
                 {
-                    setInfoLabel(mPatientBirthday, str);
+                    setInfoData(PATIENT_BIRTHDAY, str);
                 }
             }
             else if (firstToken == "Image")
@@ -171,7 +172,7 @@ void PatientInfoBox::setScanDir(std::string scanDir)
                     string scanDate;
 
                     istr >> scanDate;
-                    setInfoLabel(mImageScanDate, scanDate);
+                    setInfoData(IMAGE_SCAN_DATE, scanDate);
                 }
             }
             else if (firstToken == "Scanner")
@@ -189,11 +190,11 @@ void PatientInfoBox::setScanDir(std::string scanDir)
 
                 if (secondToken == "Manufacturer")
                 {
-                    setInfoLabel(mScannerManufacturer, str);
+                    setInfoData(SCANNER_MANUFACTURER, str);
                 }
                 else if (secondToken == "Model")
                 {
-                	setInfoLabel(mScannerModel, str);
+                    setInfoData(SCANNER_MODEL, str);
                 }
             }
             else if (firstToken == "Software")
@@ -209,7 +210,7 @@ void PatientInfoBox::setScanDir(std::string scanDir)
                     str += tmp + " ";
                 }
 
-                setInfoLabel(mSoftwareVer, str);
+                setInfoData(SOFTWARE_VERSION, str);
             }
         }
         tocFile.close();
@@ -226,14 +227,18 @@ void PatientInfoBox::setScanDir(std::string scanDir)
 ///
 //	Set the patient information text, do not display "ERROR:" if that is what is present
 //
-void PatientInfoBox::setInfoLabel(WLabel* label, const std::string &str)
+void PatientInfoBox::setInfoData(PatientEnum patientEnum, const std::string& str)
 {
+    boost::any data;
+
 	if (str.find("ERROR") == string::npos)
 	{
-		label->setText(str);
+		data = boost::any(str);
 	}
 	else
 	{
-		label->setText("Unknown");
+		data = boost::any(std::string("Unknown"));
 	}
+
+	mModel->setData(patientEnum, 1, data);
 }

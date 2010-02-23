@@ -206,6 +206,7 @@ void ResultsPage::startUpdate()
 void ResultsPage::stopUpdate()
 {
     mMonitorLogTab->stopUpdate();
+    backPushed();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
