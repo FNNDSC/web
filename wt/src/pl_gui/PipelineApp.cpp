@@ -211,7 +211,7 @@ void PipelineApp::createUI()
     WContainerWidget *topContainer = new WContainerWidget();
     WGridLayout *topLayout = new WGridLayout();
     topContainer->setStyleClass("topdiv");
-    WImage *chbLogo = new WImage("icons/chbIntranet.gif");
+    WImage *chbLogo = new WImage(w->tr("logo-image").toUTF8());
     WImage *brainImage = new WImage("icons/mri.gif");
     chbLogo->setStyleClass("titlediv");
     topLayout->addWidget(chbLogo, 0, 0, Wt::AlignLeft);
