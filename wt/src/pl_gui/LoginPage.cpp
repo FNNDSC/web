@@ -34,6 +34,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <openssl/evp.h>
 #include <openssl/md5.h>
+#include <openssl/des.h>
 
 ///
 //  Namespaces
@@ -55,17 +56,17 @@ using namespace boost::iostreams;
 LoginPage::LoginPage(WContainerWidget *parent) :
     WContainerWidget(parent)
 {
-	setStyleClass("maindiv");
+    setStyleClass("maindiv");
+	
+    WLabel* loginText = new WLabel("Enter username and password:");
 
-	WLabel* loginText = new WLabel("Enter username and password:");
+    mUserNameLineEdit = new WLineEdit("");
+    WText *userNameText = new WText("User Name:");
 
-	mUserNameLineEdit = new WLineEdit("");
-	WText *userNameText = new WText("User Name:");
+    mPasswordLineEdit = new WLineEdit("");
+    mPasswordLineEdit->setEchoMode(WLineEdit::Password);
 
-	mPasswordLineEdit = new WLineEdit("");
-	mPasswordLineEdit->setEchoMode(WLineEdit::Password);
-
-	WText *passwordText = new WText("Password:");
+    WText *passwordText = new WText("Password:");
 
     WPushButton *loginButton = new WPushButton("Login");
 
@@ -81,7 +82,7 @@ LoginPage::LoginPage(WContainerWidget *parent) :
     WGridLayout *buttonLayout = new WGridLayout();
     buttonLayout->addWidget(loginButton, 0, 0, AlignCenter);
 
-    WImage *chbLogo = new WImage("icons/chbIntranet.gif");
+    WImage *chbLogo = new WImage(tr("logo-image").toUTF8());
     WGridLayout *chbLogoLayout = new WGridLayout();
     chbLogoLayout->addWidget(chbLogo, 0, 0, AlignCenter);
 
@@ -156,37 +157,50 @@ void LoginPage::login()
 
     // Get the returned encoded password
     stream<boost::processes::pipe_end> is(c.get_stdout());
-    std::string md5EncodedPassword;
-    is >> md5EncodedPassword;
+    std::string encodedPassword;
+    is >> encodedPassword;
+    char *enteredEncodedPassword = NULL;
 
-    if ( md5EncodedPassword.size() > (sizeof(salt) + 4) )
+    // DES
+    if ( encodedPassword.size() == 13 )
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            salt[i] = encodedPassword[i];
+        }
+        // Encrypt the password using DES with OpenSSL
+        enteredEncodedPassword = DES_crypt(passwd, salt);
+
+    }
+    // MD5
+    else if ( encodedPassword.size() > (sizeof(salt) + 4) )
     {
         // The salt comes from characters 3 - 10, which is in between
         // the second and third "$"
         for (int i = 0; i < 8; i++)
         {
-            salt[i] = md5EncodedPassword[i+3];
+            salt[i] = encodedPassword[i+3];
         }
 
         // Encrypt the entered password using MD5 encrypting with OpenSSL
-        char *enteredEncodedPassword = md5crypt(passwd, magic, salt);
+        enteredEncodedPassword = md5crypt(passwd, magic, salt);
+    }
+ 
+    // If the passwords match, the user can login.
+    if (!strcmp(enteredEncodedPassword, encodedPassword.c_str()))
+    {
+        // Attempt to also get the E-mail address
+        cmdToExecute = "ypmatch " + mUserNameLineEdit->text().toUTF8() + " aliases";
+        c = launch_shell(cmdToExecute, ctx);
+        s = c.wait();
 
-        // If the passwords match, the user can login.
-        if (!strcmp(enteredEncodedPassword, md5EncodedPassword.c_str()))
-        {
-            // Attempt to also get the E-mail address
-            cmdToExecute = "ypmatch " + mUserNameLineEdit->text().toUTF8() + " aliases";
-            c = launch_shell(cmdToExecute, ctx);
-            s = c.wait();
+        // Get the returned E-mail address
+        stream<boost::processes::pipe_end> is(c.get_stdout());
+        std::string email;
+        is >> email;
 
-            // Get the returned E-mail address
-            stream<boost::processes::pipe_end> is(c.get_stdout());
-            std::string email;
-            is >> email;
-
-            mUserLoggedIn.emit(mUserNameLineEdit->text().toUTF8(), email);
-            loggedIn = true;
-        }
+        mUserLoggedIn.emit(mUserNameLineEdit->text().toUTF8(), email);
+        loggedIn = true;
     }
 
     // Invalid username/password, show error message
