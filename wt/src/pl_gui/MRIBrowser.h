@@ -15,10 +15,41 @@
 #include <Wt/WContainerWidget>
 #include <Wt/WTreeView>
 #include <Wt/WStandardItemModel>
+#include <Wt/WSortFilterProxyModel>
 
 #include <string>
 
+namespace Wt
+{
+    class WPushButton;
+    class WLineEdit;
+}
 using namespace Wt;
+
+///
+/// \class MRIFilterProxyModel
+/// \brief Override WSortFilterProxyModel class to provide non-regexp searched
+///
+class MRIFilterProxyModel : public WSortFilterProxyModel
+{
+public:
+    ///
+    /// Constructor
+    ///
+    MRIFilterProxyModel(WObject *parent = 0);
+
+    ///
+    /// Destructor
+    ///
+    virtual ~MRIFilterProxyModel();
+
+protected:
+
+    ///
+    /// Custom filter, override base class implementation
+    ///
+    virtual bool filterAcceptRow(int sourceRow, const WModelIndex& sourceParent) const;
+};
 
 ///
 /// \class MRIBrowser
@@ -65,6 +96,11 @@ private:
     void mriChanged();
 
     ///
+    /// Search clicked [slot]
+    ///
+    void searchClicked();
+
+    ///
     ///  Create an MRI item.
     ///
     WStandardItem *createMRIItem(const std::string& MRID,
@@ -81,6 +117,18 @@ private:
 
     /// MRID Model
     WStandardItemModel *mMRIModel;
+
+    /// Sort-filter proxy model
+    WSortFilterProxyModel *mSortFilterProxyModel;
+
+    /// Search button
+    WPushButton *mSearchButton;
+
+    /// Filter
+    bool mFiltering;
+
+    /// Search Line edit
+    WLineEdit *mSearchLineEdit;
 };
 
 #endif // MRIBROWSER_H

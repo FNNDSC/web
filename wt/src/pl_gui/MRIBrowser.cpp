@@ -22,10 +22,17 @@
 #include <Wt/WLabel>
 #include <Wt/WStandardItem>
 #include <Wt/WVBoxLayout>
+#include <Wt/WPushButton>
+#include <Wt/WLineEdit>
+#include <Wt/WSortFilterProxyModel>
+#include <Wt/WRegExp>
+#include <Wt/WSuggestionPopup>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
 
 ///
 //  Namespaces
@@ -33,6 +40,69 @@
 using namespace Wt;
 using namespace std;
 using namespace boost::filesystem;
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  MRIFilterProxyModel
+//
+//
+
+
+///
+//  Constructor
+//
+MRIFilterProxyModel::MRIFilterProxyModel(WObject *parent) :
+    WSortFilterProxyModel(parent)
+{
+}
+
+///
+//  Destructor
+//
+MRIFilterProxyModel::~MRIFilterProxyModel()
+{
+}
+
+///
+// Custom filter, override base class implementation
+//
+bool MRIFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& sourceParent) const
+{
+    if (filterRegExp().empty())
+        return true;
+
+    for(int col = 0; col < sourceModel()->columnCount(); col++)
+    {
+        boost::any data = sourceModel()->index(sourceRow, col, sourceParent).data(filterRole());
+
+        if (!data.empty())
+        {
+            WString s = asString(data);
+            std::string searchTarget = s.toUTF8();
+
+            // Break search pattern into multiple tokens separated by spaces
+            std::string searchPattern = filterRegExp().toUTF8();
+            istringstream istr(searchPattern, ios_base::out);
+            std::string curSearchPattern;
+            while (getline(istr, curSearchPattern, ' '))
+            {
+                if (curSearchPattern != "" && curSearchPattern != " " && curSearchPattern != "\n")
+                {
+                    WApplication::instance()->log("debug") << "SEARCH: '" << curSearchPattern << "'";
+                    WRegExp regExp(curSearchPattern);
+                    bool searchResult = regExp.exactMatch(s) || boost::algorithm::icontains(searchTarget, curSearchPattern);
+                    if (searchResult)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -51,16 +121,57 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mMRIModel = new WStandardItemModel(this);
     populateMRIDs(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID_age.log");
 
-    mMRITreeView->setModel(mMRIModel);
-    mMRITreeView->resize(200, WLength::Auto);
+    mSearchButton = new WPushButton("Search");
+
+    WContainerWidget *searchContainer = new WContainerWidget();
+    mSearchLineEdit = new WLineEdit("", searchContainer);
+    mSearchLineEdit->setToolTip("Enter a string or regular expression to filter MRIDs.  Multiple expressions can be separated by spaces.");
+    mSearchLineEdit->setTextSize(27);
+
+    mSortFilterProxyModel = new MRIFilterProxyModel(this);
+    mSortFilterProxyModel->setSourceModel(mMRIModel);
+    mSortFilterProxyModel->setDynamicSortFilter(true);
+    mSortFilterProxyModel->setFilterKeyColumn(0);
+    mSortFilterProxyModel->setFilterRole(DisplayRole);
+
+    mMRITreeView->setModel(mSortFilterProxyModel);
+    mMRITreeView->resize(250, WLength::Auto);
     mMRITreeView->setSelectionMode(SingleSelection);
     mMRITreeView->expandToDepth(1);
     mMRITreeView->selectionChanged().connect(SLOT(this, MRIBrowser::mriChanged));
     mMRITreeView->setHeaderHeight(0);
 
-    WVBoxLayout *layout = new WVBoxLayout();
-    layout->addWidget(mMRITreeView);
+    // options for email address suggestions
+    WSuggestionPopup::Options searchOptions
+     = { "<span class=\"highlight\">", // highlightBeginTag
+             "</span>",                    // highlightEndTag
+             ' ',           // listSeparator      (for multiple addresses)
+             " ",        // whitespace
+             " ", // wordSeparators     (within an address)
+             " "           // appendReplacedText (prepare next email address)
+       };
+
+    WSuggestionPopup *popup
+       = new Wt::WSuggestionPopup(Wt::WSuggestionPopup::generateMatcherJS(searchOptions),
+                                  Wt::WSuggestionPopup::generateReplacerJS(searchOptions),
+                                  searchContainer);
+    popup->setStyleClass("suggest");
+    popup->forEdit(mSearchLineEdit);
+    popup->setModel(mMRIModel);
+    popup->setModelColumn(0);
+
+    WGridLayout *searchLayout = new WGridLayout();
+    searchLayout->addWidget(searchContainer, 0, 0, AlignRight);
+    searchLayout->addWidget(mSearchButton, 0, 1, AlignLeft);
+    searchLayout->setColumnStretch(0, 1);
+
+    WGridLayout *layout = new WGridLayout();
+    layout->addLayout(searchLayout, 0, 0);
+    layout->addWidget(mMRITreeView, 1, 0);
+    layout->setRowStretch(1, 1);
     setLayout(layout);
+
+    mSearchButton->clicked().connect(SLOT(this, MRIBrowser::searchClicked));
 
     resetAll();
 }
@@ -80,6 +191,11 @@ void MRIBrowser::resetAll()
     WModelIndexSet noSelection;
     mMRITreeView->setSelectedIndexes(noSelection);
 
+    mSortFilterProxyModel->setFilterRegExp("");
+    mSearchButton->setText("Filter");
+    mSearchLineEdit->setText("");
+    mFiltering = false;
+
 }
 
 
@@ -97,7 +213,7 @@ std::string MRIBrowser::getMRIDFromScanDir(const std::string& scanDir) const
         if (item != NULL)
         {
             boost::any displayData = item->data(DisplayRole);
-            boost::any d = item->data(UserRole);
+            boost::any d = item->data(UserRole + 1);
             if (!displayData.empty() && !d.empty())
             {
                 std::string curScanDir = boost::any_cast<std::string>(d);
@@ -173,8 +289,8 @@ WStandardItem *MRIBrowser::createMRIItem(const std::string& MRID,
 {
     WStandardItem *result = new WStandardItem(MRID);
 
-    result->setData(scanDir, UserRole);
-    result->setData(age, UserRole + 1);
+    result->setData(scanDir, UserRole + 1);
+    result->setData(age, UserRole + 2);
     result->setIcon("icons/folder.gif");
 
     return result;
@@ -192,8 +308,8 @@ void MRIBrowser::mriChanged()
 
     WModelIndex selected = *mMRITreeView->selectedIndexes().begin();
     boost::any displayData = selected.data(DisplayRole);
-    boost::any d = selected.data(UserRole);
-    boost::any d1 = selected.data(UserRole + 1);
+    boost::any d = selected.data(UserRole + 1);
+    boost::any d1 = selected.data(UserRole + 2);
     if (!displayData.empty() && !d.empty() && !d1.empty())
     {
         WString mrid = boost::any_cast<WString>(displayData);
@@ -204,4 +320,27 @@ void MRIBrowser::mriChanged()
     }
 }
 
+///
+//  Search clicked [slot]
+//
+void MRIBrowser::searchClicked()
+{
+    if (!mFiltering)
+    {
+        if(!mSearchLineEdit->text().empty())
+        {
+            mFiltering = true;
+            mSortFilterProxyModel->setFilterRegExp(mSearchLineEdit->text());
+            mSearchButton->setText("Clear");
+            mSearchLineEdit->setEnabled(false);
+        }
+    }
+    else if (mFiltering)
+    {
+        mSortFilterProxyModel->setFilterRegExp("");
+        mSearchButton->setText("Filter");
+        mSearchLineEdit->setEnabled(true);
+        mFiltering = false;
+    }
+}
 
