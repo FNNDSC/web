@@ -194,6 +194,7 @@ void MRIBrowser::resetAll()
     mSortFilterProxyModel->setFilterRegExp("");
     mSearchButton->setText("Filter");
     mSearchLineEdit->setText("");
+    mSearchLineEdit->setEnabled(true);
     mFiltering = false;
 
 }
