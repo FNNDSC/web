@@ -15,7 +15,6 @@
 #include "SubjectPage.h"
 #include "MonitorPage.h"
 #include "ResultsPage.h"
-#include "ClusterLoadPage.h"
 #include "ResultsPage.h"
 #include "ConfigOptions.h"
 #include "ConfigXML.h"
@@ -193,7 +192,6 @@ void PipelineApp::finalize()
     mSubjectPage->finalize();
     mMonitorPage->finalize();
     mResultsPage->finalize();
-    mClusterLoadPage->finalize();
 }
 
 
@@ -227,11 +225,10 @@ void PipelineApp::createUI()
     mSubjectPage = new SubjectPage();
     mResultsPage = new ResultsPage(mSubjectPage->getMRIBrowser());
     mMonitorPage = new MonitorPage(mSubjectPage->getMRIBrowser());
-    mClusterLoadPage = new ClusterLoadPage();
     topTab->addTab(mSubjectPage, "Subjects");
     topTab->addTab(mResultsPage, "Results");
     topTab->addTab(mMonitorPage, "Monitor Cluster");
-    topTab->addTab(mClusterLoadPage, "Cluster Load");
+    topTab->addTab(new WText(w->tr("cluster-load-page"), XHTMLUnsafeText), "Cluster Load");
     topTab->currentChanged().connect(this, &PipelineApp::mainTabChanged);
 
     layout->addWidget(topContainer, 0, 0);
@@ -250,8 +247,6 @@ void PipelineApp::createUI()
                          WLength(100.0, WLength::Percentage));
     mMonitorPage->resize(WLength(100.0, WLength::Percentage),
                          WLength(100.0, WLength::Percentage));
-    mClusterLoadPage->resize(WLength(100.0, WLength::Percentage),
-                             WLength(100.0, WLength::Percentage));
 
     mMainSiteWidget->setLayout(layout);
 
@@ -288,25 +283,21 @@ void PipelineApp::mainTabChanged(int currentIndex)
     {
     case SUBJECTS_TAB:
         mMonitorPage->stopUpdate();
-        mClusterLoadPage->stopUpdate();
         mResultsPage->stopUpdate();
         break;
 
     case RESULTS_TAB:
         mResultsPage->startUpdate();
         mMonitorPage->stopUpdate();
-        mClusterLoadPage->stopUpdate();
         break;
 
     case MONITOR_CLUSTER_TAB:
         mMonitorPage->resetAll();
         mResultsPage->stopUpdate();
-        mClusterLoadPage->stopUpdate();
         break;
     case CLUSTER_LOAD_TAB:
         mMonitorPage->stopUpdate();
         mResultsPage->stopUpdate();
-        mClusterLoadPage->startUpdate();
         break;
     }
 }

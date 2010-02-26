@@ -52,7 +52,7 @@ public:
     const std::string& GetClusterName()         const { return mClusterName; }
     const std::string& GetPackageDir()          const { return mPackageDir; }
     const std::string& GetConfigXML()           const { return mConfigXML; }
-    const std::string& GetProcStatFile()        const { return mProcStatFile; }
+    const std::string& GetCPUUsageFile()        const { return mCPUUsageFile; }
     const std::string& GetTopLogFile()          const { return mTopLogFile; }
 private:
 
@@ -86,8 +86,8 @@ private:
     /// Results configuration XML file
     std::string mConfigXML;
 
-    /// Proc stat file
-    std::string mProcStatFile;
+    /// CPU Usage file
+    std::string mCPUUsageFile;
 
     /// Top log file
     std::string mTopLogFile;

@@ -29,7 +29,6 @@ class MonitorPage;
 class ConfigOptions;
 class ConfigXML;
 class SubjectPage;
-class ClusterLoadPage;
 class ResultsPage;
 
 ///
@@ -124,9 +123,6 @@ private:
 
     /// Subject page
     SubjectPage *mSubjectPage;
-
-    /// Cluster load page
-    ClusterLoadPage *mClusterLoadPage;
 
     /// Configuration options
     ConfigOptions *mConfigOptions;

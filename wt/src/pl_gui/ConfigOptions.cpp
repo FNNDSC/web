@@ -49,7 +49,7 @@ ConfigOptions::ConfigOptions() :
         ("clusterName",     value<string>(), "Cluster name")
         ("packageDir",      value<string>(), "Package directory")
         ("configXML",       value<string>(), "Config XML file")
-        ("procStatFile",    value<string>(), "Proc Stat file")
+        ("cpuUsageFile",    value<string>(), "CPU Usage File")
         ("topLogFile",      value<string>(), "Top Log file")
         ;
 }
@@ -138,9 +138,9 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mConfigXML = vm["configXML"].as<string>();
         }
 
-        if (vm.count("procStatFile"))
+        if (vm.count("cpuUsageFile"))
         {
-            mProcStatFile = vm["procStatFile"].as<string>();
+            mCPUUsageFile = vm["cpuUsageFile"].as<string>();
         }
 
         if (vm.count("topLogFile"))
@@ -157,7 +157,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[Cluster Name:] " << mClusterName;
         WApplication::instance()->log("info") << "[Package Dir:] " << mPackageDir;
         WApplication::instance()->log("info") << "[Results Config XML:] " << mConfigXML;
-        WApplication::instance()->log("info") << "[Proc stat file:] " << mProcStatFile;
+        WApplication::instance()->log("info") << "[CPU Usage file:] " << mCPUUsageFile;
         WApplication::instance()->log("info") << "[Top log file:] " << mTopLogFile;
 
         configFile.close();

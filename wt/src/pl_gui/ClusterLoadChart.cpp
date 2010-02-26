@@ -243,8 +243,8 @@ void ClusterLoadChart::updateChart()
     {
         if (mUpdateChart)
         {
-            std::ifstream inFile(getConfigOptionsPtrTS(mApp)->GetProcStatFile().c_str());
-            while (inFile.is_open() && !inFile.eof())
+            std::ifstream inFile(getConfigOptionsPtrTS(mApp)->GetCPUUsageFile().c_str());
+            if (inFile.is_open() && !inFile.eof())
             {
                 char buf[1024] = {0};
 
@@ -253,57 +253,31 @@ void ClusterLoadChart::updateChart()
 
                 istringstream istr( string(buf), ios_base::out);
                 istr >> token;
-
-                if (token == "cpu")
+                float usagePercent = 0.0;
+                try
                 {
-                    unsigned int cpuUtilization[4];
-
-                    for (int i = 0; i < 4; i++)
-                    {
-                        string cpuUtilizationStr;
-                        istr >> cpuUtilizationStr;
-
-                        cpuUtilization[i] = atoi(cpuUtilizationStr.c_str());
-                    }
-
-                    // 0 - user time
-                    // 1 - nice time
-                    // 2 - system time
-                    // 3 - idle time
-                    unsigned int usageTime = (cpuUtilization[0] - mCPUUtilization[0]) + (cpuUtilization[1] - mCPUUtilization[1]) +
-                                             (cpuUtilization[2] - mCPUUtilization[2]);
-                    unsigned int totalTime = usageTime + (cpuUtilization[3] - mCPUUtilization[3]);
-                    float cpuPercent;
-
-                    if (totalTime != 0)
-                    {
-                        cpuPercent = (float)usageTime / (float)totalTime;
-                    }
-
-                    // First, take the lock to safely manipulate the UI outside of the
-                    // normal event loop, by having exclusive access to the session.
-                    WApplication::UpdateLock lock = mApp->getUpdateLock();
-
-                    if (mCPUUtilization[0] != 0)
-                    {
-                        addCPUReading(cpuPercent);
-                    }
-
-                    for (int i = 0; i < 4; i++)
-                    {
-                        mCPUUtilization[i] = cpuUtilization[i];
-                    }
-
-                    mChart->update();
-                    mApp->triggerUpdate();
-
-                    break;
+                    usagePercent = boost::lexical_cast<float>(token);
                 }
+                catch(...)
+                {
+                    WApplication::instance()->log("warn") << "Could not cast value from file " <<  getConfigOptionsPtrTS(mApp)->GetCPUUsageFile() <<
+                                                            " : " << token;
+                    continue;
+                }
+
+                // First, take the lock to safely manipulate the UI outside of the
+                // normal event loop, by having exclusive access to the session.
+                WApplication::UpdateLock lock = mApp->getUpdateLock();
+
+                addCPUReading(usagePercent / 100.0f);
+
+                mChart->update();
+                mApp->triggerUpdate();
             }
         }
 
         // Sleep for 1 second
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
     }
 }
 
