@@ -67,7 +67,7 @@ ResultsPage::ResultsPage(const MRIBrowser *mriBrowser, WContainerWidget *parent)
     mUserComboBox = new WComboBox();
 
     WGridLayout *userBox = new WGridLayout();
-    userBox->addWidget(showText, 0, 0, AlignLeft);
+    userBox->addWidget(showText, 0, 0, AlignRight);
     userBox->addWidget(mUserComboBox, 0, 1, AlignLeft);
     mUserComboBox->addItem("<user>");
     mUserComboBox->addItem("All");
@@ -79,13 +79,15 @@ ResultsPage::ResultsPage(const MRIBrowser *mriBrowser, WContainerWidget *parent)
     WPushButton *clearButton = new WPushButton("Clear");
     WPushButton *refreshButton = new WPushButton("Refresh");
 
-    userBox->addWidget(new WText("Search:"), 0, 3, AlignLeft);
-    userBox->addWidget(mSearchLineEdit, 0, 4, AlignLeft);
-    userBox->addWidget(mSearchPushButton, 0, 5, AlignLeft);
-    userBox->addWidget(clearButton, 0, 6, AlignLeft);
-    userBox->addWidget(refreshButton, 0, 8, AlignRight);
+    userBox->addWidget(new WText("Search:"), 0, 2, AlignRight);
+    userBox->addWidget(mSearchLineEdit, 0, 3, AlignLeft);
+    userBox->addWidget(mSearchPushButton, 0, 4, AlignLeft);
+    userBox->addWidget(clearButton, 0, 5, AlignLeft);
+    userBox->addWidget(refreshButton, 0, 6, AlignRight);
     userBox->setColumnStretch(2, 1);
-    userBox->setColumnStretch(7, 2);
+    userBox->setColumnStretch(6, 1);
+    userBox->setColumnStretch(7, 3);
+
 
     WGridLayout *browserLayout = new WGridLayout();
     browserLayout->addLayout(userBox, 0, 0);
