@@ -33,6 +33,7 @@
 #include <Wt/WAnchor>
 #include <Wt/WFileResource>
 #include <Wt/WStackedWidget>
+#include <Wt/WScrollArea>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -63,13 +64,20 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
     setTitle("File Info");
 
     mImagePreview = new WImage();
-    mTextPreview = new WTextArea();
-    mTextPreview->setStyleClass("logdiv");
+    mTextPreview = new WText();
+    WScrollArea *scrollArea = new WScrollArea();
+    scrollArea->setMaximumSize(1000, 820);
+    scrollArea->setMinimumSize(500, WLength::Auto);
+    scrollArea->setStyleClass("textpreviewscroll");
+
+    scrollArea->setWidget(mTextPreview);
+    mTextPreview->setStyleClass("textpreviewdiv");
+    mTextPreview->setTextFormat(PlainText);
     mTextPreview->decorationStyle().font().setFamily(WFont::Monospace);
 
     mPreviewStack = new WStackedWidget();
     mPreviewStack->addWidget(mImagePreview);
-    mPreviewStack->addWidget(mTextPreview);
+    mPreviewStack->addWidget(scrollArea);
 
 
     // Create an anchor that references a URL
@@ -170,8 +178,14 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
                 ostringstream oss;
                 oss << inFile.rdbuf();
 
-                mTextPreview->setText(oss.str().c_str());
-                mTextPreview->setMinimumSize(650, 532);
+                if (oss.str().size() < WApplication::instance()->maximumRequestSize())
+                {
+                    mTextPreview->setText(oss.str().c_str());
+                }
+                else
+                {
+                    mTextPreview->setText("The file is too large to display, please click Download to view it.");
+                }
 
                 mPreviewStack->setCurrentIndex(1);
                 mPreviewStack->show();

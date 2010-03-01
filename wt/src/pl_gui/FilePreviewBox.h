@@ -26,7 +26,7 @@ namespace Wt
     class WFileResource;
     class WPushButton;
     class WStackedWidget;
-    class WTextArea;
+    class WText;
 }
 
 using namespace Wt;
@@ -81,7 +81,7 @@ private:
     WImage *mImagePreview;
 
     /// Text preview (for text files)
-    WTextArea *mTextPreview;
+    WText *mTextPreview;
 
     /// Image resource
     WFileResource *mImageResource;

@@ -127,6 +127,14 @@ div.Wt-popupmenu .separator {
     color: white;
 }
 
+.textpreviewdiv {
+    color: white;
+}
+
+.textpreviewscroll {
+    background-color: black;
+}
+
 .logdivred {
     background-color: black; /* Didn't look so good red */
     color: white;
