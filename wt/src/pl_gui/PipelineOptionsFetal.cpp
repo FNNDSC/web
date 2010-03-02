@@ -61,7 +61,7 @@ PipelineOptionsFetal::PipelineOptionsFetal(WContainerWidget *parent) :
     WGroupBox *fetalExtractionBox = new WGroupBox("Fetal Extraction");
     fetalExtractionBox->setStyleClass("optiongroupdiv");
     WGridLayout *fetalLayout = new WGridLayout();
-    WText *sliceText = new WText("Slice selection margin for extraction: ");
+    WText *sliceText = new WText("Slice selection for extraction: ");
     WText *marginText = new WText("Margin in voxels around extracted region: ");
     WText *cirumferenceText = new WText("Head circumference (in cm): ");
 
