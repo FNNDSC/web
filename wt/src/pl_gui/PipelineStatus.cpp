@@ -111,6 +111,9 @@ void PipelineStatus::updateAll()
     case Enums::PIPELINE_TYPE_FS:
         mPipelineTypeLabel->setText("Structural Reconstruction");
         break;
+    case Enums::PIPELINE_TYPE_FETAL:
+            mPipelineTypeLabel->setText("Fetal Extraction");
+            break;
     case Enums::PIPELINE_UNKNOWN:
         mPipelineTypeLabel->setText("Unknown");
         break;

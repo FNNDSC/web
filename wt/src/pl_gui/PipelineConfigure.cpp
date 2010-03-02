@@ -12,6 +12,7 @@
 #include "PipelineConfigure.h"
 #include "PipelineOptionsFS.h"
 #include "PipelineOptionsTract.h"
+#include "PipelineOptionsFetal.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
@@ -49,8 +50,10 @@ PipelineConfigure::PipelineConfigure(const vector<ScanBrowser::ScanData>& scansT
 
     mPipelineOptionsTract = new PipelineOptionsTract();
     mPipelineOptionsFS = new PipelineOptionsFS();
+    mPipelineOptionsFetal = new PipelineOptionsFetal();
     mStackedPipelineOptions->addWidget(mPipelineOptionsTract);
     mStackedPipelineOptions->addWidget(mPipelineOptionsFS);
+    mStackedPipelineOptions->addWidget(mPipelineOptionsFetal);
 
 
     WGridLayout *layout = new WGridLayout();
@@ -86,9 +89,11 @@ PipelineConfigure::~PipelineConfigure()
 void PipelineConfigure::resetAll()
 {
     mStackedPipelineOptions->setCurrentIndex(0);
+    mPipelineOptionsFetal->resetAll();
     mPipelineOptionsTract->resetAll();
     mPipelineOptionsFS->resetAll();
     mPipelineStatus->resetAll();
+    mPipelineOptionsCurrent = mPipelineOptionsTract;
 }
 
 ///
@@ -102,10 +107,17 @@ void PipelineConfigure::updateAll()
     {
     case Enums::PIPELINE_TYPE_TRACT:
         mStackedPipelineOptions->setCurrentIndex(0);
+        mPipelineOptionsCurrent = mPipelineOptionsTract;
         break;
     case Enums::PIPELINE_TYPE_FS:
         mStackedPipelineOptions->setCurrentIndex(1);
+        mPipelineOptionsCurrent = mPipelineOptionsFS;
         break;
+    case Enums::PIPELINE_TYPE_FETAL:
+        mStackedPipelineOptions->setCurrentIndex(2);
+        mPipelineOptionsCurrent = mPipelineOptionsFetal;
+        break;
+
     }
 }
 
@@ -115,14 +127,7 @@ void PipelineConfigure::updateAll()
 //
 bool PipelineConfigure::validate() const
 {
-    if (mPipelineType == Enums::PIPELINE_TYPE_TRACT)
-    {
-        return mPipelineOptionsTract->validate();
-    }
-    else
-    {
-        return mPipelineOptionsFS->validate();
-    }
+    return mPipelineOptionsCurrent->validate();
 }
 
 ///
@@ -130,14 +135,7 @@ bool PipelineConfigure::validate() const
 //
 std::string PipelineConfigure::getCommandLineString() const
 {
-    if (mPipelineType == Enums::PIPELINE_TYPE_TRACT)
-    {
-        return mPipelineOptionsTract->getCommandLineString();
-    }
-    else
-    {
-        return mPipelineOptionsFS->getCommandLineString();
-    }
+    return mPipelineOptionsCurrent->getCommandLineString();
 }
 
 ///
@@ -145,14 +143,7 @@ std::string PipelineConfigure::getCommandLineString() const
 //
 std::string PipelineConfigure::getOutputDirSuffix() const
 {
-    if (mPipelineType == Enums::PIPELINE_TYPE_TRACT)
-    {
-        return mPipelineOptionsTract->getOutputDirSuffix();
-    }
-    else
-    {
-        return mPipelineOptionsFS->getOutputDirSuffix();
-    }
+    return mPipelineOptionsCurrent->getOutputDirSuffix();
 }
 
 ///
@@ -160,14 +151,7 @@ std::string PipelineConfigure::getOutputDirSuffix() const
 //
 std::string PipelineConfigure::getOutputFileSuffix() const
 {
-    if (mPipelineType == Enums::PIPELINE_TYPE_TRACT)
-    {
-        return mPipelineOptionsTract->getOutputFileSuffix();
-    }
-    else
-    {
-        return mPipelineOptionsFS->getOutputFileSuffix();
-    }
+    return mPipelineOptionsCurrent->getOutputFileSuffix();
 }
 
 

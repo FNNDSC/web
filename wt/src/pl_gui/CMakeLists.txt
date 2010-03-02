@@ -24,6 +24,7 @@ ADD_EXECUTABLE(pl_gui.wt
   PipelineApp.cpp
   PipelineConfigure.cpp
   PipelineOptions.cpp
+  PipelineOptionsFetal.cpp
   PipelineOptionsFS.cpp
   PipelineOptionsTract.cpp
   PipelineStatus.cpp

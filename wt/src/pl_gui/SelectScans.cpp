@@ -124,9 +124,13 @@ const std::string SelectScans::getCurrentPipelineAsString() const
     {
         return std::string("tract");
     }
-    else
+    else if (getCurrentPipeline() == Enums::PIPELINE_TYPE_FS)
     {
         return std::string("FS");
+    }
+    else
+    {
+        return std::string("fetal");
     }
 }
 

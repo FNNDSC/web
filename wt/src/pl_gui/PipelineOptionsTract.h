@@ -64,7 +64,7 @@ public:
     ///
     /// Generate command-line options string based on user choices
     ///
-    std::string getCommandLineString() const;
+    virtual std::string getCommandLineString() const;
 
 private:
 

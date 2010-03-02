@@ -56,4 +56,14 @@
 			</FilePattern>			
 		</FilePatterns>		
 	</Pipeline>
+	<Pipeline name="fetal_meta.bash" tag="fetal" desc="Fetal Extraction">
+		<FilePatterns>
+			<FilePattern dir="true" name=".*-stage-2-.*">
+				<FilePattern dir="false" name=".*\.hdr" recurse="false" />
+				<FilePattern dir="false" name=".*\.img" recurse="false" />
+				<FilePattern dir="false" name=".*\.nii" recurse="false" />				
+			</FilePattern>
+		</FilePatterns>		
+	</Pipeline>
+	
 </Results>

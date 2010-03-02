@@ -48,12 +48,14 @@ public:
     const std::string& GetOutGradientDir()      const { return mOutGradientDir; }
     const std::string& GetSeriesListTract()     const { return mSeriesListTract; }
     const std::string& GetSeriesListFS()        const { return mSeriesListFS; }
+    const std::string& GetSeriesListFetal()     const { return mSeriesListFetal; }
     const std::string& GetScriptDir()           const { return mScriptDir; }
     const std::string& GetClusterName()         const { return mClusterName; }
     const std::string& GetPackageDir()          const { return mPackageDir; }
     const std::string& GetConfigXML()           const { return mConfigXML; }
     const std::string& GetCPUUsageFile()        const { return mCPUUsageFile; }
     const std::string& GetTopLogFile()          const { return mTopLogFile; }
+    const std::string& GetRemoteMatLab()        const { return mRemoteMatLab; }
 private:
 
     // Allowable options
@@ -67,6 +69,9 @@ private:
 
     /// Series list (FS)
     std::string mSeriesListFS;
+
+    /// Series list (Fetal)
+    std::string mSeriesListFetal;
 
     /// Script dir
     std::string mScriptDir;
@@ -91,6 +96,9 @@ private:
 
     /// Top log file
     std::string mTopLogFile;
+
+    /// Remote MatLAB host
+    std::string mRemoteMatLab;
 };
 
 #endif // CONFIGOPTIONS_H

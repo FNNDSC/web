@@ -20,6 +20,7 @@ namespace Enums
         PIPELINE_UNKNOWN = -1,
         PIPELINE_TYPE_TRACT,
         PIPELINE_TYPE_FS,
+        PIPELINE_TYPE_FETAL,
 
         NUM_PIPELINES
 

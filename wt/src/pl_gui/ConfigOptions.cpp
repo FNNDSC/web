@@ -46,11 +46,13 @@ ConfigOptions::ConfigOptions() :
         ("scriptDir",       value<string>(), "Base scripts directory")
         ("seriesListTract", value<string>(), "Series list tractography (comma separated)")
         ("seriesListFS",    value<string>(), "Series list freesurfer (comma separated)")
+        ("seriesListFetal", value<string>(), "Series list fetal (comma separated)")
         ("clusterName",     value<string>(), "Cluster name")
         ("packageDir",      value<string>(), "Package directory")
         ("configXML",       value<string>(), "Config XML file")
         ("cpuUsageFile",    value<string>(), "CPU Usage File")
         ("topLogFile",      value<string>(), "Top Log file")
+        ("remoteMatLab",    value<string>(), "Remote MatLAB hostname")
         ;
 }
 
@@ -118,6 +120,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mSeriesListFS = vm["seriesListFS"].as<string>();
         }
 
+        if (vm.count("seriesListFetal"))
+        {
+            mSeriesListFetal = vm["seriesListFetal"].as<string>();
+        }
+
         if (vm.count("scriptDir"))
         {
             mScriptDir = vm["scriptDir"].as<string>();
@@ -148,17 +155,25 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mTopLogFile = vm["topLogFile"].as<string>();
         }
 
+        if (vm.count("remoteMatLab"))
+        {
+            mRemoteMatLab = vm["remoteMatLab"].as<string>();
+        }
+
+
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
         WApplication::instance()->log("info") << "[Output Gradient Dir:] " << mOutGradientDir;
         WApplication::instance()->log("info") << "[Script Dir:] " << mScriptDir;
         WApplication::instance()->log("info") << "[SeriesListTract:] " << mSeriesListTract;
         WApplication::instance()->log("info") << "[SeriesListFS:] " << mSeriesListFS;
+        WApplication::instance()->log("info") << "[SeriesListFetak:] " << mSeriesListFetal;
         WApplication::instance()->log("info") << "[Cluster Name:] " << mClusterName;
         WApplication::instance()->log("info") << "[Package Dir:] " << mPackageDir;
         WApplication::instance()->log("info") << "[Results Config XML:] " << mConfigXML;
         WApplication::instance()->log("info") << "[CPU Usage file:] " << mCPUUsageFile;
         WApplication::instance()->log("info") << "[Top log file:] " << mTopLogFile;
+        WApplication::instance()->log("info") << "[Remote MatLAB:] " << mRemoteMatLab;
 
         configFile.close();
     }

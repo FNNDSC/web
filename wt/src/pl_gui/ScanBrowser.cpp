@@ -314,6 +314,10 @@ void ScanBrowser::addScanClicked()
         {
             pipelineType = Enums::PIPELINE_TYPE_FS;
         }
+        else if(findSeriesMatch(getConfigOptionsPtr()->GetSeriesListFetal(), curScanText.toUTF8()))
+        {
+            pipelineType = Enums::PIPELINE_TYPE_FS;
+        }
 
         if (pipelineType != Enums::PIPELINE_UNKNOWN)
         {
@@ -407,6 +411,11 @@ void ScanBrowser::pipelineOverrideClicked()
     group->addButton(tractButton, Enums::PIPELINE_TYPE_TRACT + 1);
     new WBreak(mPipelineDialog->contents());
 
+    WRadioButton *fetalButton = new WRadioButton("Fetal Extraction",
+            mPipelineDialog->contents());
+    group->addButton(fetalButton, Enums::PIPELINE_TYPE_FETAL + 1);
+    new WBreak(mPipelineDialog->contents());
+
     WRadioButton *unknownButton = new WRadioButton("Unknown",
             mPipelineDialog->contents());
     group->addButton(unknownButton, Enums::PIPELINE_UNKNOWN + 1);
@@ -471,6 +480,9 @@ void ScanBrowser::setCurrentPipeline(Enums::PipelineType pipelineType)
     case Enums::PIPELINE_TYPE_TRACT:
         mPipelineModeLabel->setText("Pipeline Type: Tractography");
         break;
+    case Enums::PIPELINE_TYPE_FETAL:
+        mPipelineModeLabel->setText("Pipeline Type: Fetal Extraction");
+        break;
     case Enums::PIPELINE_TYPE_FS:
         mPipelineModeLabel->setText("Pipeline Type: Structural Reconstruction");
         break;
@@ -490,7 +502,7 @@ bool ScanBrowser::findSeriesMatch(const std::string& seriesList,
     {
         if(seriesName.find(token) != string::npos)
         {
-            return true;
+             return true;
         }
     }
 

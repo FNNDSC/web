@@ -19,8 +19,10 @@
 #include "ScanBrowser.h"
 #include "PipelineStatus.h"
 
+class PipelineOptions;
 class PipelineOptionsTract;
 class PipelineOptionsFS;
+class PipelineOptionsFetal;
 namespace Wt
 {
     class WStackedWidget;
@@ -98,6 +100,13 @@ private:
 
     /// Freesurfer pipeline options
     PipelineOptionsFS *mPipelineOptionsFS;
+
+    /// Fetal pipeline options
+    PipelineOptionsFetal *mPipelineOptionsFetal;
+
+    /// Current pipeline options
+    PipelineOptions *mPipelineOptionsCurrent;
+
 
     /// Scans to process (passed in from SubjectPage)
     const std::vector<ScanBrowser::ScanData>& mScansToProcessData;
