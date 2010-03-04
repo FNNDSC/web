@@ -109,10 +109,16 @@ private:
     WComboBox *mVolumeMaskComboBox;
 
     /// Volume mask threshold
-    WLineEdit *mThresholdLineEdit;
+    WLineEdit *mLowerThresholdLineEdit;
 
-    /// FA Treshold label
-    WLabel *mThresholdLabel;
+    /// Mask Lower Threshold label
+    WLabel *mLowerThresholdLabel;
+
+    /// Volume mask threshold
+    WLineEdit *mUpperThresholdLineEdit;
+
+    /// Mask Upper Threshold label
+    WLabel *mUpperThresholdLabel;
 
     /// Upload Gradient file check box
     WCheckBox *mGradientFileCheckBox;
