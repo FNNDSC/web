@@ -103,13 +103,16 @@ private:
     WComboBox *mImageModelComboBox;
 
     /// Checkbox for whether to use FA volume as mask filter
-    WCheckBox *mFAVolumeMaskCheckBox;
+    WCheckBox *mVolumeMaskCheckBox;
+
+    /// Mask volume combo box
+    WComboBox *mVolumeMaskComboBox;
 
     /// Volume mask threshold
-    WLineEdit *mFAThresholdLineEdit;
+    WLineEdit *mThresholdLineEdit;
 
     /// FA Treshold label
-    WLabel *mFAThresholdLabel;
+    WLabel *mThresholdLabel;
 
     /// Upload Gradient file check box
     WCheckBox *mGradientFileCheckBox;

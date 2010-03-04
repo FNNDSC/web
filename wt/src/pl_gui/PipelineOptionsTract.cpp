@@ -74,23 +74,36 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     WVBoxLayout *processingBoxLayout = new WVBoxLayout();
 
     mEddyCurrentCheckBox = new WCheckBox("Perform Eddy Current Correction (ECC)");
-    mFAVolumeMaskCheckBox = new WCheckBox("Use FA volume as mask filter?");
+    mVolumeMaskCheckBox = new WCheckBox("");
+    mVolumeMaskComboBox = new WComboBox();
+    mVolumeMaskComboBox->addItem("FA");
+    mVolumeMaskComboBox->addItem("ADC");
+    mVolumeMaskComboBox->setToolTip("Set the volume (FA or ADC) that will be used as a mask filter.");
+    WText *useText =  new WText("Use");
+    WText *maskText =  new WText("volume as mask filter?");
+    maskText->setWordWrap(false);
 
+    WGridLayout *volumeMaskLayout = new WGridLayout();
+    volumeMaskLayout->addWidget(mVolumeMaskCheckBox, 0, 0, AlignMiddle);
+    volumeMaskLayout->addWidget(useText, 0, 1, AlignMiddle);
+    volumeMaskLayout->addWidget(mVolumeMaskComboBox, 0, 2, AlignMiddle);
+    volumeMaskLayout->addWidget(maskText, 0, 3, AlignMiddle);
+    volumeMaskLayout->setColumnStretch(4, 1);
 
     WGridLayout *lineEditLayout = new WGridLayout();
-    mFAThresholdLineEdit = new WLineEdit("0.0");
+    mThresholdLineEdit = new WLineEdit("0.0");
     WDoubleValidator *validator = new WDoubleValidator();
     validator->setRange(0.0, 1.0);
-    mFAThresholdLineEdit->setValidator(validator);
+    mThresholdLineEdit->setValidator(validator);
 
-    mFAThresholdLineEdit->setToolTip("Enter a lower threshold value between 0.0 and 1.0. A value of 0.0 will use the entire FA volume.");
-    mFAThresholdLabel = new WLabel("Lower threshold value for mask:");
-    lineEditLayout->addWidget(mFAThresholdLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
-    lineEditLayout->addWidget(mFAThresholdLineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    mThresholdLineEdit->setToolTip("Enter a lower threshold value between 0.0 and 1.0. A value of 0.0 will use the entire mask volume.");
+    mThresholdLabel = new WLabel("Lower threshold value for mask:");
+    lineEditLayout->addWidget(mThresholdLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    lineEditLayout->addWidget(mThresholdLineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
     lineEditLayout->setColumnStretch(1, 1);
 
     WVBoxLayout *vboxFALayout = new WVBoxLayout();
-    vboxFALayout->addWidget(mFAVolumeMaskCheckBox);
+    vboxFALayout->addLayout(volumeMaskLayout);
     vboxFALayout->addLayout(lineEditLayout);
     vboxFALayout->addSpacing(WLength(20.0, WLength::Pixel));
 
@@ -181,7 +194,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 
 
     // Connection
-    mFAVolumeMaskCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::volumeMaskClicked));
+    mVolumeMaskCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::volumeMaskClicked));
     mB0VolumesCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::b0VolumeClicked));
     mGradientFileUpload->changed().connect(SLOT(mGradientFileUpload, WFileUpload::upload));
     mGradientFileUpload->uploaded().connect(SLOT(this, PipelineOptionsTract::fileUploaded));
@@ -215,10 +228,11 @@ void PipelineOptionsTract::resetAll()
     }
 
     mEddyCurrentCheckBox->setChecked(false);
-    mFAVolumeMaskCheckBox->setChecked(false);
-    mFAThresholdLineEdit->setText("0.0");
-    mFAThresholdLineEdit->disable();
-    mFAThresholdLabel->disable();
+    mVolumeMaskCheckBox->setChecked(false);
+    mVolumeMaskComboBox->setCurrentIndex(0);
+    mThresholdLineEdit->setText("0.0");
+    mThresholdLineEdit->disable();
+    mThresholdLabel->disable();
     mB0VolumesCheckBox->setChecked(false);
     mB0VolumesLineEdit->setText("1");
     mB0VolumesLineEdit->disable();
@@ -239,9 +253,9 @@ bool PipelineOptionsTract::validate() const
     if (!PipelineOptions::validate())
         return false;
 
-    if (mFAVolumeMaskCheckBox->isChecked())
+    if (mVolumeMaskCheckBox->isChecked())
     {
-        if (!mFAThresholdLineEdit->validate())
+        if (!mThresholdLineEdit->validate())
         {
             mMessageBox->setWindowTitle("Invalid Input");
             mMessageBox->setText("Threshold value for mask must be in the range [0.0, 1.0].  Please correct it.");
@@ -320,9 +334,10 @@ std::string PipelineOptionsTract::getCommandLineString() const
         args += " -I hardi";
     }
 
-    if (mFAVolumeMaskCheckBox->isChecked())
+    if (mVolumeMaskCheckBox->isChecked())
     {
-        args += " -F " + mFAThresholdLineEdit->text().toUTF8();
+        args += " -i " + mVolumeMaskComboBox->currentText().toUTF8();
+        args += " -F " + mThresholdLineEdit->text().toUTF8();
     }
 
     if (mGradientFileCheckBox->isChecked())
@@ -364,15 +379,15 @@ std::string PipelineOptionsTract::getCommandLineString() const
 //
 void PipelineOptionsTract::volumeMaskClicked()
 {
-    if (mFAVolumeMaskCheckBox->isChecked())
+    if (mVolumeMaskCheckBox->isChecked())
     {
-        mFAThresholdLineEdit->enable();
-        mFAThresholdLabel->enable();
+        mThresholdLineEdit->enable();
+        mThresholdLabel->enable();
     }
     else
     {
-        mFAThresholdLineEdit->disable();
-        mFAThresholdLabel->disable();
+        mThresholdLineEdit->disable();
+        mThresholdLabel->disable();
     }
 }
 
