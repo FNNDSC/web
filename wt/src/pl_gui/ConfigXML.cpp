@@ -186,6 +186,7 @@ void ConfigXML::translateScriptArgs(WStandardItemModel *model, const std::string
                 std::list<OptionArgNode>::iterator iter = (*optionMap)[tag]->mOptionArgs.begin();
                 while (iter != (*optionMap)[tag]->mOptionArgs.end())
                 {
+                    WApplication::instance()->log("debug") << "   (" << iter->mTag << "," << arg << ")";
                     if (iter->mTag == arg)
                     {
                         options.push_back(new WStandardItem((*optionMap)[tag]->mDesc));
@@ -481,7 +482,7 @@ bool ConfigXML::parseOptionNode(std::map<std::string, OptionNode*>& optionMap, m
                                             NULL, NULL,
                                             MXML_DESCEND);
         optionArgNode != NULL;
-        optionArgNode = mxmlFindElement(optionNode, optionNode,
+        optionArgNode = mxmlFindElement(optionArgNode, optionNode,
                                           "OptionArg",
                                           NULL, NULL,
                                           MXML_NO_DESCEND))

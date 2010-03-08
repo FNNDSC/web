@@ -39,7 +39,7 @@
           <Option tag="-I" desc="Image Model" notgiven="DTI">
             <OptionArg tag="hardi" desc="HARDI" />
           </Option>
-          <Option tag="-i" desc="Volume Mask" notgiven="" >
+          <Option tag="-i" desc="Mask Volume" notgiven="" >
             <OptionArg tag="FA" desc="FA" />
             <OptionArg tag="ADC" desc="ADC" />
           </Option>
