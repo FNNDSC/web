@@ -47,9 +47,17 @@ ConfigXML::~ConfigXML()
 
     while (mapIter != mPipelineMap.end())
     {
+        std::map<std::string, OptionNode*>::iterator optionIter = (mapIter->second)->mOptionMap.begin();
+        while (optionIter != (mapIter->second)->mOptionMap.begin())
+        {
+            delete optionIter->second;
+            optionIter++;
+        }
         delete mapIter->second;
         mapIter++;
     }
+
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -91,6 +99,21 @@ WStandardItemModel* ConfigXML::getResultsPipelineTree(const std::string& pipelin
 }
 
 ///
+/// Get the <Options> map for the pipeline by name
+/// \param pipelineName Name of pipeline to get tree for
+/// \return Pointer option node tree or NULL if the pipeline is not found.
+///
+std::map<std::string, ConfigXML::OptionNode*>* ConfigXML::getOptionMap(const std::string& pipelineName)
+{
+    if (mPipelineMap.find(pipelineName) == mPipelineMap.end())
+    {
+        return NULL;
+    }
+
+    return (&mPipelineMap[pipelineName]->mOptionMap);
+}
+
+///
 //  Get the pattern to use to match files as text files
 //
 std::string ConfigXML::getTextFilePattern() const
@@ -115,6 +138,87 @@ std::string ConfigXML::getImageFilePattern() const
 const std::list<ConfigXML::PreviewPatternNode>& ConfigXML::getPreviewPatterns() const
 {
     return mPreviewPatterns;
+}
+
+///
+//  Translate arguments to script using pipeline options specification given in main
+//  configuration XML file
+//
+void ConfigXML::translateScriptArgs(WStandardItemModel *model, const std::string& metaScript, const std::string& arguments)
+{
+    std::map<std::string, OptionNode*> *optionMap = getOptionMap(metaScript);
+
+    if (optionMap != NULL)
+    {
+        std::map<std::string, bool> argNotGivenMap;
+
+        std::vector <WStandardItem*> options;
+        std::vector <WStandardItem*> values;
+
+        // Initialize all the "not givens" to true
+        std::map<std::string, OptionNode*>::iterator mapIter = optionMap->begin();
+        while(mapIter != optionMap->end())
+        {
+            argNotGivenMap[mapIter->first] = true;
+            mapIter++;
+        }
+
+        istringstream iss(arguments);
+        std::vector<string> tokens;
+        copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<vector<string> >(tokens));
+
+        int index = 0;
+        while(index < tokens.size())
+        {
+            string tag = tokens[index];
+            index++;
+            if (optionMap->find(tag) != optionMap->end())
+            {
+                argNotGivenMap[tag] = false;
+                string arg="";
+                // Check to see if the next token is an argument
+                if (index < tokens.size() && tokens[index][0] != '-')
+                {
+                    arg=tokens[index];
+                    index++;
+                }
+
+                std::list<OptionArgNode>::iterator iter = (*optionMap)[tag]->mOptionArgs.begin();
+                while (iter != (*optionMap)[tag]->mOptionArgs.end())
+                {
+                    if (iter->mTag == arg)
+                    {
+                        options.push_back(new WStandardItem((*optionMap)[tag]->mDesc));
+                        values.push_back(new WStandardItem(iter->mDesc));
+                    }
+                    else if (iter->mTag == "*")
+                    {
+                        options.push_back(new WStandardItem((*optionMap)[tag]->mDesc));
+                        values.push_back(new WStandardItem(arg));
+                    }
+
+                    iter++;
+                }
+            }
+        }
+
+        mapIter = optionMap->begin();
+        while(mapIter != optionMap->end())
+        {
+            if(argNotGivenMap[mapIter->first] == true && mapIter->second->mNotGivenText != "")
+            {
+                options.push_back(new WStandardItem(mapIter->second->mDesc));
+                values.push_back(new WStandardItem(mapIter->second->mNotGivenText));
+            }
+            mapIter++;
+        }
+
+        for (int i = 0; i < options.size(); i++)
+        {
+            model->setItem(i, 0, options[i]);
+            model->setItem(i, 1, values[i]);
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -226,7 +330,7 @@ bool ConfigXML::parsePipelineNode(mxml_node_t *pipelineNode, const std::string& 
 
     mxml_node_t *filePatternNode;
 
-    // Iterate over the <Pipeline> nodes
+    // Iterate over the <FilePattern> nodes
     bool result = true;
     for (filePatternNode = mxmlFindElement(filePatternsNode, filePatternsNode,
                                             "FilePattern",
@@ -239,6 +343,23 @@ bool ConfigXML::parsePipelineNode(mxml_node_t *pipelineNode, const std::string& 
                                           MXML_NO_DESCEND))
     {
         result = result && parseFilePatternNode(mPipelineMap[pipelineName]->mModel->invisibleRootItem(), filePatternNode, configPath, 0);
+    }
+
+    // Iterate over the <Option> nodes
+    mxml_node_t *optionsNode = mxmlFindElement(pipelineNode, pipelineNode, "Options", NULL, NULL, MXML_DESCEND);
+    mxml_node_t *optionNode;
+
+    for (optionNode = mxmlFindElement(optionsNode, optionsNode,
+                                        "Option",
+                                        NULL, NULL,
+                                        MXML_DESCEND);
+        optionNode != NULL;
+        optionNode = mxmlFindElement(optionNode, optionsNode,
+                                      "Option",
+                                      NULL, NULL,
+                                      MXML_NO_DESCEND))
+    {
+        result = result && parseOptionNode(mPipelineMap[pipelineName]->mOptionMap, optionNode, configPath);
     }
 
     return result;
@@ -323,6 +444,79 @@ bool ConfigXML::parseFilePatternNode(WStandardItem *item, mxml_node_t *filePatte
     }
 
     return result;
+}
+
+///
+//  Parse <Option> node
+//
+bool ConfigXML::parseOptionNode(std::map<std::string, OptionNode*>& optionMap, mxml_node_t *optionNode,
+                                const std::string& configPath)
+{
+    if (optionNode == NULL)
+    {
+        return false;
+    }
+
+
+    const char* tag = mxmlElementGetAttr(optionNode, "tag");
+    if (tag == NULL)
+    {
+        WApplication::instance()->log("error") << "No tag specified for <Option> node. Ignoring.";
+        return false;
+    }
+
+    // Create the node if it has not yet been found
+    if (optionMap.find(tag) == optionMap.end())
+    {
+        optionMap[tag] = new OptionNode();
+    }
+
+    optionMap[tag]->mDesc = mxmlElementGetAttr(optionNode, "desc");
+    optionMap[tag]->mNotGivenText = mxmlElementGetAttr(optionNode, "notgiven");
+
+    mxml_node_t *optionArgNode;
+    bool result = true;
+    for (optionArgNode = mxmlFindElement(optionNode, optionNode,
+                                            "OptionArg",
+                                            NULL, NULL,
+                                            MXML_DESCEND);
+        optionArgNode != NULL;
+        optionArgNode = mxmlFindElement(optionNode, optionNode,
+                                          "OptionArg",
+                                          NULL, NULL,
+                                          MXML_NO_DESCEND))
+    {
+        result = result && parseOptionArgNode(optionMap[tag]->mOptionArgs, optionArgNode, configPath);
+    }
+
+    return result;
+}
+
+///
+//  Parse <OptionArg> node
+//
+bool ConfigXML::parseOptionArgNode(std::list<OptionArgNode>& optionArgs, mxml_node_t *optionArgNode,
+                                   const std::string& configPath)
+{
+    if (optionArgNode == NULL)
+    {
+        return false;
+    }
+
+    const char* tag = mxmlElementGetAttr(optionArgNode, "tag");
+    const char* desc = mxmlElementGetAttr(optionArgNode, "desc");
+    if (tag == NULL)
+    {
+        WApplication::instance()->log("error") << "No tag specified for <OptionArg> node. Ignoring.";
+        return false;
+    }
+
+    OptionArgNode newNode;
+    newNode.mTag = tag;
+    newNode.mDesc = desc;
+    optionArgs.push_back(newNode);
+
+    return true;
 }
 
 ///

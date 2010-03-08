@@ -22,6 +22,7 @@ ADD_EXECUTABLE(pl_gui.wt
   MRIInfoBox.cpp
   PatientInfoBox.cpp
   PipelineApp.cpp
+  PipelineArgTable.cpp
   PipelineConfigure.cpp
   PipelineOptions.cpp
   PipelineOptionsFetal.cpp

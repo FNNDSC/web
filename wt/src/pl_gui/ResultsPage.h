@@ -30,6 +30,7 @@ class ResultsTable;
 class MonitorLogTab;
 class MonitorResultsTab;
 class MRIBrowser;
+class PipelineArgTable;
 
 using namespace Wt;
 
@@ -109,7 +110,12 @@ private:
     ///
     /// New result selected (double click) [slot]
     ///
-    void resultSelected(std::string clusterShFile, std::string metaScript);
+    void resultSelected(std::string clusterShFile, std::string metaScript, std::string arguments);
+
+    ///
+    /// New result clicked (single click) [slot]
+    ///
+    void resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments);
 
     ///
     /// Refresh clicked [slot]
@@ -149,6 +155,9 @@ private:
 
     /// Stacked widget
     WStackedWidget *mStackedWidget;
+
+    /// Pipeline arguments table
+    PipelineArgTable *mPipelineArgTable;
 };
 
 #endif // RESULTSPAGE_H

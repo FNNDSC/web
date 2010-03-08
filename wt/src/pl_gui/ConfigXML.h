@@ -56,6 +56,7 @@ public:
 
     } PreviewPatternNode;
 
+
     ///
     /// Constructor
     ///
@@ -82,6 +83,17 @@ public:
     ///
     WStandardItemModel* getResultsPipelineTree(const std::string& pipelineName);
 
+
+    ///
+    /// Translate arguments to script using pipeline options specification given in main
+    /// configuration XML file
+    /// \param rootItem Root item to append rows that contain entries for optoins
+    /// \param metaScript Meta script name (tract_meta.bash, fs_meta.bash, etc.)
+    /// \param arguments Arguments that were sent to script
+    ///
+    void translateScriptArgs(WStandardItemModel *model, const std::string& metaScript, const std::string& arguments);
+
+
     ///
     /// Get the pattern to use to match files as text files
     ///
@@ -101,6 +113,31 @@ public:
 
 protected:
 
+    /// Option Argument node
+    typedef struct
+    {
+        // Option argument tag
+        std::string mTag;
+
+        // Option argument description
+        std::string mDesc;
+
+    } OptionArgNode;
+
+    /// Option Node
+    typedef struct
+    {
+        /// Option description
+        std::string mDesc;
+
+        /// Option not-given text
+        std::string mNotGivenText;
+
+        /// Option arguments
+        std::list<OptionArgNode> mOptionArgs;
+
+    } OptionNode;
+
     /// Pipeline structure
     class PipelineConf
     {
@@ -117,6 +154,8 @@ protected:
         /// Pipeline tag for meta script
         std::string mMetaTag;
 
+        /// Option map
+        std::map<std::string, OptionNode*> mOptionMap;
     };
 
     ///
@@ -141,9 +180,29 @@ protected:
                                const std::string& configPath, int indent);
 
     ///
+    ///  Parse <Option> node
+    ///
+    bool parseOptionNode(std::map<std::string, OptionNode*>& optionMap, mxml_node_t *optionNode,
+                         const std::string& configPath);
+
+    ///
+    ///  Parse <OptionArg> node
+    ///
+    bool parseOptionArgNode(std::list<OptionArgNode>& optionArgs, mxml_node_t *optionArgNode,
+                             const std::string& configPath);
+
+    ///
     ///  Parse <[Text|Image]FilePattern> node
     ///
     std::string parsePatternNode(mxml_node_t *baseNode, std::string nodeName) const;
+
+    ///
+    /// Get the <Options> map for the pipeline by name
+    /// \param pipelineName Name of pipeline to get tree for
+    /// \return Pointer option node tree or NULL if the pipeline is not found.
+    ///
+    std::map<std::string, OptionNode*>* getOptionMap(const std::string& pipelineName);
+
 
     /// Map relating pipeline by string to a tree of entries
     std::map<std::string, PipelineConf*> mPipelineMap;

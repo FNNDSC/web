@@ -66,7 +66,12 @@ public:
     ///
     /// Signal new result selected (double click)
     ///
-    Wt::Signal<std::string, std::string>& resultSelected()  {   return mResultSelected; }
+    Wt::Signal<std::string, std::string, std::string>& resultSelected()  {   return mResultSelected; }
+
+    ///
+    /// Signal new result clicked (single click)
+    ///
+    Wt::Signal<std::string, std::string, std::string>& resultClicked()  {   return mResultClicked; }
 
 private:
 
@@ -74,6 +79,12 @@ private:
     /// Called when item is selected form list [slot]
     ///
     void jobSelected(const WModelIndex&);
+
+
+    ///
+    //  Called when item is single clicked form list [slot]
+    //
+    void jobClicked(const WModelIndex& item);
 
     ///
     ///  Populate results table by reading the schedule.log.xml file
@@ -85,11 +96,20 @@ private:
     ///
     void setDataColumn(mxml_node_t *node, const char* name, int row, int col, int role=EditRole);
 
+    ///
+    /// Translate arguments to script using pipeline options specification given in main
+    /// configuration XML file
+    ///
+    WStandardItem* translateScriptArgs(const std::string& metaScript, const std::string& arguments);
+
 
 private:
 
     /// Result selected signal
-    Wt::Signal<std::string, std::string> mResultSelected;
+    Wt::Signal<std::string, std::string,std::string> mResultSelected;
+
+    /// Result clicked signal
+    Wt::Signal<std::string, std::string,std::string> mResultClicked;
 
     /// Model representing cluster jobs
     WStandardItemModel *mModel;

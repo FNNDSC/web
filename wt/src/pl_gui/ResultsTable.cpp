@@ -12,6 +12,7 @@
 #include "PipelineApp.h"
 #include "ResultsTable.h"
 #include "ConfigOptions.h"
+#include "ConfigXML.h"
 #include "MonitorResultsTab.h"
 #include "MonitorLogTab.h"
 #include "ResultsFilterProxyModel.h"
@@ -37,6 +38,7 @@
 #include <iostream>
 #include <string>
 #include <mxml.h>
+#include <vector>
 
 ///
 //  Namespaces
@@ -60,7 +62,7 @@ ResultsTable::ResultsTable(WContainerWidget *parent) :
     setStyleClass("tabdiv");
 
     mModel = new WStandardItemModel(this);
-    mModel->insertColumns(0, 10);
+    mModel->insertColumns(0, 11);
     mModel->setHeaderData(0, boost::any(WString::fromUTF8("Date")));
     mModel->setHeaderData(1, boost::any(WString::fromUTF8("User")));
     mModel->setHeaderData(2, boost::any(WString::fromUTF8("MRID")));
@@ -71,6 +73,7 @@ ResultsTable::ResultsTable(WContainerWidget *parent) :
     mModel->setHeaderData(7, boost::any(WString::fromUTF8("Manufacturer")));
     mModel->setHeaderData(8, boost::any(WString::fromUTF8("Model")));
     mModel->setHeaderData(9, boost::any(WString::fromUTF8("Software Ver")));
+    mModel->setHeaderData(10, boost::any(WString::fromUTF8("Pipeline")));
     mModel->invisibleRootItem()->setRowCount(0);
 
     mTreeView = new WTreeView();
@@ -78,6 +81,7 @@ ResultsTable::ResultsTable(WContainerWidget *parent) :
     mTreeView->setAlternatingRowColors(true);
     mTreeView->setSelectionMode(SingleSelection);
     mTreeView->doubleClicked().connect(SLOT(this, ResultsTable::jobSelected));
+    mTreeView->clicked().connect(SLOT(this, ResultsTable::jobClicked));
 
     WVBoxLayout *layout = new WVBoxLayout();
     layout->addWidget(mTreeView);
@@ -137,12 +141,34 @@ void ResultsTable::jobSelected(const WModelIndex& item)
 
     boost::any d = mSortFilterProxyModel->data(modelRow, 0, UserRole);
     boost::any d1 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 1);
-    if (!d.empty() && !d1.empty())
+    boost::any d2 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 2);
+    if (!d.empty() && !d1.empty() && !d2.empty())
     {
         WString clusterCommand = boost::any_cast<WString>(d);
         WString metaScript = boost::any_cast<WString>(d1);
+        WString arguments = boost::any_cast<WString>(d2);
 
-        mResultSelected.emit(clusterCommand.toUTF8(), metaScript.toUTF8());
+        mResultSelected.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8());
+    }
+}
+
+///
+//  Called when item is selected form list [slot]
+//
+void ResultsTable::jobClicked(const WModelIndex& item)
+{
+    int modelRow = item.row();
+
+    boost::any d = mSortFilterProxyModel->data(modelRow, 0, UserRole);
+    boost::any d1 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 1);
+    boost::any d2 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 2);
+    if (!d.empty() && !d1.empty() && !d2.empty())
+    {
+        WString clusterCommand = boost::any_cast<WString>(d);
+        WString metaScript = boost::any_cast<WString>(d1);
+        WString arguments = boost::any_cast<WString>(d2);
+
+        mResultClicked.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8());
     }
 }
 
@@ -221,6 +247,7 @@ bool ResultsTable::populateResultsTable()
         // Set extended (not for display) data
         setDataColumn(clusterJobNode, "Command", row, 0, UserRole);
         setDataColumn(clusterJobNode, "MetaScript", row, 0, UserRole + 1);
+        setDataColumn(clusterJobNode, "Arguments", row, 0, UserRole + 2);
 
         // Set display data
         setDataColumn(clusterJobNode, "User", row, 1);
@@ -232,6 +259,7 @@ bool ResultsTable::populateResultsTable()
         setDataColumn(clusterJobNode, "ScannerManufacturer", row, 7);
         setDataColumn(clusterJobNode, "ScannerModel", row, 8);
         setDataColumn(clusterJobNode, "SoftwareVer", row, 9);
+        setDataColumn(clusterJobNode, "MetaScript", row, 10);
     }
 
     fclose(fp);
@@ -257,6 +285,8 @@ void ResultsTable::setDataColumn(mxml_node_t *node, const char* name, int row, i
         }
     }
 }
+
+
 
 
 

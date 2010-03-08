@@ -12,6 +12,7 @@
 #include "PipelineApp.h"
 #include "ResultsPage.h"
 #include "ResultsTable.h"
+#include "PipelineArgTable.h"
 #include "ConfigOptions.h"
 #include "MRIBrowser.h"
 #include "MonitorLogTab.h"
@@ -88,12 +89,20 @@ ResultsPage::ResultsPage(const MRIBrowser *mriBrowser, WContainerWidget *parent)
     userBox->setColumnStretch(6, 1);
     userBox->setColumnStretch(7, 3);
 
+    mPipelineArgTable = new PipelineArgTable();
+    mPipelineArgTable->setMinimumSize(WLength(1000, WLength::Pixel),
+                                      WLength(150, WLength::Pixel));
+    mPipelineArgTable->setMaximumSize(WLength(1000, WLength::Pixel),
+                                      WLength(150, WLength::Pixel));
+
 
     WGridLayout *browserLayout = new WGridLayout();
     browserLayout->addLayout(userBox, 0, 0);
     browserLayout->addWidget(mResultsTable, 1, 0);
+    browserLayout->addWidget(mPipelineArgTable, 2, 0);
     browserLayout->setRowStretch(0, -1);
     browserLayout->setRowStretch(1, 1);
+    browserLayout->setRowStretch(2, -1);
     browserContainer->setLayout(browserLayout);
 
 
@@ -126,6 +135,7 @@ ResultsPage::ResultsPage(const MRIBrowser *mriBrowser, WContainerWidget *parent)
     mSearchPushButton->clicked().connect(SLOT(this, ResultsPage::searchPushed));
     clearButton->clicked().connect(SLOT(this, ResultsPage::clearPushed));
     mResultsTable->resultSelected().connect(SLOT(this, ResultsPage::resultSelected));
+    mResultsTable->resultClicked().connect(SLOT(this, ResultsPage::resultClicked));
     mBackButton->clicked().connect(SLOT(this, ResultsPage::backPushed));
     refreshButton->clicked().connect(SLOT(this, ResultsPage::refreshClicked));
 
@@ -262,9 +272,17 @@ void ResultsPage::backPushed()
 
 
 ///
-/// New result selected (double click) [slot]
+//  New result clicked (single click) [slot]
+//
+void ResultsPage::resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments)
+{
+    mPipelineArgTable->setScript(metaScript, arguments);
+}
+
 ///
-void ResultsPage::resultSelected(std::string clusterShFile, std::string metaScript)
+//  New result selected (double click) [slot]
+//
+void ResultsPage::resultSelected(std::string clusterShFile, std::string metaScript, std::string arguments)
 {
     std::string jobSelectedFile = path(clusterShFile).branch_path().string() + "/" + metaScript;
     mMonitorLogTab->jobSelectedChanged(jobSelectedFile);
