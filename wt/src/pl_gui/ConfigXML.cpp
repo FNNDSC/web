@@ -186,7 +186,6 @@ void ConfigXML::translateScriptArgs(WStandardItemModel *model, const std::string
                 std::list<OptionArgNode>::iterator iter = (*optionMap)[tag]->mOptionArgs.begin();
                 while (iter != (*optionMap)[tag]->mOptionArgs.end())
                 {
-                    WApplication::instance()->log("debug") << "   (" << iter->mTag << "," << arg << ")";
                     if (iter->mTag == arg)
                     {
                         options.push_back(new WStandardItem((*optionMap)[tag]->mDesc));
