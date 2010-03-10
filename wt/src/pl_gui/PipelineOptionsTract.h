@@ -69,9 +69,9 @@ public:
 private:
 
     ///
-    ///  FA Volume mask checkbox clicked [slot]
+    ///  Volume mask 2 checkbox clicked [slot]
     ///
-    void volumeMaskClicked();
+    void volumeMask2Clicked();
 
     ///
     ///  B0 Volumes checkbox clicked [slot]
@@ -102,23 +102,38 @@ private:
     /// Image model
     WComboBox *mImageModelComboBox;
 
-    /// Checkbox for whether to use FA volume as mask filter
-    WCheckBox *mVolumeMaskCheckBox;
-
     /// Mask volume combo box
-    WComboBox *mVolumeMaskComboBox;
+    WComboBox *mVolumeMask1ComboBox;
 
     /// Volume mask threshold
-    WLineEdit *mLowerThresholdLineEdit;
+    WLineEdit *mLowerThreshold1LineEdit;
 
     /// Mask Lower Threshold label
-    WLabel *mLowerThresholdLabel;
+    WLabel *mLowerThreshold1Label;
 
     /// Volume mask threshold
-    WLineEdit *mUpperThresholdLineEdit;
+    WLineEdit *mUpperThreshold1LineEdit;
 
     /// Mask Upper Threshold label
-    WLabel *mUpperThresholdLabel;
+    WLabel *mUpperThreshold1Label;
+
+    /// Checkbox for whether to use FA volume as mask filter
+    WCheckBox *mVolumeMask2CheckBox;
+
+    /// Mask volume combo box
+    WComboBox *mVolumeMask2ComboBox;
+
+    /// Volume mask threshold
+    WLineEdit *mLowerThreshold2LineEdit;
+
+    /// Mask Lower Threshold label
+    WLabel *mLowerThreshold2Label;
+
+    /// Volume mask threshold
+    WLineEdit *mUpperThreshold2LineEdit;
+
+    /// Mask Upper Threshold label
+    WLabel *mUpperThreshold2Label;
 
     /// Upload Gradient file check box
     WCheckBox *mGradientFileCheckBox;

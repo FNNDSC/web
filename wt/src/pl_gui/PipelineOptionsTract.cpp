@@ -73,54 +73,104 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     processingBox->setStyleClass("optiongroupdiv");
     WVBoxLayout *processingBoxLayout = new WVBoxLayout();
 
+    // Eddy Current Correction
     mEddyCurrentCheckBox = new WCheckBox("Perform Eddy Current Correction (ECC)");
-    mVolumeMaskCheckBox = new WCheckBox("");
-    mVolumeMaskComboBox = new WComboBox();
-    mVolumeMaskComboBox->addItem("FA");
-    mVolumeMaskComboBox->addItem("ADC");
-    mVolumeMaskComboBox->setToolTip("Set the volume (FA or ADC) that will be used as a mask filter.");
+
+
+    /////////////////////////////////
+    // Volume Mask 1
+    /////////////////////////////////
+    mVolumeMask1ComboBox = new WComboBox();
+    mVolumeMask1ComboBox->addItem("DWI");
+    mVolumeMask1ComboBox->addItem("FA");
+    mVolumeMask1ComboBox->addItem("ADC");
+    mVolumeMask1ComboBox->setToolTip("Set the volume (DWI, FA or ADC) that will be used as a mask 1 filter.");
     WText *useText =  new WText("Use");
-    WText *maskText =  new WText("volume as mask filter?");
+    WText *maskText =  new WText("volume as mask filter:");
     maskText->setWordWrap(false);
 
-    WGridLayout *volumeMaskLayout = new WGridLayout();
-    volumeMaskLayout->addWidget(mVolumeMaskCheckBox, 0, 0, AlignMiddle);
-    volumeMaskLayout->addWidget(useText, 0, 1, AlignMiddle);
-    volumeMaskLayout->addWidget(mVolumeMaskComboBox, 0, 2, AlignMiddle);
-    volumeMaskLayout->addWidget(maskText, 0, 3, AlignMiddle);
-    volumeMaskLayout->setColumnStretch(4, 1);
+    WGridLayout *volumeMask1Layout = new WGridLayout();
+    volumeMask1Layout->addWidget(useText, 0, 0, AlignMiddle);
+    volumeMask1Layout->addWidget(mVolumeMask1ComboBox, 0, 1, AlignMiddle);
+    volumeMask1Layout->addWidget(maskText, 0, 2, AlignMiddle);
+    volumeMask1Layout->setColumnStretch(3, 1);
 
-    mLowerThresholdLineEdit = new WLineEdit("0.0");
-    mUpperThresholdLineEdit = new WLineEdit("1.0");
+    mLowerThreshold1LineEdit = new WLineEdit("0.0");
+    mUpperThreshold1LineEdit = new WLineEdit("1.0");
     WDoubleValidator *validator = new WDoubleValidator();
     validator->setRange(0.0, 1.0);
-    mLowerThresholdLineEdit->setValidator(validator);
-    mUpperThresholdLineEdit->setValidator(validator);
+    mLowerThreshold1LineEdit->setValidator(validator);
+    mUpperThreshold1LineEdit->setValidator(validator);
 
-    mLowerThresholdLineEdit->setToolTip("Enter a lower threshold value between 0.0 and 1.0. A value of 0.0 will use the entire mask volume.");
-    mUpperThresholdLineEdit->setToolTip("Enter an upper threshold value between 0.0 and 1.0. A value of 1.0 will use the entire mask volume.");
-    mLowerThresholdLabel = new WLabel("Lower threshold value for mask:");
-    mUpperThresholdLabel = new WLabel("Upper threshold value for mask:");
+    mLowerThreshold1LineEdit->setToolTip("Enter a lower threshold value between 0.0 and 1.0. A value of 0.0 will use the entire mask volume.");
+    mUpperThreshold1LineEdit->setToolTip("Enter an upper threshold value between 0.0 and 1.0. A value of 1.0 will use the entire mask volume.");
+    mLowerThreshold1Label = new WLabel("Lower threshold value for mask:");
+    mUpperThreshold1Label = new WLabel("Upper threshold value for mask:");
 
-    WGridLayout *lowerThresholdLayout = new WGridLayout();
-    WGridLayout *upperThresholdLayout = new WGridLayout();
-    lowerThresholdLayout->addWidget(mLowerThresholdLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
-    lowerThresholdLayout->addWidget(mLowerThresholdLineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
-    upperThresholdLayout->addWidget(mUpperThresholdLabel, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
-    upperThresholdLayout->addWidget(mUpperThresholdLineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    WGridLayout *lowerThreshold1Layout = new WGridLayout();
+    WGridLayout *upperThreshold1Layout = new WGridLayout();
+    lowerThreshold1Layout->addWidget(mLowerThreshold1Label, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    lowerThreshold1Layout->addWidget(mLowerThreshold1LineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    upperThreshold1Layout->addWidget(mUpperThreshold1Label, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    upperThreshold1Layout->addWidget(mUpperThreshold1LineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
 
-    lowerThresholdLayout->setColumnStretch(1, 1);
-    upperThresholdLayout->setColumnStretch(1, 1);
+    lowerThreshold1Layout->setColumnStretch(1, 1);
+    upperThreshold1Layout->setColumnStretch(1, 1);
 
-    WVBoxLayout *vboxThresholdLayout = new WVBoxLayout();
-    vboxThresholdLayout->addLayout(volumeMaskLayout);
-    vboxThresholdLayout->addLayout(lowerThresholdLayout);
-    vboxThresholdLayout->addLayout(upperThresholdLayout);
-    vboxThresholdLayout->addSpacing(WLength(20.0, WLength::Pixel));
+    WVBoxLayout *vboxThreshold1Layout = new WVBoxLayout();
+    vboxThreshold1Layout->addLayout(volumeMask1Layout);
+    vboxThreshold1Layout->addLayout(lowerThreshold1Layout);
+    vboxThreshold1Layout->addLayout(upperThreshold1Layout);
+    vboxThreshold1Layout->addSpacing(WLength(20.0, WLength::Pixel));
 
-    WGridLayout *comboBoxLayout = new WGridLayout();
+    /////////////////////////////////
+    // Volume Mask 2
+    /////////////////////////////////
+    mVolumeMask2ComboBox = new WComboBox();
+    mVolumeMask2CheckBox = new WCheckBox();
+    mVolumeMask2ComboBox->addItem("DWI");
+    mVolumeMask2ComboBox->addItem("FA");
+    mVolumeMask2ComboBox->addItem("ADC");
+    mVolumeMask2ComboBox->setToolTip("Set the volume (DWI, FA or ADC) that will be used as a mask 2 filter.");
+    WText *mask2Text =  new WText("volume as second mask filter?");
+    mask2Text->setWordWrap(false);
+
+    WGridLayout *volumeMask2Layout = new WGridLayout();
+    volumeMask2Layout->addWidget(mVolumeMask2CheckBox, 0, 0, AlignMiddle);
+    volumeMask2Layout->addWidget(useText, 0, 1, AlignMiddle);
+    volumeMask2Layout->addWidget(mVolumeMask2ComboBox, 0, 2, AlignMiddle);
+    volumeMask2Layout->addWidget(mask2Text, 0, 3, AlignMiddle);
+    volumeMask2Layout->setColumnStretch(4, 1);
+
+    mLowerThreshold2LineEdit = new WLineEdit("0.0");
+    mUpperThreshold2LineEdit = new WLineEdit("1.0");
+    mLowerThreshold2LineEdit->setValidator(validator);
+    mUpperThreshold2LineEdit->setValidator(validator);
+
+    mLowerThreshold2LineEdit->setToolTip("Enter a lower threshold value between 0.0 and 1.0. A value of 0.0 will use the entire mask volume.");
+    mUpperThreshold2LineEdit->setToolTip("Enter an upper threshold value between 0.0 and 1.0. A value of 1.0 will use the entire mask volume.");
+    mLowerThreshold2Label = new WLabel("Lower threshold value for mask 2:");
+    mUpperThreshold2Label = new WLabel("Upper threshold value for mask 2:");
+
+    WGridLayout *lowerThreshold2Layout = new WGridLayout();
+    WGridLayout *upperThreshold2Layout = new WGridLayout();
+    lowerThreshold2Layout->addWidget(mLowerThreshold2Label, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    lowerThreshold2Layout->addWidget(mLowerThreshold2LineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    upperThreshold2Layout->addWidget(mUpperThreshold2Label, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    upperThreshold2Layout->addWidget(mUpperThreshold2LineEdit, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+
+    lowerThreshold2Layout->setColumnStretch(1, 1);
+    upperThreshold2Layout->setColumnStretch(1, 1);
+
+    WVBoxLayout *vboxThreshold2Layout = new WVBoxLayout();
+    vboxThreshold2Layout->addLayout(volumeMask2Layout);
+    vboxThreshold2Layout->addLayout(lowerThreshold2Layout);
+    vboxThreshold2Layout->addLayout(upperThreshold2Layout);
+    vboxThreshold2Layout->addSpacing(WLength(20.0, WLength::Pixel));
+
 
     // Reconstruction algorithm
+    WGridLayout *comboBoxLayout = new WGridLayout();
     mReconAlgorithmComboBox = new WComboBox();
     mReconAlgorithmComboBox->addItem("FACT");
     mReconAlgorithmComboBox->addItem("2nd Order Runga-Kutta");
@@ -139,7 +189,8 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     // Processing group box layout
     processingBoxLayout->addWidget(mEddyCurrentCheckBox);
     processingBoxLayout->addSpacing(WLength(20.0, WLength::Pixel));
-    processingBoxLayout->addLayout(vboxThresholdLayout);
+    processingBoxLayout->addLayout(vboxThreshold1Layout);
+    processingBoxLayout->addLayout(vboxThreshold2Layout);
     processingBoxLayout->addLayout(comboBoxLayout);
     processingBox->setLayout(processingBoxLayout, AlignTop);
 
@@ -205,7 +256,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 
 
     // Connection
-    mVolumeMaskCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::volumeMaskClicked));
+    mVolumeMask2CheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::volumeMask2Clicked));
     mB0VolumesCheckBox->clicked().connect(SLOT(this, PipelineOptionsTract::b0VolumeClicked));
     mGradientFileUpload->changed().connect(SLOT(mGradientFileUpload, WFileUpload::upload));
     mGradientFileUpload->uploaded().connect(SLOT(this, PipelineOptionsTract::fileUploaded));
@@ -239,14 +290,19 @@ void PipelineOptionsTract::resetAll()
     }
 
     mEddyCurrentCheckBox->setChecked(false);
-    mVolumeMaskCheckBox->setChecked(false);
-    mVolumeMaskComboBox->setCurrentIndex(0);
-    mLowerThresholdLineEdit->setText("0.0");
-    mLowerThresholdLineEdit->disable();
-    mLowerThresholdLabel->disable();
-    mUpperThresholdLineEdit->setText("1.0");
-    mUpperThresholdLineEdit->disable();
-    mUpperThresholdLabel->disable();
+    mVolumeMask1ComboBox->setCurrentIndex(0);
+    mLowerThreshold1LineEdit->setText("0.0");
+    mUpperThreshold1LineEdit->setText("1.0");
+
+    mVolumeMask2ComboBox->setCurrentIndex(1);
+    mVolumeMask2CheckBox->setChecked(false);
+    mLowerThreshold2LineEdit->setText("0.0");
+    mLowerThreshold2LineEdit->disable();
+    mUpperThreshold2LineEdit->setText("1.0");
+    mUpperThreshold2LineEdit->disable();
+    mLowerThreshold2Label->disable();
+    mUpperThreshold2Label->disable();
+
 
     mB0VolumesCheckBox->setChecked(false);
     mB0VolumesLineEdit->setText("1");
@@ -268,9 +324,27 @@ bool PipelineOptionsTract::validate() const
     if (!PipelineOptions::validate())
         return false;
 
-    if (mVolumeMaskCheckBox->isChecked())
+    if (!mLowerThreshold1LineEdit->validate())
     {
-        if (!mLowerThresholdLineEdit->validate())
+        mMessageBox->setWindowTitle("Invalid Input");
+        mMessageBox->setText("Lower threshold value for mask must be in the range [0.0, 1.0].  Please correct it.");
+        mMessageBox->setButtons(Wt::Ok);
+        mMessageBox->show();
+        return false;
+    }
+
+    if (!mUpperThreshold1LineEdit->validate())
+    {
+        mMessageBox->setWindowTitle("Invalid Input");
+        mMessageBox->setText("Upper threshold value for mask must be in the range [0.0, 1.0].  Please correct it.");
+        mMessageBox->setButtons(Wt::Ok);
+        mMessageBox->show();
+        return false;
+    }
+
+    if (mVolumeMask2CheckBox->isChecked())
+    {
+        if (!mLowerThreshold2LineEdit->validate())
         {
             mMessageBox->setWindowTitle("Invalid Input");
             mMessageBox->setText("Lower threshold value for mask must be in the range [0.0, 1.0].  Please correct it.");
@@ -279,7 +353,7 @@ bool PipelineOptionsTract::validate() const
             return false;
         }
 
-        if (!mUpperThresholdLineEdit->validate())
+        if (!mUpperThreshold2LineEdit->validate())
         {
             mMessageBox->setWindowTitle("Invalid Input");
             mMessageBox->setText("Upper threshold value for mask must be in the range [0.0, 1.0].  Please correct it.");
@@ -359,11 +433,15 @@ std::string PipelineOptionsTract::getCommandLineString() const
         args += " -I hardi";
     }
 
-    if (mVolumeMaskCheckBox->isChecked())
+    args += " --m1 " + mVolumeMask1ComboBox->currentText().toUTF8();
+    args += " --m1-lower-threshold " + mLowerThreshold1LineEdit->text().toUTF8();
+    args += " --m1-upper-threshold " + mUpperThreshold1LineEdit->text().toUTF8();
+
+    if (mVolumeMask2CheckBox->isChecked())
     {
-        args += " -i " + mVolumeMaskComboBox->currentText().toUTF8();
-        args += " -F " + mLowerThresholdLineEdit->text().toUTF8();
-        args += " -u " + mUpperThresholdLineEdit->text().toUTF8();
+        args += " --m2 " + mVolumeMask2ComboBox->currentText().toUTF8();
+        args += " --m2-lower-threshold " + mLowerThreshold2LineEdit->text().toUTF8();
+        args += " --m2-upper-threshold " + mUpperThreshold2LineEdit->text().toUTF8();
     }
 
     if (mGradientFileCheckBox->isChecked())
@@ -401,27 +479,6 @@ std::string PipelineOptionsTract::getCommandLineString() const
 //
 
 ///
-//  FA Volume mask checkbox clicked [slot]
-//
-void PipelineOptionsTract::volumeMaskClicked()
-{
-    if (mVolumeMaskCheckBox->isChecked())
-    {
-        mLowerThresholdLineEdit->enable();
-        mLowerThresholdLabel->enable();
-        mUpperThresholdLineEdit->enable();
-        mUpperThresholdLabel->enable();
-    }
-    else
-    {
-        mLowerThresholdLineEdit->disable();
-        mLowerThresholdLabel->disable();
-        mUpperThresholdLineEdit->disable();
-        mUpperThresholdLabel->disable();
-    }
-}
-
-///
 //  B0 Volumes checkbox clicked [slot]
 //
 void PipelineOptionsTract::b0VolumeClicked()
@@ -435,6 +492,27 @@ void PipelineOptionsTract::b0VolumeClicked()
     {
         mB0VolumesLineEdit->disable();
         mB0VolumesLabel->disable();
+    }
+}
+
+///
+//  Volume mask 2 checkbox clicked [slot]
+//
+void PipelineOptionsTract::volumeMask2Clicked()
+{
+    if (mVolumeMask2CheckBox->isChecked())
+    {
+        mLowerThreshold2LineEdit->enable();
+        mLowerThreshold2Label->enable();
+        mUpperThreshold2LineEdit->enable();
+        mUpperThreshold2Label->enable();
+    }
+    else
+    {
+        mLowerThreshold2LineEdit->disable();
+        mLowerThreshold2Label->disable();
+        mUpperThreshold2LineEdit->disable();
+        mUpperThreshold2Label->disable();
     }
 }
 

@@ -88,7 +88,6 @@ bool MRIFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& sour
             {
                 if (curSearchPattern != "" && curSearchPattern != " " && curSearchPattern != "\n")
                 {
-                    WApplication::instance()->log("debug") << "SEARCH: '" << curSearchPattern << "'";
                     WRegExp regExp(curSearchPattern);
                     bool searchResult = regExp.exactMatch(s) || boost::algorithm::icontains(searchTarget, curSearchPattern);
                     if (searchResult)

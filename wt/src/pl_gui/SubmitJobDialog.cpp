@@ -106,6 +106,10 @@ void SubmitJobDialog::setCommandLine(const std::string& commandLine)
 {
 	mCommandLine = commandLine;
 	mCommandLineEdit->setText(mCommandLine);
+
+	// Reset to default state
+	mAdvancedButton->enable();
+	mCommandLineEdit->disable();
 }
 
 ///

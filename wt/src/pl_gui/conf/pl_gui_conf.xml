@@ -39,14 +39,26 @@
           <Option tag="-I" desc="Image Model" notgiven="DTI">
             <OptionArg tag="hardi" desc="HARDI" />
           </Option>
-          <Option tag="-i" desc="Mask Volume" notgiven="" >
+          <Option tag="--m1" desc="Mask 1 Volume" notgiven="" >
+            <OptionArg tag="DWI" desc="DWI" />            
             <OptionArg tag="FA" desc="FA" />
             <OptionArg tag="ADC" desc="ADC" />
           </Option>
-          <Option tag="-F" desc="Mask Lower Threshold" notgiven="" >
+          <Option tag="--m1-lower-threshold" desc="Mask 1 Lower Threshold" notgiven="" >
             <OptionArg tag="*" desc="*" />            
           </Option>
-          <Option tag="-u" desc="Mask Upper Threshold" notgiven="" >
+          <Option tag="--m1-upper-threshold" desc="Mask 1 Upper Threshold" notgiven="" >
+            <OptionArg tag="*" desc="*" />            
+          </Option>
+          <Option tag="--m2" desc="Mask 2 Volume" notgiven="" >
+            <OptionArg tag="DWI" desc="DWI" />            
+            <OptionArg tag="FA" desc="FA" />
+            <OptionArg tag="ADC" desc="ADC" />
+          </Option>
+          <Option tag="--m2-lower-threshold" desc="Mask 2 Lower Threshold" notgiven="" >
+            <OptionArg tag="*" desc="*" />            
+          </Option>
+          <Option tag="--m2-upper-threshold" desc="Mask 2 Upper Threshold" notgiven="" >
             <OptionArg tag="*" desc="*" />            
           </Option>            
           <Option tag="-B" desc="B0 Volumes" notgiven="" >
