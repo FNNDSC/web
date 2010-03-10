@@ -263,6 +263,7 @@ bool ResultsTable::populateResultsTable()
     }
 
     fclose(fp);
+    mxmlRelease(tree);
 
     return result;
 }

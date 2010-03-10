@@ -48,7 +48,7 @@ ConfigXML::~ConfigXML()
     while (mapIter != mPipelineMap.end())
     {
         std::map<std::string, OptionNode*>::iterator optionIter = (mapIter->second)->mOptionMap.begin();
-        while (optionIter != (mapIter->second)->mOptionMap.begin())
+        while (optionIter != (mapIter->second)->mOptionMap.end())
         {
             delete optionIter->second;
             optionIter++;

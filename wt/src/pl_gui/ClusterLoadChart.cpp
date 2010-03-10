@@ -260,7 +260,7 @@ void ClusterLoadChart::updateChart()
                 }
                 catch(...)
                 {
-                    WApplication::instance()->log("warn") << "Could not cast value from file " <<  getConfigOptionsPtrTS(mApp)->GetCPUUsageFile() <<
+                    mApp->log("warn") << "Could not cast value from file " <<  getConfigOptionsPtrTS(mApp)->GetCPUUsageFile() <<
                                                             " : " << token;
                     continue;
                 }

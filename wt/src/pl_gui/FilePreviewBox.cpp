@@ -118,6 +118,11 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
 FilePreviewBox::~FilePreviewBox()
 {
     delete mDownloadFileResource;
+    if (mImageResource != NULL)
+    {
+        delete mImageResource;
+        mImageResource = NULL;
+    }
 }
 
 
