@@ -64,13 +64,41 @@ MRIFilterProxyModel::~MRIFilterProxyModel()
 }
 
 ///
+//  Set filter file - a file that specifies a set of patterns to filter the list of MRIs
+//
+void MRIFilterProxyModel::setFilterFile(const std::string& path)
+{
+    mFilterFileList.clear();
+
+    std::ifstream inFile(path.c_str(), ios::in);
+    if (!inFile.is_open())
+    {
+        WApplication::instance()->log("warning") << "Could not open file for reading: " << path;
+        return;
+    }
+
+    while (!inFile.eof())
+    {
+        char buf[1024] = {0};
+        inFile.getline( buf, sizeof(buf));
+
+        istringstream istr( string(buf), ios_base::out);
+
+        std::string curFilter;
+        while(getline(istr, curFilter, ' '))
+        {
+            mFilterFileList.push_back(curFilter);
+        }
+    }
+
+    inFile.close();
+}
+
+///
 // Custom filter, override base class implementation
 //
 bool MRIFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& sourceParent) const
 {
-    if (filterRegExp().empty())
-        return true;
-
     for(int col = 0; col < sourceModel()->columnCount(); col++)
     {
         boost::any data = sourceModel()->index(sourceRow, col, sourceParent).data(filterRole());
@@ -80,10 +108,41 @@ bool MRIFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& sour
             WString s = asString(data);
             std::string searchTarget = s.toUTF8();
 
+            // First, see if it matches anything in the file filter list
+            bool passesFilterFile = false;
+            std::string curSearchPattern;
+            std::list<std::string>::const_iterator iter = mFilterFileList.begin();
+
+            if (iter == mFilterFileList.end())
+            {
+                passesFilterFile = true;
+            }
+            else
+            {
+                while(iter != mFilterFileList.end())
+                {
+                    curSearchPattern = *iter;
+                    WRegExp regExp(curSearchPattern);
+                    bool searchResult = regExp.exactMatch(s) || boost::algorithm::icontains(searchTarget, curSearchPattern);
+                    if (searchResult)
+                    {
+                        passesFilterFile = true;
+                        break;
+                    }
+
+                    iter++;
+                }
+            }
+
+            if (passesFilterFile == false)
+                return false;
+
+            if (filterRegExp().empty())
+                return true;
+
             // Break search pattern into multiple tokens separated by spaces
             std::string searchPattern = filterRegExp().toUTF8();
             istringstream istr(searchPattern, ios_base::out);
-            std::string curSearchPattern;
             while (getline(istr, curSearchPattern, ' '))
             {
                 if (curSearchPattern != "" && curSearchPattern != " " && curSearchPattern != "\n")
@@ -132,6 +191,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mSortFilterProxyModel->setDynamicSortFilter(true);
     mSortFilterProxyModel->setFilterKeyColumn(0);
     mSortFilterProxyModel->setFilterRole(DisplayRole);
+    mSortFilterProxyModel->setFilterFile(getConfigOptionsPtr()->GetMRIDFilterFile());
 
     mMRITreeView->setModel(mSortFilterProxyModel);
     mMRITreeView->resize(250, WLength::Auto);
@@ -143,11 +203,11 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     // options for email address suggestions
     WSuggestionPopup::Options searchOptions
      = { "<span class=\"highlight\">", // highlightBeginTag
-             "</span>",                    // highlightEndTag
-             ' ',           // listSeparator      (for multiple addresses)
-             " ",        // whitespace
-             " ", // wordSeparators     (within an address)
-             " "           // appendReplacedText (prepare next email address)
+             "</span>",                // highlightEndTag
+             ' ',                      // listSeparator      (for multiple addresses)
+             " ",                      // whitespace
+             " ",                      // wordSeparators     (within an address)
+             " "                       // appendReplacedText (prepare next email address)
        };
 
     WSuggestionPopup *popup

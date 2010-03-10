@@ -56,6 +56,8 @@ public:
     const std::string& GetCPUUsageFile()        const { return mCPUUsageFile; }
     const std::string& GetTopLogFile()          const { return mTopLogFile; }
     const std::string& GetRemoteMatLab()        const { return mRemoteMatLab; }
+    const std::string& GetMRIDFilterFile()      const { return mMRIDFilterFile; }
+
 private:
 
     // Allowable options
@@ -99,6 +101,9 @@ private:
 
     /// Remote MatLAB host
     std::string mRemoteMatLab;
+
+    /// MRI Filter file
+    std::string mMRIDFilterFile;
 };
 
 #endif // CONFIGOPTIONS_H

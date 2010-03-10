@@ -53,6 +53,7 @@ ConfigOptions::ConfigOptions() :
         ("cpuUsageFile",    value<string>(), "CPU Usage File")
         ("topLogFile",      value<string>(), "Top Log file")
         ("remoteMatLab",    value<string>(), "Remote MatLAB hostname")
+        ("mridFilterFile",  value<string>(), "MRI Filter file")
         ;
 }
 
@@ -77,16 +78,15 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
 {
     if (mOptionDesc == NULL)
     {
-        cerr << "Missing options description." << endl;
+        WApplication::instance()->log("error") << "Missing options description.";
         return false;
     }
 
     fstream configFile(configPath.c_str(), ios::in);
     if(!configFile.is_open())
     {
-        cerr << "ERROR: Opening file for reading: " << configPath << endl;
+        WApplication::instance()->log("error") << "Opening file for reading: " << configPath;
         return false;
-
     }
 
     try
@@ -160,6 +160,10 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mRemoteMatLab = vm["remoteMatLab"].as<string>();
         }
 
+        if (vm.count("mridFilterFile"))
+        {
+            mMRIDFilterFile = vm["mridFilterFile"].as<string>();
+        }
 
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
@@ -174,12 +178,13 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[CPU Usage file:] " << mCPUUsageFile;
         WApplication::instance()->log("info") << "[Top log file:] " << mTopLogFile;
         WApplication::instance()->log("info") << "[Remote MatLAB:] " << mRemoteMatLab;
+        WApplication::instance()->log("info") << "[MRID Filter File:] " << mMRIDFilterFile;
 
         configFile.close();
     }
     catch(...)
     {
-        cerr << "Error parsing config file: " << configPath << endl;
+        WApplication::instance()->log("error") << "Error parsing config file: " << configPath;
         return false;
     }
 

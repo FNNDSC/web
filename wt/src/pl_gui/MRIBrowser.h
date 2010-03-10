@@ -18,6 +18,7 @@
 #include <Wt/WSortFilterProxyModel>
 
 #include <string>
+#include <list>
 
 namespace Wt
 {
@@ -43,12 +44,21 @@ public:
     ///
     virtual ~MRIFilterProxyModel();
 
+    ///
+    /// Set filter file - a file that specifies a set of patterns to filter the list of MRIs
+    ///
+    void setFilterFile(const std::string& path);
+
 protected:
 
     ///
     /// Custom filter, override base class implementation
     ///
     virtual bool filterAcceptRow(int sourceRow, const WModelIndex& sourceParent) const;
+
+    /// List of filters specified from file
+    std::list<std::string> mFilterFileList;
+
 };
 
 ///
@@ -119,7 +129,7 @@ private:
     WStandardItemModel *mMRIModel;
 
     /// Sort-filter proxy model
-    WSortFilterProxyModel *mSortFilterProxyModel;
+    MRIFilterProxyModel *mSortFilterProxyModel;
 
     /// Search button
     WPushButton *mSearchButton;
