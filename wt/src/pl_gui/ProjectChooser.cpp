@@ -122,14 +122,22 @@ void ProjectChooser::resetAll()
 
     std::string userProjectDir = getConfigOptionsPtr()->GetProjectDir() + "/" +
                                  getCurrentUserName();
-    for(directory_iterator dirIter(userProjectDir); dirIter != directory_iterator(); ++dirIter)
-    {
-        const string& extension = dirIter->path().extension();
 
-        if (extension == ".xml")
+    try
+    {
+        for(directory_iterator dirIter(userProjectDir); dirIter != directory_iterator(); ++dirIter)
         {
-            mProjectSelectionBox->addItem(dirIter->path().string());
+            const string& extension = dirIter->path().extension();
+
+            if (extension == ".xml")
+            {
+                mProjectSelectionBox->addItem(dirIter->path().string());
+            }
         }
+    }
+    catch(...)
+    {
+        // Empty directory, which is fine
     }
 }
 
