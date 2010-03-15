@@ -66,6 +66,12 @@ div.Wt-popupmenu .separator {
     border: 1px solid #C3D9FF;
 }
 
+.projectdiv {
+    background-color: #00539b;
+    color: #e0ecff;
+    font-size: 12px;
+}
+
 
 .Wt-treeview {
     background-color: white;

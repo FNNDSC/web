@@ -43,6 +43,7 @@ ConfigOptions::ConfigOptions() :
         ("dicomDir",        value<string>(), "Base DICOM directory")
         ("outDir",          value<string>(), "Base output directory")
         ("outGradientDir",  value<string>(), "Gradient output directory")
+        ("projectDir",      value<string>(), "Project directory")
         ("scriptDir",       value<string>(), "Base scripts directory")
         ("seriesListTract", value<string>(), "Series list tractography (comma separated)")
         ("seriesListFS",    value<string>(), "Series list freesurfer (comma separated)")
@@ -110,6 +111,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mOutGradientDir = vm["outGradientDir"].as<string>();
         }
 
+        if (vm.count("projectDir"))
+        {
+            mProjectDir = vm["projectDir"].as<string>();
+        }
+
         if (vm.count("seriesListTract"))
         {
             mSeriesListTract = vm["seriesListTract"].as<string>();
@@ -168,6 +174,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
         WApplication::instance()->log("info") << "[Output Gradient Dir:] " << mOutGradientDir;
+        WApplication::instance()->log("info") << "[Project Dir:] " << mProjectDir;
         WApplication::instance()->log("info") << "[Script Dir:] " << mScriptDir;
         WApplication::instance()->log("info") << "[SeriesListTract:] " << mSeriesListTract;
         WApplication::instance()->log("info") << "[SeriesListFS:] " << mSeriesListFS;

@@ -52,9 +52,6 @@ public:
     ///
     Wt::Signal<std::string, std::string>& userLoggedIn() { return mUserLoggedIn; }
 
-    ///
-    /// Get current u
-
 private:
 
     ///

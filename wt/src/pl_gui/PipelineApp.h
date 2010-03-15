@@ -19,7 +19,8 @@
 
 namespace Wt
 {
-	class WStackedWidget;
+    class WLabel;
+    class WStackedWidget;
 	class WContainerWidget;
 }
 
@@ -30,6 +31,7 @@ class ConfigOptions;
 class ConfigXML;
 class SubjectPage;
 class ResultsPage;
+class ProjectPage;
 
 ///
 /// \class PipelineApp
@@ -105,6 +107,16 @@ private:
     ///
     void userLoggedIn(std::string userName, std::string email);
 
+    ///
+    ///  Project chosen [slot]
+    ///
+    void projectChosen(std::string path);
+
+    ///
+    ///  Go home [slot]
+    ///
+    void goHome();
+
 private:
 
     typedef enum
@@ -124,6 +136,9 @@ private:
     /// Subject page
     SubjectPage *mSubjectPage;
 
+    /// Project Page
+    ProjectPage *mProjectPage;
+
     /// Configuration options
     ConfigOptions *mConfigOptions;
 
@@ -141,6 +156,9 @@ private:
 
     /// Current E-mail
     std::string mCurrentEmail;
+
+    /// Current project label
+    WLabel *mCurrentProjectLabel;
 
 };
 

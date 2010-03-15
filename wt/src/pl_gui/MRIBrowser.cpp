@@ -12,6 +12,7 @@
 #include "PipelineApp.h"
 #include "MRIBrowser.h"
 #include "ConfigOptions.h"
+#include "ProjectXML.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -41,6 +42,35 @@ using namespace Wt;
 using namespace std;
 using namespace boost::filesystem;
 
+///
+//  Static constants
+//
+
+// This table maps model roles to whether they can be searched, what XML tag they are read from (and search on),
+// and what description should be displayed.  This table is used heavily by the SearchTerm class.
+const MRIBrowser::MRIField MRIBrowser::mFieldInfo[] =
+{
+    { DisplayRole,                  true,   "PatientID",            "Patient ID"            },  // PATIENT_ID
+    { MRIBrowser::FIRST_SCAN_ROLE,  true,   "Scan",                 "Scan Sequence Name"    },  // SCAN
+    { MRIBrowser::DIR_ROLE,         false,  "Directory",            "Directory"             },  // DIRECTORY
+    { MRIBrowser::AGE_ROLE,         true,   "PatientAge",           "Patient Age"           },  // AGE
+    { MRIBrowser::NAME_ROLE,        true,   "PatientName",          "Patient Name"          },  // NAME
+    { MRIBrowser::SEX_ROLE,         true,   "PatientSex",           "Patient Sex"           },  // SEX
+    { MRIBrowser::BIRTHDAY_ROLE,    true,   "PatientBirthday",      "Patient Birthday"      },  // BIRTHDAY
+    { MRIBrowser::SCANDATE_ROLE,    true,   "ImageScanDate",        "Image Scan Date"       },  // SCANDATE
+    { MRIBrowser::MANUFACTURER_ROLE,true,   "ScannerManufacturer",  "Scanner Manufacturer"  },  // MANUFACTURER
+    { MRIBrowser::MODEL_ROLE,       true,   "ScannerModel",         "Scanner Model"         },  // MODEL
+    { MRIBrowser::SOFTWARE_VER_ROLE,true,   "SoftwareVer",          "Software Version"      },  // SOFTWARE_VER
+};
+
+const MRIBrowser::MRISearchType MRIBrowser::mSearchType[] =
+{
+    { "contains",       "Contains"                      },  // CONTAINS
+    { "equal",          "Is equal to"                   },  // EQUAL
+    { "gtequal",        "Greater than or equal to"      },  // GEQUAL
+    { "ltequal",        "Less than or equal to"         },  // LEQUAL
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  MRIFilterProxyModel
@@ -52,7 +82,8 @@ using namespace boost::filesystem;
 //  Constructor
 //
 MRIFilterProxyModel::MRIFilterProxyModel(WObject *parent) :
-    WSortFilterProxyModel(parent)
+    WSortFilterProxyModel(parent),
+    mNumSearchTerms(0)
 {
 }
 
@@ -68,30 +99,60 @@ MRIFilterProxyModel::~MRIFilterProxyModel()
 //
 void MRIFilterProxyModel::setFilterFile(const std::string& path)
 {
-    mFilterFileList.clear();
+    ProjectXML projectXML;
 
-    std::ifstream inFile(path.c_str(), ios::in);
-    if (!inFile.is_open())
+    for(int i = 0; i < MRIBrowser::NUM_FIELDS; i++)
     {
-        WApplication::instance()->log("warning") << "Could not open file for reading: " << path;
+        mSearchItems[i].clear();
+    }
+    mNumSearchTerms = 0;
+
+    // No file specified, just return
+    if (path == "")
+        return;
+
+    if (!projectXML.loadFromFile(path))
+    {
+        WApplication::instance()->log("error") << "Cound not open/parse project XML file: " << path;
         return;
     }
 
-    while (!inFile.eof())
+    mSearchMatchType = MRIBrowser::ANY;
+    if (projectXML.getSearchMatchType() == "all")
     {
-        char buf[1024] = {0};
-        inFile.getline( buf, sizeof(buf));
-
-        istringstream istr( string(buf), ios_base::out);
-
-        std::string curFilter;
-        while(getline(istr, curFilter, ' '))
-        {
-            mFilterFileList.push_back(curFilter);
-        }
+        mSearchMatchType = MRIBrowser::ALL;
     }
 
-    inFile.close();
+    std::list<ProjectXML::SearchTermNode> searchTerms = projectXML.getSearchTerms();
+    std::list<ProjectXML::SearchTermNode>::iterator iter = searchTerms.begin();
+
+    while(iter != searchTerms.end())
+    {
+        ProjectXML::SearchTermNode* node = &(*iter);
+
+        for(int i = 0; i < MRIBrowser::NUM_FIELDS; i++)
+        {
+            const MRIBrowser::MRIField *field = MRIBrowser::getMRIField(i);
+            if (field != NULL && field->mTagName == node->mField)
+            {
+                for (int j = 0; j < MRIBrowser::NUM_TYPES; j++)
+                {
+                    const MRIBrowser::MRISearchType *search = MRIBrowser::getMRISearchType(j);
+                    if (search != NULL & search->mXMLValue == node->mType)
+                    {
+                        SearchItem newItem;
+                        newItem.mRole = field->mRole;
+                        newItem.mSearchType = (MRIBrowser::MRISearchTypeEnum)j;
+                        newItem.mExpr = node->mExpr;
+                        mSearchItems[i].push_back(newItem);
+                        mNumSearchTerms++;
+                    }
+                }
+            }
+        }
+
+        iter++;
+    }
 }
 
 ///
@@ -99,60 +160,141 @@ void MRIFilterProxyModel::setFilterFile(const std::string& path)
 //
 bool MRIFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& sourceParent) const
 {
-    for(int col = 0; col < sourceModel()->columnCount(); col++)
+    int col = 0;
+    boost::any data = sourceModel()->index(sourceRow, col, sourceParent).data(filterRole());
+
+    if (!data.empty())
     {
-        boost::any data = sourceModel()->index(sourceRow, col, sourceParent).data(filterRole());
+        WString s = asString(data);
+        std::string searchTarget = s.toUTF8();
 
-        if (!data.empty())
+        // First, see if it matches anything in the file filter list
+        bool passesFilterFile;
+        if (mSearchMatchType == MRIBrowser::ANY)
         {
-            WString s = asString(data);
-            std::string searchTarget = s.toUTF8();
+            passesFilterFile = false;
+        }
+        else
+        {
+            passesFilterFile = true;
+        }
 
-            // First, see if it matches anything in the file filter list
-            bool passesFilterFile = false;
-            std::string curSearchPattern;
-            std::list<std::string>::const_iterator iter = mFilterFileList.begin();
-
-            if (iter == mFilterFileList.end())
+        if (mNumSearchTerms == 0)
+        {
+            passesFilterFile = true;
+        }
+        else
+        {
+            for(int i = 0; i < MRIBrowser::NUM_FIELDS; i++)
             {
-                passesFilterFile = true;
-            }
-            else
-            {
-                while(iter != mFilterFileList.end())
+                std::list<SearchItem>::const_iterator iter = mSearchItems[i].begin();
+                while(iter != mSearchItems[i].end())
                 {
-                    curSearchPattern = *iter;
-                    WRegExp regExp(curSearchPattern);
-                    bool searchResult = regExp.exactMatch(s) || boost::algorithm::icontains(searchTarget, curSearchPattern);
-                    if (searchResult)
+                    bool curSearchResult = true;
+                    const SearchItem *searchItem = &(*iter);
+
+                    // Special handling for scan which has multiple entries
+                    if (i == MRIBrowser::SCAN)
                     {
-                        passesFilterFile = true;
-                        break;
+                        // Determine the number of scans
+                        boost::any numScansData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::NUM_SCANS_ROLE);
+                        if (!numScansData.empty())
+                        {
+                            int numScans = boost::any_cast<int>(numScansData);
+                            if (numScans == 0)
+                            {
+                                curSearchResult = false;
+                            }
+                            else
+                            {
+                                for (int scan = 0; scan < numScans; scan++)
+                                {
+                                    int scanRole = MRIBrowser::FIRST_SCAN_ROLE + scan;
+
+                                    boost::any scanData = sourceModel()->index(sourceRow, col, sourceParent).data(scanRole);
+                                    if (!scanData.empty())
+                                    {
+                                        WString curStr = asString(scanData);
+                                        std::string searchStr = curStr.toUTF8();
+
+                                        curSearchResult = compareSearchTerm(searchStr, searchItem->mExpr, searchItem->mSearchType);
+
+                                        if (curSearchResult)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // General case
+                    else
+                    {
+                        boost::any curData = sourceModel()->index(sourceRow, col, sourceParent).data(searchItem->mRole);
+                        if (!curData.empty())
+                        {
+                            WString curStr = asString(curData);
+                            std::string searchStr = curStr.toUTF8();
+
+                            curSearchResult = compareSearchTerm(searchStr, searchItem->mExpr, searchItem->mSearchType);
+                        }
                     }
 
+                    // ANY
+                    if (mSearchMatchType == MRIBrowser::ANY)
+                    {
+                        if (curSearchResult)
+                        {
+                            passesFilterFile = true;
+                            break;
+                        }
+                    }
+                    // ALL
+                    else
+                    {
+                        passesFilterFile = passesFilterFile && curSearchResult;
+                        if (passesFilterFile == false)
+                            break;
+                    }
                     iter++;
+                }
+
+                // ANY
+                if (mSearchMatchType == MRIBrowser::ANY)
+                {
+                    if (passesFilterFile == true)
+                        break;
+                }
+                // ALL
+                else
+                {
+                    if (passesFilterFile == false)
+                        break;
                 }
             }
 
-            if (passesFilterFile == false)
-                return false;
+        }
 
-            if (filterRegExp().empty())
-                return true;
+        if (passesFilterFile == false)
+            return false;
 
-            // Break search pattern into multiple tokens separated by spaces
-            std::string searchPattern = filterRegExp().toUTF8();
-            istringstream istr(searchPattern, ios_base::out);
-            while (getline(istr, curSearchPattern, ' '))
+        if (filterRegExp().empty())
+            return true;
+
+        // Break search pattern into multiple tokens separated by spaces
+        std::string searchPattern = filterRegExp().toUTF8();
+        istringstream istr(searchPattern, ios_base::out);
+        std::string curSearchPattern;
+        while (getline(istr, curSearchPattern, ' '))
+        {
+            if (curSearchPattern != "" && curSearchPattern != " " && curSearchPattern != "\n")
             {
-                if (curSearchPattern != "" && curSearchPattern != " " && curSearchPattern != "\n")
+                WRegExp regExp(curSearchPattern);
+                bool searchResult = regExp.exactMatch(s) || boost::algorithm::icontains(searchTarget, curSearchPattern);
+                if (searchResult)
                 {
-                    WRegExp regExp(curSearchPattern);
-                    bool searchResult = regExp.exactMatch(s) || boost::algorithm::icontains(searchTarget, curSearchPattern);
-                    if (searchResult)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
         }
@@ -161,6 +303,48 @@ bool MRIFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& sour
     return false;
 }
 
+///
+//   Compare search term
+//
+bool MRIFilterProxyModel::compareSearchTerm(std::string searchStr, std::string expr, MRIBrowser::MRISearchTypeEnum searchType) const
+{
+    if (searchStr == "")
+        return false;
+
+    switch(searchType)
+    {
+    case MRIBrowser::CONTAINS:
+        {
+            WRegExp regExp(expr);
+            bool searchResult = regExp.exactMatch(searchStr) || boost::algorithm::icontains(searchStr, expr);
+            if (searchResult)
+            {
+                return true;
+            }
+        }
+        break;
+    case MRIBrowser::EQUAL:
+        if (searchStr == expr)
+        {
+            return true;
+        }
+        break;
+    case MRIBrowser::GEQUAL:
+        if (searchStr >= expr)
+        {
+            return true;
+        }
+        break;
+    case MRIBrowser::LEQUAL:
+        if (searchStr <= expr)
+        {
+            return true;
+        }
+        break;
+    }
+
+    return false;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -177,7 +361,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     // Populate the list of MRIDs
     mMRITreeView = new WTreeView();
     mMRIModel = new WStandardItemModel(this);
-    populateMRIDs(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID_age.log");
+    populateMRIDs(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID.xml");
 
     mSearchButton = new WPushButton("Search");
 
@@ -191,7 +375,6 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mSortFilterProxyModel->setDynamicSortFilter(true);
     mSortFilterProxyModel->setFilterKeyColumn(0);
     mSortFilterProxyModel->setFilterRole(DisplayRole);
-    mSortFilterProxyModel->setFilterFile(getConfigOptionsPtr()->GetMRIDFilterFile());
 
     mMRITreeView->setModel(mSortFilterProxyModel);
     mMRITreeView->resize(250, WLength::Auto);
@@ -216,7 +399,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
                                   searchContainer);
     popup->setStyleClass("suggest");
     popup->forEdit(mSearchLineEdit);
-    popup->setModel(mMRIModel);
+    popup->setModel(mSortFilterProxyModel);
     popup->setModelColumn(0);
 
     WGridLayout *searchLayout = new WGridLayout();
@@ -256,6 +439,12 @@ void MRIBrowser::resetAll()
     mSearchLineEdit->setEnabled(true);
     mFiltering = false;
 
+    // Select the first item in the list
+    if (mSortFilterProxyModel->rowCount() > 0)
+    {
+        mMRITreeView->select(mSortFilterProxyModel->index(0, 0));
+        mSortFilterProxyModel->sort(0, AscendingOrder);
+    }
 }
 
 
@@ -273,11 +462,11 @@ std::string MRIBrowser::getMRIDFromScanDir(const std::string& scanDir) const
         if (item != NULL)
         {
             boost::any displayData = item->data(DisplayRole);
-            boost::any d = item->data(UserRole + 1);
+            boost::any d = item->data(DIR_ROLE);
             if (!displayData.empty() && !d.empty())
             {
-                std::string curScanDir = boost::any_cast<std::string>(d);
-                path curScanPath(curScanDir);
+                WString curScanDir = boost::any_cast<WString>(d);
+                path curScanPath(curScanDir.toUTF8());
 
                 if (scanPath.normalize() == curScanPath.normalize())
                 {
@@ -292,6 +481,38 @@ std::string MRIBrowser::getMRIDFromScanDir(const std::string& scanDir) const
     return ("");
 }
 
+///
+// Return the number of fields in the MRI field table
+//
+const MRIBrowser::MRIField* MRIBrowser::getMRIField(int role)
+{
+    return &mFieldInfo[role];
+}
+
+///
+// Return the search term of the MRI search term table
+//
+const MRIBrowser::MRISearchType* MRIBrowser::getMRISearchType(int index)
+{
+    return &mSearchType[index];
+}
+
+///
+//  Set filter file - a file that specifies a set of patterns to filter the list of MRIs
+//
+void MRIBrowser::setFilterFile(const std::string& path)
+{
+    mSortFilterProxyModel->setFilterFile(path);
+    mSortFilterProxyModel->setFilterRegExp("");
+    mSearchButton->setText("Filter");
+    mSearchLineEdit->setEnabled(true);
+
+    if (mSortFilterProxyModel->rowCount() > 0)
+    {
+        mMRITreeView->select(mSortFilterProxyModel->index(0, 0));
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Private Members
@@ -300,63 +521,83 @@ std::string MRIBrowser::getMRIDFromScanDir(const std::string& scanDir) const
 
 
 ///
-//  Populate the MRIDs model by reading the dcmMRID.log file.
+//  Populate the MRIDs model by reading the dcm_MRID.xml file.
 //
-void MRIBrowser::populateMRIDs(const std::string& mridLogFile)
+void MRIBrowser::populateMRIDs(const std::string& mridXMLFile)
 {
-    std::ifstream inFile(mridLogFile.c_str());
-    while (!inFile.eof())
+    FILE *fp = fopen(mridXMLFile.c_str(), "r");
+    if (fp == NULL)
     {
-        string scanName,
-               MRID,
-               age;
-
-        char buf[1024] = {0};
-        inFile.getline( buf, sizeof(buf));
-
-        istringstream istr( string(buf), ios_base::out);
-        istr >> scanName >> MRID >> age;
-
-        // If age was an error, then just map it to UNKNOWN_AGE
-        if (age == "ERROR:")
-        {
-            age = "UNKNOWN_AGE";
-        }
-
-        stringstream scanDir;
-        scanDir << getConfigOptionsPtr()->GetDicomDir() << "/" << scanName;
-
-        stringstream tocURL;
-
-        tocURL << scanDir.str() << "/toc.txt";
-
-
-        std::ifstream tocFile(tocURL.str().c_str());
-        if (tocFile.is_open())
-        {
-            mMRIModel->appendRow(createMRIItem(MRID, scanDir.str(), age));
-        }
+       WApplication::instance()->log("error") << "Failed opening MRID log file for reading: " << mridXMLFile;
+       return;
     }
+
+    mxml_node_t *tree;
+    tree = mxmlLoadFile(NULL, fp, MXML_OPAQUE_CALLBACK);
+
+    bool result = true;
+    mxml_node_t *patientRecordNode;
+
+
+    for (patientRecordNode = mxmlFindElement(tree, tree,
+                                             "PatientRecord",
+                                             NULL, NULL,
+                                             MXML_DESCEND);
+        patientRecordNode != NULL;
+        patientRecordNode = mxmlFindElement(patientRecordNode, tree,
+                                            "PatientRecord",
+                                            NULL, NULL,
+                                            MXML_NO_DESCEND))
+    {
+        int row = mMRIModel->rowCount();
+        mMRIModel->insertRows(row, 1);
+
+        // Set extended (not for display) data
+        setDataColumn(patientRecordNode, "PatientID", row, 0, DisplayRole);
+        setDataColumn(patientRecordNode, "Directory", row, 0, DIR_ROLE, "", getConfigOptionsPtr()->GetDicomDir() + std::string("/"));
+        setDataColumn(patientRecordNode, "PatientAge", row, 0, AGE_ROLE, "UNKNOWN_AGE");
+        setDataColumn(patientRecordNode, "PatientName", row, 0, NAME_ROLE);
+        setDataColumn(patientRecordNode, "PatientSex", row, 0, SEX_ROLE);
+        setDataColumn(patientRecordNode, "PatientBirthday", row, 0, BIRTHDAY_ROLE);
+        setDataColumn(patientRecordNode, "ImageScanDate", row, 0, SCANDATE_ROLE);
+        setDataColumn(patientRecordNode, "ScannerManufacturer", row, 0, MANUFACTURER_ROLE);
+        setDataColumn(patientRecordNode, "ScannerModel", row, 0, MODEL_ROLE);
+        setDataColumn(patientRecordNode, "SoftwareVer", row, 0, SOFTWARE_VER_ROLE);
+
+
+        mxml_node_t *scanNode;
+        int scanNumber = 0;
+        for (scanNode = mxmlFindElement(patientRecordNode, patientRecordNode,
+                                                     "Scan",
+                                                     NULL, NULL,
+                                                     MXML_DESCEND);
+             scanNode != NULL;
+             scanNode = mxmlFindElement(scanNode, patientRecordNode,
+                                                    "Scan",
+                                                    NULL, NULL,
+                                                    MXML_NO_DESCEND))
+        {
+            if (scanNode->child != NULL)
+            {
+                std::string scan = std::string(scanNode->child->value.opaque);
+                boost::any data = boost::any(WString::fromUTF8(scan));
+                mMRIModel->setData(row, 0, data, FIRST_SCAN_ROLE + scanNumber);
+                scanNumber++;
+            }
+        }
+
+        // Set the number of scans for the patient
+        boost::any scanNumData = boost::any(scanNumber);
+        mMRIModel->setData(row, 0, scanNumData, NUM_SCANS_ROLE);
+
+        mMRIModel->item(row)->setIcon("icons/folder.gif");
+
+    }
+
+
+    fclose(fp);
+    mxmlRelease(tree);
 }
-
-
-///
-//  Create an MRI item.
-//
-WStandardItem *MRIBrowser::createMRIItem(const std::string& MRID,
-                                         const std::string& scanDir,
-                                         const std::string& age)
-{
-    WStandardItem *result = new WStandardItem(MRID);
-
-    result->setData(scanDir, UserRole + 1);
-    result->setData(age, UserRole + 2);
-    result->setIcon("icons/folder.gif");
-
-    return result;
-}
-
-
 
 ///
 //  MRI selection changed by user
@@ -368,15 +609,16 @@ void MRIBrowser::mriChanged()
 
     WModelIndex selected = *mMRITreeView->selectedIndexes().begin();
     boost::any displayData = selected.data(DisplayRole);
-    boost::any d = selected.data(UserRole + 1);
-    boost::any d1 = selected.data(UserRole + 2);
-    if (!displayData.empty() && !d.empty() && !d1.empty())
+    boost::any d = selected.data(DIR_ROLE);
+    boost::any d1 = selected.data(AGE_ROLE);
+
+    if (!displayData.empty() && !d.empty() )
     {
         WString mrid = boost::any_cast<WString>(displayData);
-        std::string scanDir = boost::any_cast<std::string>(d);
-        std::string age = boost::any_cast<std::string>(d1);
+        WString scanDir = boost::any_cast<WString>(d);
+        WString age = boost::any_cast<WString>(d1);
 
-        mMRISelected.emit(mrid.toUTF8(), scanDir, age);
+        mMRISelected.emit(mrid.toUTF8(), scanDir.toUTF8(), age.toUTF8());
     }
 }
 
@@ -401,6 +643,35 @@ void MRIBrowser::searchClicked()
         mSearchButton->setText("Filter");
         mSearchLineEdit->setEnabled(true);
         mFiltering = false;
+    }
+}
+
+
+///
+//  Set data in the model from an XML node
+//
+void MRIBrowser::setDataColumn(mxml_node_t *node, const char* name, int row, int col, int role, std::string errorReplaceStr, std::string prependStr)
+{
+
+    boost::any data;
+    mxml_node_t *dataNode = mxmlFindElement(node, node, name, NULL, NULL, MXML_DESCEND);
+    if (dataNode != NULL && dataNode->child != NULL)
+    {
+        std::string dataStr = std::string(dataNode->child->value.opaque);
+
+        if (dataStr != "ERROR:")
+        {
+            data = boost::any(WString::fromUTF8(prependStr + dataStr));
+            mMRIModel->setData(row, col, data, role);
+        }
+        else
+        {
+            if (errorReplaceStr != "")
+            {
+                data = boost::any(WString::fromUTF8(errorReplaceStr));
+                mMRIModel->setData(row, col, data, role);
+            }
+        }
     }
 }
 

@@ -18,4 +18,14 @@
   <message id="cluster-load-page">
 	<iframe src="http://durban.tch.harvard.edu/ganglia/" width="100%" height="100%"></iframe>
   </message>
+ 
+  <message id="project-selection">
+    <center>
+        Welcome to the <B>Fetal-Neonatal Neuroimaging and Developmental Science Center</B> neuroimaging pipeline web.  To begin,<BR/>
+        please select or create a new project.  The project determines which set of images will be available to you for <BR/>
+        processing.  If you want to work with all of the available images or are unsure which images you will be working<BR/>
+        with, please choose the "Default (All MRIDs)" project.  You can always come back and create a new project later.<BR/>
+    </center>
+  </message>
+
 </messages>

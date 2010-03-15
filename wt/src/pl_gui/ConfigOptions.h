@@ -46,6 +46,7 @@ public:
     const std::string& GetDicomDir()            const { return mDicomDir; }
     const std::string& GetOutDir()              const { return mOutDir; }
     const std::string& GetOutGradientDir()      const { return mOutGradientDir; }
+    const std::string& GetProjectDir()          const { return mProjectDir; }
     const std::string& GetSeriesListTract()     const { return mSeriesListTract; }
     const std::string& GetSeriesListFS()        const { return mSeriesListFS; }
     const std::string& GetSeriesListFetal()     const { return mSeriesListFetal; }
@@ -83,6 +84,9 @@ private:
 
     /// Output gradient directory
     std::string mOutGradientDir;
+
+    /// Project base directory
+    std::string mProjectDir;
 
     /// Cluster name
     std::string mClusterName;

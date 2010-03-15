@@ -29,11 +29,16 @@ ADD_EXECUTABLE(pl_gui.wt
   PipelineOptionsFS.cpp
   PipelineOptionsTract.cpp
   PipelineStatus.cpp
+  ProjectChooser.cpp
+  ProjectCreator.cpp
+  ProjectPage.cpp
+  ProjectXML.cpp
   ResultsBrowser.cpp
   ResultsFilterProxyModel.cpp
   ResultsPage.cpp
   ResultsTable.cpp
   ScanBrowser.cpp
+  SearchTerm.cpp
   SelectScans.cpp
   SubjectPage.cpp
   SubmitJobDialog.cpp

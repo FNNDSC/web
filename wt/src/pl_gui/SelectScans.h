@@ -77,7 +77,7 @@ public:
     ///
     /// Get the MRI browser
     ///
-    const MRIBrowser* getMRIBrowser() const { return mMRIBrowser;   }
+    MRIBrowser* getMRIBrowser() const { return mMRIBrowser;   }
 
 private:
     ///

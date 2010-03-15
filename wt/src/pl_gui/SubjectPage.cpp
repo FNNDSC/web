@@ -146,7 +146,7 @@ void SubjectPage::finalize()
 ///
 //  Get the MRI browser
 //
-const MRIBrowser* SubjectPage::getMRIBrowser() const
+MRIBrowser* SubjectPage::getMRIBrowser() const
 {
     return mSelectScans->getMRIBrowser();
 }
@@ -324,11 +324,11 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
         std::string date = scansToProcess[i].mScanDate;
 
         // Use real-time clock to get a unique time value
-       timespec timeSpec;
-       clock_gettime(CLOCK_REALTIME, &timeSpec);
+        timespec timeSpec;
+        clock_gettime(CLOCK_REALTIME, &timeSpec);
 
 
-       tmpFile << path(scansToProcess[i].mScanDir).leaf() << ";"
+        tmpFile << path(scansToProcess[i].mScanDir).leaf() << ";"
                 << scansToProcess[i].mDicomFile << ";"
                 << "-" << date << "_" << age << "-" << curDate << "-" << timeSpec.tv_sec << timeSpec.tv_nsec << "-" << mPipelineConfigure->getOutputFileSuffix() << ";"
                 << "-" << date << "_" << age << "-" << curDate << "-" << timeSpec.tv_sec << timeSpec.tv_nsec << "-" << mPipelineConfigure->getOutputDirSuffix() << endl;

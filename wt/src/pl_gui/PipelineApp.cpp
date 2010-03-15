@@ -16,9 +16,11 @@
 #include "MonitorPage.h"
 #include "ResultsPage.h"
 #include "ResultsPage.h"
+#include "ProjectPage.h"
 #include "ConfigOptions.h"
 #include "ConfigXML.h"
 #include "LoginPage.h"
+#include "MRIBrowser.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WStackedWidget>
 #include <Wt/WTabWidget>
@@ -29,12 +31,16 @@
 #include <Wt/WLabel>
 #include <Wt/WOverlayLoadingIndicator>
 #include <Wt/WLogger>
+#include <Wt/WPushButton>
 #include <QCoreApplication>
+#include <boost/filesystem.hpp>
 
 ///
 //  Namespaces
 //
 using namespace Wt;
+using namespace boost;
+using namespace boost::filesystem;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -215,8 +221,17 @@ void PipelineApp::createUI()
     topLayout->addWidget(chbLogo, 0, 0, Wt::AlignLeft);
     WLabel *titleLabel = new WLabel(w->tr("page-top-text"));
     titleLabel->setStyleClass("titlediv");
+
+    WGridLayout *projectAndBrainLayout = new WGridLayout();
+    mCurrentProjectLabel = new WLabel("Current Project: []");
+    mCurrentProjectLabel->setStyleClass("projectdiv");
+    mCurrentProjectLabel->setWordWrap(false);
+    WPushButton *changeProjectButton = new WPushButton("Change");
+    projectAndBrainLayout->addWidget(mCurrentProjectLabel, 0, 0, AlignLeft | AlignMiddle);
+    projectAndBrainLayout->addWidget(changeProjectButton, 0, 1, AlignLeft | AlignMiddle);
+
     topLayout->addWidget(titleLabel, 0, 1, Wt::AlignCenter | Wt::AlignMiddle);
-    topLayout->addWidget(brainImage, 0, 2, Wt::AlignRight);
+    topLayout->addLayout(projectAndBrainLayout, 0, 2, Wt::AlignRight | AlignMiddle);
     topContainer->setLayout(topLayout);
 
     // Create the top tab
@@ -237,6 +252,8 @@ void PipelineApp::createUI()
     layout->setRowStretch(1, 1);
 
     mMainSiteWidget = new WContainerWidget();
+    mProjectPage = new ProjectPage();
+
 
     // All items in the tabbed widget need to be resized to 100% to
     // fill the contents.  This trick came from the Wt WTabWidget
@@ -252,6 +269,8 @@ void PipelineApp::createUI()
 
     LoginPage *loginPage = new LoginPage();
     loginPage->userLoggedIn().connect(this, &PipelineApp::userLoggedIn);
+    mProjectPage->projectChosen().connect(this, &PipelineApp::projectChosen);
+    changeProjectButton->clicked().connect(this, &PipelineApp::goHome);
 
     mStackedWidget = new WStackedWidget();
     mStackedWidget->addWidget(loginPage);
@@ -327,10 +346,50 @@ void PipelineApp::userLoggedIn(std::string userName, std::string email)
 {
     mCurrentUser = userName;
     mCurrentEmail = email;
-    mStackedWidget->addWidget(mMainSiteWidget);
+    mProjectPage->resetAll();
+    mStackedWidget->addWidget(mProjectPage);
     mStackedWidget->setCurrentIndex(1);
+
+
+}
+
+
+///
+//  Project chosen [slot]
+//
+void PipelineApp::projectChosen(std::string projectPath)
+{
+    bool firstTime = (mStackedWidget->count() == 2);
+
+    if (firstTime)
+    {
+        mStackedWidget->addWidget(mMainSiteWidget);
+    }
+    mStackedWidget->setCurrentIndex(2);
     mSubjectPage->resetAll();
-    mResultsPage->resetAll();
+
+    if (firstTime)
+    {
+        mResultsPage->resetAll();
+    }
+
+    mCurrentProjectLabel->setText(WString("Current Project: [{1}]").arg(path(projectPath).stem()));
+
+    // Not really a path, don't try to load it
+    if (projectPath.find("/") == std::string::npos)
+    {
+        projectPath = "";
+    }
+    mSubjectPage->getMRIBrowser()->setFilterFile(projectPath);
+}
+
+///
+//  Go home [slot]
+//
+void PipelineApp::goHome()
+{
+    mProjectPage->resetAll();
+    mStackedWidget->setCurrentIndex(1);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
