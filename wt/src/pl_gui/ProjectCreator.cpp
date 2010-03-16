@@ -316,7 +316,7 @@ void ProjectCreator::cancelCreateClicked()
 //
 void ProjectCreator::searchAddOrRemove(bool add, int ID)
 {
-    int numShowing;
+    int numShowing = 0;
     for (int i = 0; i < MAX_SEARCH_TERMS; i++)
     {
         if(mSearchTerms[i]->isVisible())
