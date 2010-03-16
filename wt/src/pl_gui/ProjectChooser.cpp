@@ -80,6 +80,7 @@ ProjectChooser::ProjectChooser(WContainerWidget *parent) :
     setLayout(layout);
 
     loadButton->clicked().connect(SLOT(this, ProjectChooser::loadClicked));
+    mProjectSelectionBox->doubleClicked().connect(SLOT(this, ProjectChooser::loadClicked));
     mDeleteButton->clicked().connect(SLOT(this, ProjectChooser::deleteClicked));
     mProjectSelectionBox->clicked().connect(SLOT(this, ProjectChooser::selectionChanged));
 
