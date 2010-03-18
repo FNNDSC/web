@@ -43,6 +43,11 @@ public:
     virtual ~LoginPage();
 
     ///
+    /// Reset to default state
+    ///
+    void resetAll();
+
+    ///
     ///	Handle login button clicked [slot]
     ///
     void login();
@@ -71,6 +76,10 @@ private:
 
     /// Failure message
     WLabel *mFailureLabel;
+
+    /// Whether user has been logged in yet
+    bool mLoggedIn;
+
 };
 
 #endif // LOGINPAGE_H

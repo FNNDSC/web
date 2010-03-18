@@ -54,7 +54,8 @@ using namespace boost::iostreams;
 //  Constructor
 //
 LoginPage::LoginPage(WContainerWidget *parent) :
-    WContainerWidget(parent)
+    WContainerWidget(parent),
+    mLoggedIn(false)
 {
     setStyleClass("maindiv");
 	
@@ -80,7 +81,7 @@ LoginPage::LoginPage(WContainerWidget *parent) :
     textLayout->addWidget(loginText, 0, 0, AlignCenter);
 
     WGridLayout *buttonLayout = new WGridLayout();
-    buttonLayout->addWidget(loginButton, 0, 0, AlignCenter);
+    buttonLayout->addWidget(loginButton, 0, 0, AlignCenter | AlignMiddle);
 
     WImage *chbLogo = new WImage(tr("logo-image").toUTF8());
     WGridLayout *chbLogoLayout = new WGridLayout();
@@ -116,6 +117,8 @@ LoginPage::LoginPage(WContainerWidget *parent) :
 
     loginButton->clicked().connect(SLOT(this, LoginPage::login));
     mPasswordLineEdit->enterPressed().connect(SLOT(this, LoginPage::login));
+
+    resetAll();
 }
 
 ///
@@ -133,10 +136,27 @@ LoginPage::~LoginPage()
 //
 
 ///
+//  Reset to default state
+//
+void LoginPage::resetAll()
+{
+    mUserNameLineEdit->setText("");
+    mPasswordLineEdit->setText("");
+    mFailureLabel->hide();
+    mLoggedIn = false;
+}
+
+///
 //	Handle login button clicked [slot]
 //
 void LoginPage::login()
 {
+    // If already logged in, don't need to do it again
+    if (mLoggedIn == true)
+    {
+        return;
+    }
+
     bool loggedIn = false;
     const char *userName = mUserNameLineEdit->text().toUTF8().c_str();
     const char *passwd = mPasswordLineEdit->text().toUTF8().c_str();
@@ -208,6 +228,8 @@ void LoginPage::login()
     {
         mFailureLabel->show();
     }
+
+    mLoggedIn = loggedIn;
 }
 
 
