@@ -368,7 +368,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     WContainerWidget *searchContainer = new WContainerWidget();
     mSearchLineEdit = new WLineEdit("", searchContainer);
     mSearchLineEdit->setToolTip("Enter a string or regular expression to filter MRIDs.  Multiple expressions can be separated by spaces.");
-    mSearchLineEdit->setTextSize(27);
+    mSearchLineEdit->resize(190, WLength::Auto);
 
     mSortFilterProxyModel = new MRIFilterProxyModel(this);
     mSortFilterProxyModel->setSourceModel(mMRIModel);

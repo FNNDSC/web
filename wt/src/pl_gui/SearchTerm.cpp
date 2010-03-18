@@ -78,9 +78,9 @@ SearchTerm::SearchTerm(int uniqueID, WContainerWidget *parent) :
     mMinusButton = new WPushButton("-");
 
     WGridLayout *layout = new WGridLayout();
-    layout->addWidget(mSearchField, 0, 0);
-    layout->addWidget(mSearchType, 0, 1);
-    layout->addWidget(mSearchString, 0, 2);
+    layout->addWidget(mSearchField, 0, 0, AlignMiddle);
+    layout->addWidget(mSearchType, 0, 1, AlignMiddle);
+    layout->addWidget(mSearchString, 0, 2, AlignMiddle);
     layout->addWidget(mPlusButton, 0, 3, AlignMiddle | AlignCenter);
     layout->addWidget(mMinusButton, 0, 4, AlignMiddle | AlignCenter);
     layout->setColumnStretch(0, 1);

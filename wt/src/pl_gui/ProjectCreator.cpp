@@ -106,7 +106,7 @@ ProjectCreator::ProjectCreator(WContainerWidget *parent) :
     conditionText->setWordWrap(false);
 
     anyOrAllLayout->addWidget(includeText, 0, 0, AlignLeft);
-    anyOrAllLayout->addWidget(mAnyOrAllComboBox, 0, 1, AlignLeft);
+    anyOrAllLayout->addWidget(mAnyOrAllComboBox, 0, 1, AlignLeft | AlignMiddle);
     anyOrAllLayout->addWidget(conditionText, 0, 2, AlignLeft);
     anyOrAllLayout->setColumnStretch(2, 1);
 

@@ -21,10 +21,10 @@
  
   <message id="project-selection">
     <center>
-        Welcome to the <B>Fetal-Neonatal Neuroimaging and Developmental Science Center</B> neuroimaging pipeline web.  To begin,<BR/>
-        please select or create a new project.  The project determines which set of images will be available to you for <BR/>
-        processing.  If you want to work with all of the available images or are unsure which images you will be working<BR/>
-        with, please choose the "Default (All MRIDs)" project.  You can always come back and create a new project later.<BR/>
+        Welcome to the <B>Fetal-Neonatal Neuroimaging and Developmental Science Center</B> neuroimaging pipeline web.  To begin,<br/>
+        please select or create a new project.  The project determines which set of images will be available to you for <br/>
+        processing.  If you want to work with all of the available images or are unsure which images you will be working<br/>
+        with, please choose the "Default (All MRIDs)" project.  You can always come back and create a new project later.<br/>
     </center>
   </message>
 
