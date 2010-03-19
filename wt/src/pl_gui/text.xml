@@ -8,6 +8,19 @@
         Neuroimaging Pipeline
   </message>
   
+  <message id="login-page-text">
+        <br/>
+        <br/>
+        <center>
+            <B>Recommended browsers:</B>
+        </center>
+        <ul type="square">
+            <li>Safari 4.x for Mac OS X</li>
+            <li>Mozilla Firefox 3.x (<a href="http://www.firefox.com/">download</a>)</li>                        
+        </ul>
+        
+  </message>
+  
   <message id="file-bug">
         <font size="1">
                 Please report all issues in <a href="http://durban.tch.harvard.edu/bugzilla/">bugzilla</a>.

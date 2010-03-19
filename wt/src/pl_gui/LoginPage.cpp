@@ -112,6 +112,7 @@ LoginPage::LoginPage(WContainerWidget *parent) :
 
     WVBoxLayout *pageLayout = new WVBoxLayout();
     pageLayout->addWidget(loginContainer);
+    pageLayout->addWidget(new WText(tr("login-page-text")));
 
     setLayout(pageLayout, AlignMiddle | AlignCenter);
 
