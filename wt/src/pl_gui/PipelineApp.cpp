@@ -236,7 +236,7 @@ void PipelineApp::createUI()
     projectAndBrainLayout->addWidget(changeProjectButton, 0, 1, AlignLeft | AlignMiddle);
     projectAndBrainLayout->addWidget(mCurrentUserLabel, 1, 0, AlignRight | AlignMiddle);
     projectAndBrainLayout->addWidget(logoutButton, 1, 1, AlignRight | AlignMiddle);
-    projectAndBrainLayout->setVerticalSpacing(0);
+    projectAndBrainLayout->setVerticalSpacing(2);
 
     topLayout->addWidget(titleLabel, 0, 1, Wt::AlignCenter | Wt::AlignMiddle);
     topLayout->addLayout(projectAndBrainLayout, 0, 2, Wt::AlignRight | AlignMiddle);
