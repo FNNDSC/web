@@ -25,6 +25,7 @@
 #include <Wt/WDialog>
 #include <Wt/WLineEdit>
 #include <Wt/WImage>
+#include <Wt/WEnvironment>
 #include <signal.h>
 #include <boost/process/process.hpp>
 #include <boost/process/child.hpp>
@@ -44,6 +45,13 @@ using namespace std;
 using namespace boost::processes;
 using namespace boost::iostreams;
 
+///
+//  Constants
+//
+const std::string gUserNameCookie = "pl_gui_username";
+const std::string gEmailCookie = "pl_gui_email";
+const int gCookieExpireSeconds = 60 * 5; // 5 minutes
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Constructor/Destructor
@@ -55,7 +63,8 @@ using namespace boost::iostreams;
 //
 LoginPage::LoginPage(WContainerWidget *parent) :
     WContainerWidget(parent),
-    mLoggedIn(false)
+    mLoggedIn(false),
+    mLogoutRequested(false)
 {
     setStyleClass("maindiv");
 	
@@ -141,10 +150,32 @@ LoginPage::~LoginPage()
 //
 void LoginPage::resetAll()
 {
+    mCurrentUserName = "";
+    mCurrentEmail ="";
     mUserNameLineEdit->setText("");
     mPasswordLineEdit->setText("");
     mFailureLabel->hide();
     mLoggedIn = false;
+
+    if (mLogoutRequested == false)
+    {
+        try
+        {
+            std::string userName = WApplication::instance()->environment().getCookie(gUserNameCookie);
+            std::string email = WApplication::instance()->environment().getCookie(gEmailCookie);
+
+            if (userName != "")
+            {
+                mLoggedIn = true;
+                mCurrentUserName = userName;
+                mCurrentEmail = email;
+            }
+        }
+        catch(...)
+        {
+            WApplication::instance()->log("debug") << "EXCEPTION thrown reading cookie.";
+        }
+    }
 }
 
 ///
@@ -179,7 +210,17 @@ void LoginPage::login()
     // Get the returned encoded password
     stream<boost::processes::pipe_end> is(c.get_stdout());
     std::string encodedPassword;
-    is >> encodedPassword;
+
+    try
+    {
+        is >> encodedPassword;
+    }
+    catch(...)
+    {
+        mFailureLabel->show();
+        return;
+    }
+
     char *enteredEncodedPassword = NULL;
 
     // DES
@@ -206,6 +247,12 @@ void LoginPage::login()
         // Encrypt the entered password using MD5 encrypting with OpenSSL
         enteredEncodedPassword = md5crypt(passwd, magic, salt);
     }
+
+    if (enteredEncodedPassword == NULL)
+    {
+        mFailureLabel->show();
+        return;
+    }
  
     // If the passwords match, the user can login.
     if (!strcmp(enteredEncodedPassword, encodedPassword.c_str()))
@@ -221,6 +268,18 @@ void LoginPage::login()
         is >> email;
 
         mUserLoggedIn.emit(mUserNameLineEdit->text().toUTF8(), email);
+
+        // Set a cookie to store the login information
+        try
+        {
+            WApplication::instance()->setCookie(gUserNameCookie, mUserNameLineEdit->text().toUTF8(), gCookieExpireSeconds);
+            WApplication::instance()->setCookie(gEmailCookie, email, gCookieExpireSeconds);
+        }
+        catch(...)
+        {
+            WApplication::instance()->log("debug") << "EXCEPTION thrown writing cookie.";
+        }
+
         loggedIn = true;
     }
 
@@ -231,8 +290,28 @@ void LoginPage::login()
     }
 
     mLoggedIn = loggedIn;
+    mLogoutRequested = false;
 }
 
+///
+//  Log the user out
+//
+void LoginPage::logout()
+{
+    // Clear login information from cookie
+    try
+    {
+        WApplication::instance()->setCookie(gUserNameCookie, "", gCookieExpireSeconds);
+        WApplication::instance()->setCookie(gEmailCookie, "", gCookieExpireSeconds);
+    }
+    catch(...)
+    {
+        WApplication::instance()->log("debug") << "EXCEPTION thrown writing cookie.";
+    }
+
+    mLogoutRequested = true;
+    resetAll();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //

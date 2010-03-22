@@ -10,6 +10,7 @@
 //  Children's Hospital Boston
 //  GPL v2
 //
+#include "PipelineApp.h"
 #include "ProjectPage.h"
 #include "ProjectChooser.h"
 #include "ProjectCreator.h"
@@ -60,17 +61,26 @@ ProjectPage::ProjectPage(WContainerWidget *parent) :
 {
     setStyleClass("maindiv");
 
+
+    mCurrentUserLabel = new WLabel("");
+    mCurrentUserLabel->setStyleClass("projectdiv");
+    mCurrentUserLabel->setWordWrap(false);
+
+    WGridLayout *logoutLayout = new WGridLayout();
+    WPushButton *logoutButton = new WPushButton("Logout");
+    logoutLayout->addWidget(mCurrentUserLabel, 0, 0, AlignRight | AlignMiddle);
+    logoutLayout->addWidget(logoutButton, 0, 1, AlignRight | AlignMiddle);
+
     WContainerWidget *topContainer = new WContainerWidget();
     WGridLayout *topLayout = new WGridLayout();
     topContainer->setStyleClass("topdiv");
     WImage *chbLogo = new WImage(tr("logo-image").toUTF8());
-    WImage *brainImage = new WImage("icons/mri.gif");
     chbLogo->setStyleClass("titlediv");
     topLayout->addWidget(chbLogo, 0, 0, Wt::AlignLeft);
     WLabel *titleLabel = new WLabel(tr("page-top-text"));
     titleLabel->setStyleClass("titlediv");
     topLayout->addWidget(titleLabel, 0, 1, Wt::AlignCenter | Wt::AlignMiddle);
-    topLayout->addWidget(brainImage, 0, 2, Wt::AlignRight);
+    topLayout->addLayout(logoutLayout, 0, 2, Wt::AlignRight | Wt::AlignMiddle);
     topContainer->setLayout(topLayout);
 	
     mProjectChooser = new ProjectChooser();
@@ -100,6 +110,7 @@ ProjectPage::ProjectPage(WContainerWidget *parent) :
     setLayout(layout);
 
     // Connections
+    logoutButton->clicked().connect(SLOT(this, ProjectPage::logoutClicked));
     mProjectChooser->projectChosen().connect(SLOT(this, ProjectPage::projectLoad));
     mProjectChooser->projectClicked().connect(SLOT(mProjectCreator, ProjectCreator::setFromXML));
     mProjectCreator->projectAdded().connect(SLOT(this, ProjectPage::projectAdded));
@@ -126,6 +137,7 @@ void ProjectPage::resetAll()
 {
     mProjectChooser->resetAll();
     mProjectCreator->resetAll();
+    mCurrentUserLabel->setText(getCurrentUserName());
 }
 
 
@@ -152,4 +164,12 @@ void ProjectPage::projectAdded(std::string projectName)
 {
     mProjectChooser->resetAll();
     mProjectCreator->resetAll();
+}
+
+///
+/// Logout clicked [slot]
+///
+void ProjectPage::logoutClicked()
+{
+    mLogoutUser.emit();
 }

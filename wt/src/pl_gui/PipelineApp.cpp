@@ -226,9 +226,17 @@ void PipelineApp::createUI()
     mCurrentProjectLabel = new WLabel("Current Project: []");
     mCurrentProjectLabel->setStyleClass("projectdiv");
     mCurrentProjectLabel->setWordWrap(false);
+    mCurrentUserLabel = new WLabel("");
+    mCurrentUserLabel->setStyleClass("projectdiv");
+    mCurrentUserLabel->setWordWrap(false);
+
     WPushButton *changeProjectButton = new WPushButton("Change");
-    projectAndBrainLayout->addWidget(mCurrentProjectLabel, 0, 0, AlignLeft | AlignMiddle);
+    WPushButton *logoutButton = new WPushButton("Logout");
+    projectAndBrainLayout->addWidget(mCurrentProjectLabel, 0, 0, AlignRight | AlignMiddle);
     projectAndBrainLayout->addWidget(changeProjectButton, 0, 1, AlignLeft | AlignMiddle);
+    projectAndBrainLayout->addWidget(mCurrentUserLabel, 1, 0, AlignRight | AlignMiddle);
+    projectAndBrainLayout->addWidget(logoutButton, 1, 1, AlignRight | AlignMiddle);
+    projectAndBrainLayout->setVerticalSpacing(0);
 
     topLayout->addWidget(titleLabel, 0, 1, Wt::AlignCenter | Wt::AlignMiddle);
     topLayout->addLayout(projectAndBrainLayout, 0, 2, Wt::AlignRight | AlignMiddle);
@@ -267,13 +275,15 @@ void PipelineApp::createUI()
 
     mMainSiteWidget->setLayout(layout);
 
-    LoginPage *loginPage = new LoginPage();
-    loginPage->userLoggedIn().connect(this, &PipelineApp::userLoggedIn);
+    mLoginPage = new LoginPage();
+    mLoginPage->userLoggedIn().connect(this, &PipelineApp::userLoggedIn);
     mProjectPage->projectChosen().connect(this, &PipelineApp::projectChosen);
+    mProjectPage->logoutUser().connect(this, &PipelineApp::logout);
     changeProjectButton->clicked().connect(this, &PipelineApp::goHome);
+    logoutButton->clicked().connect(this, &PipelineApp::logout);
 
     mStackedWidget = new WStackedWidget();
-    mStackedWidget->addWidget(loginPage);
+    mStackedWidget->addWidget(mLoginPage);
     //mStackedWidget->addWidget(mainSite);
     mStackedWidget->setCurrentIndex(0);
 
@@ -285,6 +295,12 @@ void PipelineApp::createUI()
     requestTooLarge().connect(this, &PipelineApp::largeRequest);
 
     setTitle(w->tr("page-title"));
+
+    // See if the user is already logged in via a cookie
+    if (mLoginPage->getLoggedIn())
+    {
+        userLoggedIn(mLoginPage->getCurrentUserName(), mLoginPage->getCurrentEmail());
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -347,7 +363,14 @@ void PipelineApp::userLoggedIn(std::string userName, std::string email)
     mCurrentUser = userName;
     mCurrentEmail = email;
     mProjectPage->resetAll();
-    mStackedWidget->addWidget(mProjectPage);
+    mCurrentUserLabel->setText(userName);
+
+    bool firstTime = (mStackedWidget->count() == 1);
+    if (firstTime)
+    {
+        mStackedWidget->addWidget(mProjectPage);
+    }
+
     mStackedWidget->setCurrentIndex(1);
 
 
@@ -390,6 +413,15 @@ void PipelineApp::goHome()
 {
     mProjectPage->resetAll();
     mStackedWidget->setCurrentIndex(1);
+}
+
+///
+//  Go home [slot]
+//
+void PipelineApp::logout()
+{
+    mLoginPage->logout();
+    mStackedWidget->setCurrentIndex(0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

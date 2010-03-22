@@ -32,6 +32,7 @@ class ConfigXML;
 class SubjectPage;
 class ResultsPage;
 class ProjectPage;
+class LoginPage;
 
 ///
 /// \class PipelineApp
@@ -64,6 +65,7 @@ public:
     /// Override finalize to handle destruction of threads
     ///
     virtual void finalize();
+
 
     ///
     /// Slot for handling when the main tab changes
@@ -117,6 +119,11 @@ private:
     ///
     void goHome();
 
+    ///
+    ///  Log out of site [slot]
+    ///
+    void logout();
+
 private:
 
     typedef enum
@@ -139,6 +146,9 @@ private:
     /// Project Page
     ProjectPage *mProjectPage;
 
+    /// Login page
+    LoginPage *mLoginPage;
+
     /// Configuration options
     ConfigOptions *mConfigOptions;
 
@@ -159,6 +169,9 @@ private:
 
     /// Current project label
     WLabel *mCurrentProjectLabel;
+
+    /// Current user label
+    WLabel *mCurrentUserLabel;
 
 };
 

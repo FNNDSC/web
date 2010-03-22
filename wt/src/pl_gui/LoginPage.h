@@ -57,6 +57,27 @@ public:
     ///
     Wt::Signal<std::string, std::string>& userLoggedIn() { return mUserLoggedIn; }
 
+    ///
+    /// Is the user logged in?
+    ///
+    bool getLoggedIn() const            {   return mLoggedIn;   }
+
+    ///
+    /// Get the current user name
+    ///
+    const std::string& getCurrentUserName()  const    {   return mCurrentUserName;   }
+
+    ///
+    /// Get the current user name
+    ///
+    const std::string& getCurrentEmail() const        {   return mCurrentEmail;   }
+
+    ///
+    /// Log the user out
+    ///
+    void logout();
+
+
 private:
 
     ///
@@ -79,6 +100,15 @@ private:
 
     /// Whether user has been logged in yet
     bool mLoggedIn;
+
+    /// Logout requested
+    bool mLogoutRequested;
+
+    /// Current username
+    std::string mCurrentUserName;
+
+    /// Current e-mail
+    std::string mCurrentEmail;
 
 };
 

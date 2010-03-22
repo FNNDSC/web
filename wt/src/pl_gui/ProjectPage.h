@@ -22,6 +22,7 @@ namespace Wt
     class WText;
     class WLineEdit;
     class WPushButton;
+    class WLabel;
 }
 
 class ProjectChooser;
@@ -57,6 +58,11 @@ public:
     ///
     Wt::Signal<std::string>& projectChosen()    {   return mProjectChosen;  }
 
+    ///
+    /// Logout user signal accessor
+    ///
+    Wt::Signal<void>& logoutUser()              {   return mLogoutUser;     }
+
 private:
 
     ///
@@ -69,14 +75,26 @@ private:
     ///
     void projectAdded(std::string projectName);
 
+    ///
+    /// Logout clicked [slot]
+    ///
+    void logoutClicked();
+
     /// Project chosen [signal]
     Wt::Signal<std::string> mProjectChosen;
+
+    /// Logout clikced  [signal]
+    Wt::Signal<void> mLogoutUser;
 
     /// Project chooser
     ProjectChooser *mProjectChooser;
 
     /// Project creator
     ProjectCreator *mProjectCreator;
+
+    /// Current user label
+    WLabel *mCurrentUserLabel;
+
 };
 
 #endif // PROJECTPAGE_H
