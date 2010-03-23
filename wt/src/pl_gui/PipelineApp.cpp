@@ -175,6 +175,7 @@ PipelineApp::~PipelineApp()
 void PipelineApp::create()
 {
     // Create all Qt Objects
+    mSubjectPage->createQt();
     mMonitorPage->createQt();
     mResultsPage->createQt();
 }
@@ -185,6 +186,7 @@ void PipelineApp::create()
 void PipelineApp::destroy()
 {
     // Destroy Qt Objects
+    mSubjectPage->destroyQt();
     mMonitorPage->destroyQt();
     mResultsPage->destroyQt();
 

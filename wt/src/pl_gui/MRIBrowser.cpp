@@ -393,14 +393,13 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
              " "                       // appendReplacedText (prepare next email address)
        };
 
-    WSuggestionPopup *popup
-       = new Wt::WSuggestionPopup(Wt::WSuggestionPopup::generateMatcherJS(searchOptions),
-                                  Wt::WSuggestionPopup::generateReplacerJS(searchOptions),
-                                  searchContainer);
-    popup->setStyleClass("suggest");
-    popup->forEdit(mSearchLineEdit);
-    popup->setModel(mSortFilterProxyModel);
-    popup->setModelColumn(0);
+    mPopup = new Wt::WSuggestionPopup(Wt::WSuggestionPopup::generateMatcherJS(searchOptions),
+                                      Wt::WSuggestionPopup::generateReplacerJS(searchOptions),
+                                      searchContainer);
+    mPopup->setStyleClass("suggest");
+    mPopup->forEdit(mSearchLineEdit);
+    mPopup->setModel(mSortFilterProxyModel);
+    mPopup->setModelColumn(0);
 
     WGridLayout *searchLayout = new WGridLayout();
     searchLayout->addWidget(searchContainer, 0, 0, AlignRight);
@@ -414,6 +413,9 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     setLayout(layout);
 
     mSearchButton->clicked().connect(SLOT(this, MRIBrowser::searchClicked));
+
+    // File system watcher
+    mQtFileSystemWatcherThread = new QtFileSystemWatcherThread(this, WApplication::instance());
 
     resetAll();
 }
@@ -447,6 +449,31 @@ void MRIBrowser::resetAll()
     }
 }
 
+///
+//  Create Qt objects
+//
+void MRIBrowser::createQt()
+{
+    mQtFileSystemWatcherThread->createQt();
+    mQtFileSystemWatcherThread->addPath(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID.xml");
+}
+
+///
+//  Destroy Qt objects
+//
+void MRIBrowser::destroyQt()
+{
+    mQtFileSystemWatcherThread->destroyQt();
+}
+
+
+///
+//  Finalize the widget (pre-destruction)
+//
+void MRIBrowser::finalize()
+{
+    mQtFileSystemWatcherThread->finalize();
+}
 
 ///
 /// Given a scan directory, determine the MRID
@@ -502,6 +529,7 @@ const MRIBrowser::MRISearchType* MRIBrowser::getMRISearchType(int index)
 //
 void MRIBrowser::setFilterFile(const std::string& path)
 {
+    mFilterFilePath = path;
     mSortFilterProxyModel->setFilterFile(path);
     mSortFilterProxyModel->setFilterRegExp("");
     mSearchButton->setText("Filter");
@@ -511,6 +539,46 @@ void MRIBrowser::setFilterFile(const std::string& path)
     {
         mMRITreeView->select(mSortFilterProxyModel->index(0, 0));
     }
+}
+
+///
+//  Method which gets called with a path name whenever there is a file updated, must be
+//  implemented by the QtFileSystemWatcherListener
+//
+void MRIBrowser::fileUpdated(std::string path)
+{
+    mMRIListUpdated.emit();
+}
+
+///
+//  Refresh MRI list from disk
+//
+void MRIBrowser::refreshMRIList()
+{
+    if (mSortFilterProxyModel != NULL)
+    {
+        delete mSortFilterProxyModel;
+    }
+
+    mMRIModel->removeRows(0, mMRIModel->rowCount());
+
+    populateMRIDs(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID.xml");
+
+
+    mSortFilterProxyModel = new MRIFilterProxyModel(this);
+    mSortFilterProxyModel->setSourceModel(mMRIModel);
+    mSortFilterProxyModel->setDynamicSortFilter(true);
+    mSortFilterProxyModel->setFilterKeyColumn(0);
+    mSortFilterProxyModel->setFilterRole(DisplayRole);
+
+
+    mMRITreeView->setModel(mSortFilterProxyModel);
+    mMRITreeView->setColumnWidth(0, WLength(125, WLength::Pixel));
+
+    mPopup->setModel(mSortFilterProxyModel);
+    resetAll();
+
+    setFilterFile(mFilterFilePath);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

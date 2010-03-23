@@ -43,6 +43,7 @@ ADD_EXECUTABLE(pl_gui.wt
   SubjectPage.cpp
   SubmitJobDialog.cpp
   QtFileSystemWatcher.cpp
+  QtFileSystemWatcherThread.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/moccedQtFileSystemWatcher.cpp
 )
 

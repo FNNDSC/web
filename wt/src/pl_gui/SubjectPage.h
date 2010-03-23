@@ -25,6 +25,7 @@ namespace Wt
     class WPushButton;
     class WStackedWidget;
     class WMessageBox;
+    class WImage;
 }
 
 using namespace Wt;
@@ -71,6 +72,16 @@ public:
     /// Finalize the widget (pre-destruction)
     ///
     void finalize();
+
+    ///
+    ///  Create Qt objects
+    ///
+    void createQt();
+
+    ///
+    ///  Destroy Qt objects
+    ///
+    void destroyQt();
 
     ///
     /// Get the MRI browser
@@ -120,6 +131,16 @@ private:
     ///
     void handleSubmitScans(WDialog::DialogCode dialogCode);
 
+    ///
+    ///  MRI list updated [slot]
+    ///
+    void mriListUpdated();
+
+    ///
+    ///  Refresh the MRI list [slot]
+    ///
+    void refreshMRIList();
+
 private:
 
     /// Current state of widget
@@ -145,6 +166,12 @@ private:
 
     /// Submit job dialog
     SubmitJobDialog *mSubmitJobDialog;
+
+    /// Refresh MRID button
+    WPushButton *mRefreshMRIBrowserButton;
+
+    /// Loading image
+    WImage *mLoadingImage;
 };
 
 #endif // SUBJECTPAGE

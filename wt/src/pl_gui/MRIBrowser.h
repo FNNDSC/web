@@ -17,6 +17,7 @@
 #include <Wt/WStandardItemModel>
 #include <Wt/WSortFilterProxyModel>
 #include <mxml.h>
+#include "QtFileSystemWatcherThread.h"
 
 #include <string>
 #include <list>
@@ -26,6 +27,7 @@ namespace Wt
 {
     class WPushButton;
     class WLineEdit;
+    class WSuggestionPopup;
 }
 using namespace Wt;
 
@@ -35,7 +37,7 @@ using namespace Wt;
 /// \class MRIBrowser
 /// \brief Provides a browser for all of the MRIDs
 ///
-class MRIBrowser : public WContainerWidget
+class MRIBrowser : public WContainerWidget, public QtFileSystemWatcherListener
 {
 public:
     // Types of data stored per MRID
@@ -133,6 +135,22 @@ public:
     void resetAll();
 
     ///
+    ///  Create Qt objects
+    ///
+    void createQt();
+
+    ///
+    ///  Destroy Qt objects
+    ///
+    void destroyQt();
+
+
+    ///
+    /// Finalize the widget (pre-destruction)
+    ///
+    void finalize();
+
+    ///
     /// Given a scan directory, determine the MRID
     ///
     std::string getMRIDFromScanDir(const std::string& scanDir) const;
@@ -141,6 +159,11 @@ public:
     /// Signal accessor for MRI selection
     ///
     Wt::Signal<std::string, std::string, std::string>& mriSelected() { return mMRISelected; }
+
+    ///
+    /// Signal accessor for MRI list updated
+    ///
+    Wt::Signal<void>& mriListUpdated()  {   return mMRIListUpdated; }
 
     ///
     /// Return the number of fields in the MRI field table
@@ -156,6 +179,17 @@ public:
     /// Set filter file - a file that specifies a set of patterns to filter the list of MRIs
     ///
     void setFilterFile(const std::string& path);
+
+    ///
+    /// Refresh MRI list from disk
+    ///
+    void refreshMRIList();
+
+    ///
+    /// Method which gets called with a path name whenever there is a file updated, must be
+    /// implemented by the QtFileSystemWatcherListener
+    ///
+    virtual void fileUpdated(std::string path);
 
 private:
 
@@ -199,6 +233,9 @@ private:
     /// Signal for when an MRI is selected
     Wt::Signal<std::string, std::string, std::string> mMRISelected;
 
+    /// Signal for when MRI list is updated
+    Wt::Signal<void> mMRIListUpdated;
+
     /// MRID Tree view
     WTreeView *mMRITreeView;
 
@@ -216,6 +253,15 @@ private:
 
     /// Search Line edit
     WLineEdit *mSearchLineEdit;
+
+    /// Qt file system watcher thread for notification of updates to dcm_MRID.xml
+    QtFileSystemWatcherThread *mQtFileSystemWatcherThread;
+
+    /// Current Filter file
+    std::string mFilterFilePath;
+
+    /// Suggestion popup box
+    WSuggestionPopup* mPopup;
 };
 
 ///

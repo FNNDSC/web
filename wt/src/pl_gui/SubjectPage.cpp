@@ -17,6 +17,7 @@
 #include "PipelineConfigure.h"
 #include "ConfigOptions.h"
 #include "SubmitJobDialog.h"
+#include "MRIBrowser.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -27,6 +28,7 @@
 #include <Wt/WStackedWidget>
 #include <Wt/WMessageBox>
 #include <Wt/WDate>
+#include <Wt/WImage>
 #include <signal.h>
 #include <boost/process/process.hpp>
 #include <boost/process/child.hpp>
@@ -78,14 +80,21 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
     mBackButton = new WPushButton("<- Back");
     mBackButton->setMinimumSize(WLength(65, WLength::Pixel), WLength::Auto);
 
-    WHBoxLayout *navLayout = new WHBoxLayout();
-    navLayout->addStretch(100);
-    navLayout->addWidget(mBackButton, Wt::AlignRight);
-    navLayout->addWidget(mNextButton, Wt::AlignRight);
+    mRefreshMRIBrowserButton = new WPushButton("New scan received, click to refresh MRID list.");
+    mLoadingImage = new WImage("icons/ajax-loader-2.gif");
+
+    WGridLayout *navLayout = new WGridLayout();
+    navLayout->addWidget(mLoadingImage, 0, 0, Wt::AlignRight | Wt::AlignMiddle);
+    navLayout->addWidget(mRefreshMRIBrowserButton, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
+    navLayout->addWidget(mBackButton, 0, 3, Wt::AlignRight);
+    navLayout->addWidget(mNextButton, 0, 4, Wt::AlignLeft);
+    navLayout->setColumnStretch(2, 1);
     layout->addLayout(navLayout, 1, 0);
 
     // Let row 0 take the excess space
     layout->setRowStretch(0, 1);
+    mLoadingImage->hide();
+    mRefreshMRIBrowserButton->hide();
 
 
     setLayout(layout);
@@ -99,6 +108,8 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
     mSelectScans->getScanAdded().connect(SLOT(this, SubjectPage::scanAdded));
     mNextButton->clicked().connect(SLOT(this, SubjectPage::nextClicked));
     mBackButton->clicked().connect(SLOT(this, SubjectPage::backClicked));
+    mSelectScans->getMRIBrowser()->mriListUpdated().connect(SLOT(this, SubjectPage::mriListUpdated));
+    mRefreshMRIBrowserButton->clicked().connect(SLOT(this, SubjectPage::refreshMRIList));
 
     resetAll();
 }
@@ -133,6 +144,8 @@ void SubjectPage::resetAll()
 
     mSelectScans->resetAll();
     mPipelineConfigure->resetAll();
+
+
 }
 
 ///
@@ -141,6 +154,22 @@ void SubjectPage::resetAll()
 void SubjectPage::finalize()
 {
     mSelectScans->finalize();
+}
+
+///
+//  Create Qt objects
+//
+void SubjectPage::createQt()
+{
+    mSelectScans->createQt();
+}
+
+///
+///  Destroy Qt objects
+///
+void SubjectPage::destroyQt()
+{
+    mSelectScans->destroyQt();
 }
 
 ///
@@ -465,4 +494,23 @@ void SubjectPage::handleSubmitScans(WDialog::DialogCode dialogCode)
 
         }
     }
+}
+
+///
+//  MRI list updated [slot]
+//
+void SubjectPage::mriListUpdated()
+{
+    mLoadingImage->show();
+    mRefreshMRIBrowserButton->show();
+}
+
+///
+//  Refresh the MRI list [slot]
+//
+void SubjectPage::refreshMRIList()
+{
+    mSelectScans->getMRIBrowser()->refreshMRIList();
+    mLoadingImage->hide();
+    mRefreshMRIBrowserButton->hide();
 }

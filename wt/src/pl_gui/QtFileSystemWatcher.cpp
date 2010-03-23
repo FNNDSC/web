@@ -12,6 +12,7 @@
 //
 #include "FileBrowser.h"
 #include "QtFileSystemWatcher.h"
+#include "QtFileSystemWatcherThread.h"
 #include <QtDebug>
 
 
@@ -28,12 +29,16 @@
 ///
 //  Constructor
 //
-QtFileSystemWatcher::QtFileSystemWatcher(FileBrowser *fileBrowser, QObject *parent)
+QtFileSystemWatcher::QtFileSystemWatcher(QtFileSystemWatcherThread *watcherThread, QObject *parent)
   : QFileSystemWatcher(parent),
-    mFileBrowser(fileBrowser)
+    mWatcherThread(watcherThread)
 {
     QObject::connect(this, SIGNAL(directoryChanged(const QString&)),
                      this, SLOT(notifyDirectoryChanged(const QString&)));
+
+    QObject::connect(this, SIGNAL(fileChanged(const QString&)),
+                      this, SLOT(notifyFileChanged(const QString&)));
+
 
     // This is needed to force Qt to use a polling engine rather than inotify.
     // The problem with inotify is that it only picks up events for an NFS
@@ -61,5 +66,13 @@ QtFileSystemWatcher::~QtFileSystemWatcher()
 //
 void QtFileSystemWatcher::notifyDirectoryChanged(const QString& path)
 {
-    mFileBrowser->doUpdate();
+    mWatcherThread->doUpdate(path.toStdString());
+}
+
+///
+// Handle notification of file changes [slot]
+//
+void QtFileSystemWatcher::notifyFileChanged(const QString& path)
+{
+    mWatcherThread->doUpdate(path.toStdString());
 }

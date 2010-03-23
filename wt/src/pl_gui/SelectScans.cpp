@@ -112,8 +112,24 @@ void SelectScans::resetAll()
 void SelectScans::finalize()
 {
     mClusterLoadChart->finalize();
+    mMRIBrowser->finalize();
 }
 
+///
+//  Create Qt objects
+//
+void SelectScans::createQt()
+{
+    mMRIBrowser->createQt();
+}
+
+///
+///  Destroy Qt objects
+///
+void SelectScans::destroyQt()
+{
+    mMRIBrowser->destroyQt();
+}
 
 ///
 //  Get pipeline type as string (for command line arg)

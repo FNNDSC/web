@@ -24,7 +24,7 @@
 ///
 //  Classes
 //
-class FileBrowser;
+class QtFileSystemWatcherThread;
 
 ///
 /// \class QtFileSystemWatcher
@@ -39,7 +39,7 @@ public:
     ///
     /// Constructor
     ///
-    QtFileSystemWatcher(FileBrowser *fileBrowser, QObject *parent = 0);
+    QtFileSystemWatcher(QtFileSystemWatcherThread *watcherThread, QObject *parent = 0);
 
     ///
     /// Destructor
@@ -55,10 +55,15 @@ public slots:
     ///
     void notifyDirectoryChanged(const QString& );
 
+    ///
+    /// Handle notification of file changes [slot]
+    ///
+    void notifyFileChanged(const QString& );
+
 protected:
 
-    /// File browser object
-    FileBrowser *mFileBrowser;
+    /// Watcher thread
+    QtFileSystemWatcherThread *mWatcherThread;
 
 };
 

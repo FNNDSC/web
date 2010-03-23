@@ -55,6 +55,16 @@ public:
     void finalize();
 
     ///
+    ///  Create Qt objects
+    ///
+    void createQt();
+
+    ///
+    ///  Destroy Qt objects
+    ///
+    void destroyQt();
+
+    ///
     /// Signal accessor for scan added
     ///
     Wt::Signal<bool>& getScanAdded() { return mScanAdded; }
