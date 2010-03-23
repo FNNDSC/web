@@ -187,6 +187,14 @@ void ResultsPage::resetAll()
 {
     mResultsTable->resetAll();
 
+    resetUser();
+}
+
+///
+// Reset to the current user name
+//
+void ResultsPage::resetUser()
+{
     std::string  currentUser = getCurrentUserName();
     mUserComboBox->setItemText(0, currentUser);
     mUserComboBox->setCurrentIndex(0);

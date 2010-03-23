@@ -69,6 +69,11 @@ public:
     void resetAll();
 
     ///
+    /// Reset to the current user name
+    ///
+    void resetUser();
+
+    ///
     /// Finalize the widget (pre-destruction)
     ///
     void finalize();
