@@ -41,7 +41,6 @@ public:
     ///
     bool LoadFromFile(const std::string& configFile);
 
-
     // Accessors
     const std::string& GetDicomDir()            const { return mDicomDir; }
     const std::string& GetOutDir()              const { return mOutDir; }
@@ -58,6 +57,7 @@ public:
     const std::string& GetTopLogFile()          const { return mTopLogFile; }
     const std::string& GetRemoteMatLab()        const { return mRemoteMatLab; }
     const std::string& GetMRIDFilterFile()      const { return mMRIDFilterFile; }
+    const std::string& GetPermissionsFile()     const { return mPermissionsFile; }
 
 private:
 
@@ -108,6 +108,9 @@ private:
 
     /// MRI Filter file
     std::string mMRIDFilterFile;
+
+    /// Permissions File (XML)
+    std::string mPermissionsFile;
 };
 
 #endif // CONFIGOPTIONS_H

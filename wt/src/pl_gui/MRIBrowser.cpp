@@ -13,6 +13,7 @@
 #include "MRIBrowser.h"
 #include "ConfigOptions.h"
 #include "ProjectXML.h"
+#include "PermissionsXML.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -81,9 +82,10 @@ const MRIBrowser::MRISearchType MRIBrowser::mSearchType[] =
 ///
 //  Constructor
 //
-MRIFilterProxyModel::MRIFilterProxyModel(WObject *parent) :
+MRIFilterProxyModel::MRIFilterProxyModel(PermissionsXML *permissionsXML, WObject *parent) :
     WSortFilterProxyModel(parent),
-    mNumSearchTerms(0)
+    mNumSearchTerms(0),
+    mPermissionsXML(permissionsXML)
 {
 }
 
@@ -168,121 +170,24 @@ bool MRIFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& sour
         WString s = asString(data);
         std::string searchTarget = s.toUTF8();
 
-        // First, see if it matches anything in the file filter list
-        bool passesFilterFile;
-        if (mSearchMatchType == MRIBrowser::ANY)
-        {
-            passesFilterFile = false;
-        }
-        else
-        {
-            passesFilterFile = true;
-        }
-
-        if (mNumSearchTerms == 0)
-        {
-            passesFilterFile = true;
-        }
-        else
-        {
-            for(int i = 0; i < MRIBrowser::NUM_FIELDS; i++)
-            {
-                std::list<SearchItem>::const_iterator iter = mSearchItems[i].begin();
-                while(iter != mSearchItems[i].end())
-                {
-                    bool curSearchResult = true;
-                    const SearchItem *searchItem = &(*iter);
-
-                    // Special handling for scan which has multiple entries
-                    if (i == MRIBrowser::SCAN)
-                    {
-                        // Determine the number of scans
-                        boost::any numScansData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::NUM_SCANS_ROLE);
-                        if (!numScansData.empty())
-                        {
-                            int numScans = boost::any_cast<int>(numScansData);
-                            if (numScans == 0)
-                            {
-                                curSearchResult = false;
-                            }
-                            else
-                            {
-                                for (int scan = 0; scan < numScans; scan++)
-                                {
-                                    int scanRole = MRIBrowser::FIRST_SCAN_ROLE + scan;
-
-                                    boost::any scanData = sourceModel()->index(sourceRow, col, sourceParent).data(scanRole);
-                                    if (!scanData.empty())
-                                    {
-                                        WString curStr = asString(scanData);
-                                        std::string searchStr = curStr.toUTF8();
-
-                                        curSearchResult = compareSearchTerm(searchStr, searchItem->mExpr, searchItem->mSearchType);
-
-                                        if (curSearchResult)
-                                        {
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    // General case
-                    else
-                    {
-                        boost::any curData = sourceModel()->index(sourceRow, col, sourceParent).data(searchItem->mRole);
-                        if (!curData.empty())
-                        {
-                            WString curStr = asString(curData);
-                            std::string searchStr = curStr.toUTF8();
-
-                            curSearchResult = compareSearchTerm(searchStr, searchItem->mExpr, searchItem->mSearchType);
-                        }
-                    }
-
-                    // ANY
-                    if (mSearchMatchType == MRIBrowser::ANY)
-                    {
-                        if (curSearchResult)
-                        {
-                            passesFilterFile = true;
-                            break;
-                        }
-                    }
-                    // ALL
-                    else
-                    {
-                        passesFilterFile = passesFilterFile && curSearchResult;
-                        if (passesFilterFile == false)
-                            break;
-                    }
-                    iter++;
-                }
-
-                // ANY
-                if (mSearchMatchType == MRIBrowser::ANY)
-                {
-                    if (passesFilterFile == true)
-                        break;
-                }
-                // ALL
-                else
-                {
-                    if (passesFilterFile == false)
-                        break;
-                }
-            }
-
-        }
-
-        if (passesFilterFile == false)
+        // First, see if it matches on the user/group access
+        if (filterByUserGroup(sourceRow, sourceParent) == false)
             return false;
 
+        // Next, see if it matches anything in the project filter search criteria
+        if (filterByProjectFile(sourceRow, sourceParent) == false)
+            return false;
+
+        // If no regexp specified, we are done, row should be accepted.
         if (filterRegExp().empty())
             return true;
 
+        //
+        // Finally, if the user provided a filter in the UI, match on final
+        // user specified filter
+        //
         // Break search pattern into multiple tokens separated by spaces
+        //
         std::string searchPattern = filterRegExp().toUTF8();
         istringstream istr(searchPattern, ios_base::out);
         std::string curSearchPattern;
@@ -300,6 +205,189 @@ bool MRIFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& sour
         }
     }
 
+    return false;
+}
+
+///
+// Check to see whether the row matches the project file search criteria
+//
+bool MRIFilterProxyModel::filterByProjectFile(int sourceRow, const WModelIndex& sourceParent) const
+{
+    int col = 0;
+
+    bool passesFilterFile;
+    if (mSearchMatchType == MRIBrowser::ANY)
+    {
+        passesFilterFile = false;
+    }
+    else
+    {
+        passesFilterFile = true;
+    }
+
+    if (mNumSearchTerms == 0)
+    {
+        passesFilterFile = true;
+    }
+    else
+    {
+        for(int i = 0; i < MRIBrowser::NUM_FIELDS; i++)
+        {
+            std::list<SearchItem>::const_iterator iter = mSearchItems[i].begin();
+            while(iter != mSearchItems[i].end())
+            {
+                bool curSearchResult = true;
+                const SearchItem *searchItem = &(*iter);
+
+                // Special handling for scan which has multiple entries
+                if (i == MRIBrowser::SCAN)
+                {
+                    // Determine the number of scans
+                    boost::any numScansData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::NUM_SCANS_ROLE);
+                    if (!numScansData.empty())
+                    {
+                        int numScans = boost::any_cast<int>(numScansData);
+                        if (numScans == 0)
+                        {
+                            curSearchResult = false;
+                        }
+                        else
+                        {
+                            for (int scan = 0; scan < numScans; scan++)
+                            {
+                                int scanRole = MRIBrowser::FIRST_SCAN_ROLE + scan;
+
+                                boost::any scanData = sourceModel()->index(sourceRow, col, sourceParent).data(scanRole);
+                                if (!scanData.empty())
+                                {
+                                    WString curStr = asString(scanData);
+                                    std::string searchStr = curStr.toUTF8();
+
+                                    curSearchResult = compareSearchTerm(searchStr, searchItem->mExpr, searchItem->mSearchType);
+
+                                    if (curSearchResult)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // General case
+                else
+                {
+                    boost::any curData = sourceModel()->index(sourceRow, col, sourceParent).data(searchItem->mRole);
+                    if (!curData.empty())
+                    {
+                        WString curStr = asString(curData);
+                        std::string searchStr = curStr.toUTF8();
+
+                        curSearchResult = compareSearchTerm(searchStr, searchItem->mExpr, searchItem->mSearchType);
+                    }
+                }
+
+                // ANY
+                if (mSearchMatchType == MRIBrowser::ANY)
+                {
+                    if (curSearchResult)
+                    {
+                        passesFilterFile = true;
+                        break;
+                    }
+                }
+                // ALL
+                else
+                {
+                    passesFilterFile = passesFilterFile && curSearchResult;
+                    if (passesFilterFile == false)
+                        break;
+                }
+                iter++;
+            }
+
+            // ANY
+            if (mSearchMatchType == MRIBrowser::ANY)
+            {
+                if (passesFilterFile == true)
+                    break;
+            }
+            // ALL
+            else
+            {
+                if (passesFilterFile == false)
+                    break;
+            }
+        }
+
+    }
+
+    return passesFilterFile;
+}
+
+///
+// Check to see whether the row is accessible to current user/group
+//
+bool MRIFilterProxyModel::filterByUserGroup(int sourceRow, const WModelIndex& sourceParent) const
+{
+    int col = 0;
+
+    // Determine whether there is a match on the user
+    boost::any numUsersData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::NUM_USERS_ROLE);
+    if (!numUsersData.empty())
+    {
+        int numUsers = boost::any_cast<int>(numUsersData);
+        if (numUsers > 0)
+        {
+            for (int user = 0; user < numUsers; user++)
+            {
+                int userRole = MRIBrowser::FIRST_USER_ROLE + user;
+
+                boost::any userData = sourceModel()->index(sourceRow, col, sourceParent).data(userRole);
+                if (!userData.empty())
+                {
+                    WString curStr = asString(userData);
+                    std::string userName = curStr.toUTF8();
+
+                    if (userName == getCurrentUserName())
+                    {
+                        // Found a match on exact user name, row should be accepted
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+
+    // Determine whether there is a match on the current user's groups
+    boost::any numGroupsData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::NUM_GROUPS_ROLE);
+    if (!numGroupsData.empty())
+    {
+        int numGroups = boost::any_cast<int>(numGroupsData);
+        if (numGroups > 0)
+        {
+            for (int group = 0; group < numGroups; group++)
+            {
+                int groupRole = MRIBrowser::FIRST_GROUP_ROLE + group;
+
+                boost::any groupData = sourceModel()->index(sourceRow, col, sourceParent).data(groupRole);
+                if (!groupData.empty())
+                {
+                    WString curStr = asString(groupData);
+                    std::string groupName = curStr.toUTF8();
+
+                    // Check whether this user is in this group as stored in the permissions XML file
+                    if (mPermissionsXML->userInGroup(getCurrentUserName(), groupName))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    // Did not match user or group, reject row
     return false;
 }
 
@@ -363,6 +451,10 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mMRIModel = new WStandardItemModel(this);
     populateMRIDs(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID.xml");
 
+    // Create permissions XML file reader and read in the permissions file
+    mPermissionsXML = new PermissionsXML();
+    mPermissionsXML->loadFromFile(getConfigOptionsPtr()->GetPermissionsFile());
+
     mSearchButton = new WPushButton("Search");
 
     WContainerWidget *searchContainer = new WContainerWidget();
@@ -370,7 +462,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mSearchLineEdit->setToolTip("Enter a string or regular expression to filter MRIDs.  Multiple expressions can be separated by spaces.");
     mSearchLineEdit->resize(190, WLength::Auto);
 
-    mSortFilterProxyModel = new MRIFilterProxyModel(this);
+    mSortFilterProxyModel = new MRIFilterProxyModel(mPermissionsXML, this);
     mSortFilterProxyModel->setSourceModel(mMRIModel);
     mSortFilterProxyModel->setDynamicSortFilter(true);
     mSortFilterProxyModel->setFilterKeyColumn(0);
@@ -425,6 +517,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
 //
 MRIBrowser::~MRIBrowser()
 {
+    delete mPermissionsXML;
 }
 
 ///
@@ -440,6 +533,8 @@ void MRIBrowser::resetAll()
     mSearchLineEdit->setText("");
     mSearchLineEdit->setEnabled(true);
     mFiltering = false;
+
+    //mPermissionsXML.loadFromFile(/* TODO */);
 
     // Select the first item in the list
     if (mSortFilterProxyModel->rowCount() > 0)
@@ -565,7 +660,7 @@ void MRIBrowser::refreshMRIList()
     populateMRIDs(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID.xml");
 
 
-    mSortFilterProxyModel = new MRIFilterProxyModel(this);
+    mSortFilterProxyModel = new MRIFilterProxyModel(mPermissionsXML, this);
     mSortFilterProxyModel->setSourceModel(mMRIModel);
     mSortFilterProxyModel->setDynamicSortFilter(true);
     mSortFilterProxyModel->setFilterKeyColumn(0);
@@ -632,34 +727,12 @@ void MRIBrowser::populateMRIDs(const std::string& mridXMLFile)
         setDataColumn(patientRecordNode, "ScannerModel", row, 0, MODEL_ROLE);
         setDataColumn(patientRecordNode, "SoftwareVer", row, 0, SOFTWARE_VER_ROLE);
 
-
-        mxml_node_t *scanNode;
-        int scanNumber = 0;
-        for (scanNode = mxmlFindElement(patientRecordNode, patientRecordNode,
-                                                     "Scan",
-                                                     NULL, NULL,
-                                                     MXML_DESCEND);
-             scanNode != NULL;
-             scanNode = mxmlFindElement(scanNode, patientRecordNode,
-                                                    "Scan",
-                                                    NULL, NULL,
-                                                    MXML_NO_DESCEND))
-        {
-            if (scanNode->child != NULL)
-            {
-                std::string scan = std::string(scanNode->child->value.opaque);
-                boost::any data = boost::any(WString::fromUTF8(scan));
-                mMRIModel->setData(row, 0, data, FIRST_SCAN_ROLE + scanNumber);
-                scanNumber++;
-            }
-        }
-
-        // Set the number of scans for the patient
-        boost::any scanNumData = boost::any(scanNumber);
-        mMRIModel->setData(row, 0, scanNumData, NUM_SCANS_ROLE);
+        // Set multi-entry data
+        setMultiDataColumn(patientRecordNode, "Scan", row, 0, FIRST_SCAN_ROLE, NUM_SCANS_ROLE);
+        setMultiDataColumn(patientRecordNode, "User", row, 0, FIRST_USER_ROLE, NUM_USERS_ROLE);
+        setMultiDataColumn(patientRecordNode, "Group", row, 0, FIRST_GROUP_ROLE, NUM_GROUPS_ROLE);
 
         mMRIModel->item(row)->setIcon("icons/folder.gif");
-
     }
 
 
@@ -742,4 +815,37 @@ void MRIBrowser::setDataColumn(mxml_node_t *node, const char* name, int row, int
         }
     }
 }
+
+///
+//  Set multiple data entries in the model from a series of like-named XML nodes
+//
+void MRIBrowser::setMultiDataColumn(mxml_node_t *node, const char* name, int row, int col, int firstRole, int numberRole)
+{
+    mxml_node_t *curNode;
+    int count = 0;
+
+    for (curNode = mxmlFindElement(node, node,
+                                   name,
+                                   NULL, NULL,
+                                   MXML_DESCEND);
+        curNode != NULL;
+        curNode = mxmlFindElement(curNode, node,
+                                  name,
+                                  NULL, NULL,
+                                  MXML_NO_DESCEND))
+    {
+        if (curNode != NULL && curNode->child != NULL)
+        {
+            std::string dataStr = std::string(curNode->child->value.opaque);
+            boost::any data = boost::any(WString::fromUTF8(dataStr));
+            mMRIModel->setData(row, 0, data, firstRole + count);
+            count++;
+        }
+    }
+
+   // Set the number of items in the data
+   boost::any numData = boost::any(count);
+   mMRIModel->setData(row, 0, numData, numberRole);
+}
+
 

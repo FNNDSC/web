@@ -21,6 +21,7 @@ ADD_EXECUTABLE(pl_gui.wt
   MRIBrowser.cpp
   MRIInfoBox.cpp
   PatientInfoBox.cpp
+  PermissionsXML.cpp
   PipelineApp.cpp
   PipelineArgTable.cpp
   PipelineConfigure.cpp

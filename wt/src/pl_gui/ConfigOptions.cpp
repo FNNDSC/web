@@ -55,6 +55,7 @@ ConfigOptions::ConfigOptions() :
         ("topLogFile",      value<string>(), "Top Log file")
         ("remoteMatLab",    value<string>(), "Remote MatLAB hostname")
         ("mridFilterFile",  value<string>(), "MRI Filter file")
+        ("permissionsFile", value<string>(), "Permissions file (XML) for users/groups")
         ;
 }
 
@@ -171,6 +172,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mMRIDFilterFile = vm["mridFilterFile"].as<string>();
         }
 
+        if (vm.count("permissionsFile"))
+        {
+            mPermissionsFile = vm["permissionsFile"].as<string>();
+        }
+
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
         WApplication::instance()->log("info") << "[Output Gradient Dir:] " << mOutGradientDir;
@@ -186,6 +192,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[Top log file:] " << mTopLogFile;
         WApplication::instance()->log("info") << "[Remote MatLAB:] " << mRemoteMatLab;
         WApplication::instance()->log("info") << "[MRID Filter File:] " << mMRIDFilterFile;
+        WApplication::instance()->log("info") << "[Permissions File:] " << mPermissionsFile;
 
         configFile.close();
     }

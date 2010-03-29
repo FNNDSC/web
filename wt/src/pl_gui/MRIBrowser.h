@@ -23,6 +23,7 @@
 #include <list>
 
 class MRIFilterProxyModel;
+class PermissionsXML;
 namespace Wt
 {
     class WPushButton;
@@ -89,7 +90,11 @@ public:
         MODEL_ROLE,
         SOFTWARE_VER_ROLE,
         NUM_SCANS_ROLE,
-        FIRST_SCAN_ROLE
+        FIRST_SCAN_ROLE,
+        NUM_USERS_ROLE,
+        FIRST_USER_ROLE,
+        NUM_GROUPS_ROLE,
+        FIRST_GROUP_ROLE
 
     } UserRoleEnum;
 
@@ -228,6 +233,11 @@ private:
     ///
     void setDataColumn(mxml_node_t *node, const char* name, int row, int col, int role, std::string errorReplaceStr ="", std::string prependStr = "");
 
+    ///
+    ///  Set multiple data entries in the model from a series of like-named XML nodes
+    ///
+    void setMultiDataColumn(mxml_node_t *node, const char* name, int row, int col, int firstRole, int numberRole);
+
 private:
 
     /// Signal for when an MRI is selected
@@ -262,6 +272,9 @@ private:
 
     /// Suggestion popup box
     WSuggestionPopup* mPopup;
+
+    /// Permissions XML file
+    PermissionsXML *mPermissionsXML;
 };
 
 ///
@@ -274,7 +287,7 @@ public:
     ///
     /// Constructor
     ///
-    MRIFilterProxyModel(WObject *parent = 0);
+    MRIFilterProxyModel(PermissionsXML *permissionsXML, WObject *parent = 0);
 
     ///
     /// Destructor
@@ -293,6 +306,23 @@ protected:
     ///
     bool compareSearchTerm(std::string searchTerm, std::string expr, MRIBrowser::MRISearchTypeEnum searchType) const;
 
+    ///
+    /// Check to see whether the row matches the project file search criteria
+    ///
+    bool filterByProjectFile(int sourceRow, const WModelIndex& sourceParent) const;
+
+    ///
+    /// Check to see whether the row is accessible to current user/group
+    ///
+    bool filterByUserGroup(int sourceRow, const WModelIndex& sourceParent) const;
+
+    ///
+    /// Custom filter, override base class implementation
+    ///
+    virtual bool filterAcceptRow(int sourceRow, const WModelIndex& sourceParent) const;
+
+protected:
+
     /// Search item
     typedef struct
     {
@@ -307,11 +337,6 @@ protected:
 
     } SearchItem;
 
-    ///
-    /// Custom filter, override base class implementation
-    ///
-    virtual bool filterAcceptRow(int sourceRow, const WModelIndex& sourceParent) const;
-
     /// List of search items
     std::list<SearchItem> mSearchItems[MRIBrowser::NUM_FIELDS];
 
@@ -320,6 +345,9 @@ protected:
 
     /// Type to match (any or all)
     MRIBrowser::MRISearchMatch mSearchMatchType;
+
+    /// User/group permissions XML file parser
+    PermissionsXML *mPermissionsXML;
 
 };
 
