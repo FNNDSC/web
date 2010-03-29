@@ -359,6 +359,11 @@ bool MRIFilterProxyModel::filterByUserGroup(int sourceRow, const WModelIndex& so
         }
     }
 
+    // Check whether the user is in the admin group
+    if (mPermissionsXML->userInGroup(getCurrentUserName(), getConfigOptionsPtr()->GetAdminGroup()))
+    {
+        return true;
+    }
 
     // Determine whether there is a match on the current user's groups
     boost::any numGroupsData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::NUM_GROUPS_ROLE);

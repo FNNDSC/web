@@ -58,6 +58,7 @@ public:
     const std::string& GetRemoteMatLab()        const { return mRemoteMatLab; }
     const std::string& GetMRIDFilterFile()      const { return mMRIDFilterFile; }
     const std::string& GetPermissionsFile()     const { return mPermissionsFile; }
+    const std::string& GetAdminGroup()          const { return mAdminGroup; }
 
 private:
 
@@ -111,6 +112,9 @@ private:
 
     /// Permissions File (XML)
     std::string mPermissionsFile;
+
+    /// Admin permissions group
+    std::string mAdminGroup;
 };
 
 #endif // CONFIGOPTIONS_H
