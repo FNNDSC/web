@@ -90,12 +90,12 @@ public:
         MODEL_ROLE,
         SOFTWARE_VER_ROLE,
         NUM_SCANS_ROLE,
-        FIRST_SCAN_ROLE,
         NUM_USERS_ROLE,
-        FIRST_USER_ROLE,
         NUM_GROUPS_ROLE,
-        FIRST_GROUP_ROLE
-
+        FIRST_SCAN_ROLE_INDEX,
+        FIRST_USER_ROLE_INDEX,
+        FIRST_GROUP_ROLE_INDEX,
+        VARIABLE_DATA_START_ROLE
     } UserRoleEnum;
 
     /// MRI Field
@@ -236,7 +236,8 @@ private:
     ///
     ///  Set multiple data entries in the model from a series of like-named XML nodes
     ///
-    void setMultiDataColumn(mxml_node_t *node, const char* name, int row, int col, int firstRole, int numberRole);
+    void setMultiDataColumn(mxml_node_t *node, const char* name, int row, int col, int firstRole, int numberRole,
+                            int *numVariableRoles);
 
 private:
 

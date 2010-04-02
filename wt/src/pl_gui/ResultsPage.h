@@ -71,7 +71,7 @@ public:
     ///
     /// Reset to the current user name
     ///
-    void resetUser();
+    void resetUser(const std::string &userName);
 
     ///
     /// Finalize the widget (pre-destruction)

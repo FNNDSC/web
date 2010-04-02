@@ -401,7 +401,7 @@ void PipelineApp::projectChosen(std::string projectPath)
     {
         // Resetting the entire page causes problems, so just reset the
         // user
-        mResultsPage->resetUser();
+        mResultsPage->resetUser(mCurrentUser);
     }
 
     mCurrentProjectLabel->setText(WString("Current Project: [{1}]").arg(path(projectPath).stem()));

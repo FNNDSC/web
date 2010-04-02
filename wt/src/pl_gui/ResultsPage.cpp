@@ -187,20 +187,22 @@ void ResultsPage::resetAll()
 {
     mResultsTable->resetAll();
 
-    resetUser();
+    resetUser(getCurrentUserName());
 }
 
 ///
 // Reset to the current user name
 //
-void ResultsPage::resetUser()
+void ResultsPage::resetUser(const std::string &userName)
 {
-    std::string  currentUser = getCurrentUserName();
-    mUserComboBox->setItemText(0, currentUser);
-    mUserComboBox->setCurrentIndex(0);
-    userChanged(0);
+    if (mUserComboBox->itemText(0).toUTF8() != userName)
+    {
+        mUserComboBox->setItemText(0, userName);
+        mUserComboBox->setCurrentIndex(0);
+        userChanged(0);
 
-    mSearchLineEdit->setText("");
+        mSearchLineEdit->setText("");
+    }
 }
 
 ///

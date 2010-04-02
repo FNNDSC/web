@@ -51,17 +51,17 @@ using namespace boost::filesystem;
 // and what description should be displayed.  This table is used heavily by the SearchTerm class.
 const MRIBrowser::MRIField MRIBrowser::mFieldInfo[] =
 {
-    { DisplayRole,                  true,   "PatientID",            "Patient ID"            },  // PATIENT_ID
-    { MRIBrowser::FIRST_SCAN_ROLE,  true,   "Scan",                 "Scan Sequence Name"    },  // SCAN
-    { MRIBrowser::DIR_ROLE,         false,  "Directory",            "Directory"             },  // DIRECTORY
-    { MRIBrowser::AGE_ROLE,         true,   "PatientAge",           "Patient Age"           },  // AGE
-    { MRIBrowser::NAME_ROLE,        true,   "PatientName",          "Patient Name"          },  // NAME
-    { MRIBrowser::SEX_ROLE,         true,   "PatientSex",           "Patient Sex"           },  // SEX
-    { MRIBrowser::BIRTHDAY_ROLE,    true,   "PatientBirthday",      "Patient Birthday"      },  // BIRTHDAY
-    { MRIBrowser::SCANDATE_ROLE,    true,   "ImageScanDate",        "Image Scan Date"       },  // SCANDATE
-    { MRIBrowser::MANUFACTURER_ROLE,true,   "ScannerManufacturer",  "Scanner Manufacturer"  },  // MANUFACTURER
-    { MRIBrowser::MODEL_ROLE,       true,   "ScannerModel",         "Scanner Model"         },  // MODEL
-    { MRIBrowser::SOFTWARE_VER_ROLE,true,   "SoftwareVer",          "Software Version"      },  // SOFTWARE_VER
+    { DisplayRole,                          true,   "PatientID",            "Patient ID"            },  // PATIENT_ID
+    { MRIBrowser::FIRST_SCAN_ROLE_INDEX,    true,   "Scan",                 "Scan Sequence Name"    },  // SCAN
+    { MRIBrowser::DIR_ROLE,                 false,  "Directory",            "Directory"             },  // DIRECTORY
+    { MRIBrowser::AGE_ROLE,                 true,   "PatientAge",           "Patient Age"           },  // AGE
+    { MRIBrowser::NAME_ROLE,                true,   "PatientName",          "Patient Name"          },  // NAME
+    { MRIBrowser::SEX_ROLE,                 true,   "PatientSex",           "Patient Sex"           },  // SEX
+    { MRIBrowser::BIRTHDAY_ROLE,            true,   "PatientBirthday",      "Patient Birthday"      },  // BIRTHDAY
+    { MRIBrowser::SCANDATE_ROLE,            true,   "ImageScanDate",        "Image Scan Date"       },  // SCANDATE
+    { MRIBrowser::MANUFACTURER_ROLE,        true,   "ScannerManufacturer",  "Scanner Manufacturer"  },  // MANUFACTURER
+    { MRIBrowser::MODEL_ROLE,               true,   "ScannerModel",         "Scanner Model"         },  // MODEL
+    { MRIBrowser::SOFTWARE_VER_ROLE,        true,   "SoftwareVer",          "Software Version"      },  // SOFTWARE_VER
 };
 
 const MRIBrowser::MRISearchType MRIBrowser::mSearchType[] =
@@ -244,8 +244,10 @@ bool MRIFilterProxyModel::filterByProjectFile(int sourceRow, const WModelIndex& 
                 {
                     // Determine the number of scans
                     boost::any numScansData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::NUM_SCANS_ROLE);
-                    if (!numScansData.empty())
+                    boost::any firstScansIndexData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::FIRST_SCAN_ROLE_INDEX);
+                    if (!numScansData.empty() && !firstScansIndexData.empty())
                     {
+                        int startScansIndex = boost::any_cast<int>(firstScansIndexData);
                         int numScans = boost::any_cast<int>(numScansData);
                         if (numScans == 0)
                         {
@@ -255,7 +257,7 @@ bool MRIFilterProxyModel::filterByProjectFile(int sourceRow, const WModelIndex& 
                         {
                             for (int scan = 0; scan < numScans; scan++)
                             {
-                                int scanRole = MRIBrowser::FIRST_SCAN_ROLE + scan;
+                                int scanRole = MRIBrowser::VARIABLE_DATA_START_ROLE + startScansIndex + scan;
 
                                 boost::any scanData = sourceModel()->index(sourceRow, col, sourceParent).data(scanRole);
                                 if (!scanData.empty())
@@ -334,14 +336,16 @@ bool MRIFilterProxyModel::filterByUserGroup(int sourceRow, const WModelIndex& so
 
     // Determine whether there is a match on the user
     boost::any numUsersData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::NUM_USERS_ROLE);
-    if (!numUsersData.empty())
+    boost::any firstUserIndexData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::FIRST_USER_ROLE_INDEX);
+    if (!numUsersData.empty() && !firstUserIndexData.empty())
     {
+        int startUserIndex = boost::any_cast<int>(firstUserIndexData);
         int numUsers = boost::any_cast<int>(numUsersData);
         if (numUsers > 0)
         {
             for (int user = 0; user < numUsers; user++)
             {
-                int userRole = MRIBrowser::FIRST_USER_ROLE + user;
+                int userRole = MRIBrowser::VARIABLE_DATA_START_ROLE + startUserIndex + user;
 
                 boost::any userData = sourceModel()->index(sourceRow, col, sourceParent).data(userRole);
                 if (!userData.empty())
@@ -367,14 +371,16 @@ bool MRIFilterProxyModel::filterByUserGroup(int sourceRow, const WModelIndex& so
 
     // Determine whether there is a match on the current user's groups
     boost::any numGroupsData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::NUM_GROUPS_ROLE);
-    if (!numGroupsData.empty())
+    boost::any firstGroupIndexData = sourceModel()->index(sourceRow, col, sourceParent).data(MRIBrowser::FIRST_GROUP_ROLE_INDEX);
+    if (!numGroupsData.empty() && !firstGroupIndexData.empty())
     {
+        int startGroupIndex = boost::any_cast<int>(firstGroupIndexData);
         int numGroups = boost::any_cast<int>(numGroupsData);
         if (numGroups > 0)
         {
             for (int group = 0; group < numGroups; group++)
             {
-                int groupRole = MRIBrowser::FIRST_GROUP_ROLE + group;
+                int groupRole =  MRIBrowser::VARIABLE_DATA_START_ROLE + startGroupIndex + group;
 
                 boost::any groupData = sourceModel()->index(sourceRow, col, sourceParent).data(groupRole);
                 if (!groupData.empty())
@@ -732,10 +738,11 @@ void MRIBrowser::populateMRIDs(const std::string& mridXMLFile)
         setDataColumn(patientRecordNode, "ScannerModel", row, 0, MODEL_ROLE);
         setDataColumn(patientRecordNode, "SoftwareVer", row, 0, SOFTWARE_VER_ROLE);
 
+        int numVariableRoles = 0;
         // Set multi-entry data
-        setMultiDataColumn(patientRecordNode, "Scan", row, 0, FIRST_SCAN_ROLE, NUM_SCANS_ROLE);
-        setMultiDataColumn(patientRecordNode, "User", row, 0, FIRST_USER_ROLE, NUM_USERS_ROLE);
-        setMultiDataColumn(patientRecordNode, "Group", row, 0, FIRST_GROUP_ROLE, NUM_GROUPS_ROLE);
+        setMultiDataColumn(patientRecordNode, "Scan", row, 0, FIRST_SCAN_ROLE_INDEX, NUM_SCANS_ROLE, &numVariableRoles);
+        setMultiDataColumn(patientRecordNode, "User", row, 0, FIRST_USER_ROLE_INDEX, NUM_USERS_ROLE, &numVariableRoles);
+        setMultiDataColumn(patientRecordNode, "Group", row, 0, FIRST_GROUP_ROLE_INDEX, NUM_GROUPS_ROLE, &numVariableRoles);
 
         mMRIModel->item(row)->setIcon("icons/folder.gif");
     }
@@ -824,10 +831,15 @@ void MRIBrowser::setDataColumn(mxml_node_t *node, const char* name, int row, int
 ///
 //  Set multiple data entries in the model from a series of like-named XML nodes
 //
-void MRIBrowser::setMultiDataColumn(mxml_node_t *node, const char* name, int row, int col, int firstRole, int numberRole)
+void MRIBrowser::setMultiDataColumn(mxml_node_t *node, const char* name, int row, int col, int firstRoleIndex, int numberRole,
+                                    int *numVariableRoles)
 {
     mxml_node_t *curNode;
     int count = 0;
+
+    // Set the first index of the data
+    boost::any startIndex = boost::any(*numVariableRoles);
+    mMRIModel->setData(row, 0, startIndex, firstRoleIndex);
 
     for (curNode = mxmlFindElement(node, node,
                                    name,
@@ -843,7 +855,8 @@ void MRIBrowser::setMultiDataColumn(mxml_node_t *node, const char* name, int row
         {
             std::string dataStr = std::string(curNode->child->value.opaque);
             boost::any data = boost::any(WString::fromUTF8(dataStr));
-            mMRIModel->setData(row, 0, data, firstRole + count);
+            mMRIModel->setData(row, 0, data, VARIABLE_DATA_START_ROLE + *numVariableRoles);
+            (*numVariableRoles)++;
             count++;
         }
     }
