@@ -195,6 +195,9 @@ void ResultsPage::resetAll()
 //
 void ResultsPage::resetUser(const std::string &userName)
 {
+    // This test here was to deal with a crash deep in the Wt
+    // bowels if the user got changed when the ResultsPage was
+    // not visible
     if (mUserComboBox->itemText(0).toUTF8() != userName)
     {
         mUserComboBox->setItemText(0, userName);
@@ -307,6 +310,15 @@ void ResultsPage::refreshClicked()
 {
     mResultsTable->resetAll();
     resetAll();
+
+    // Make sure the user gets reset when refresh is clicked, because
+    // resetUser() will not update if the user has not changed
+    mUserComboBox->setItemText(0, getCurrentUserName());
+    mUserComboBox->setCurrentIndex(0);
+    userChanged(0);
+
+    mSearchLineEdit->setText("");
+
 }
 
 ///
