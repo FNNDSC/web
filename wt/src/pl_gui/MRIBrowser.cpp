@@ -769,7 +769,15 @@ void MRIBrowser::mriChanged()
     {
         WString mrid = boost::any_cast<WString>(displayData);
         WString scanDir = boost::any_cast<WString>(d);
-        WString age = boost::any_cast<WString>(d1);
+        WString age;
+        if (!d1.empty())
+        {
+            age = boost::any_cast<WString>(d1);
+        }
+        else
+        {
+            age = "UNKNOWN_AGE";
+        }
 
         mMRISelected.emit(mrid.toUTF8(), scanDir.toUTF8(), age.toUTF8());
     }
@@ -854,6 +862,12 @@ void MRIBrowser::setMultiDataColumn(mxml_node_t *node, const char* name, int row
         if (curNode != NULL && curNode->child != NULL)
         {
             std::string dataStr = std::string(curNode->child->value.opaque);
+
+            if (dataStr == "")
+            {
+                dataStr = "unnamed";
+            }
+
             boost::any data = boost::any(WString::fromUTF8(dataStr));
             mMRIModel->setData(row, 0, data, VARIABLE_DATA_START_ROLE + *numVariableRoles);
             (*numVariableRoles)++;

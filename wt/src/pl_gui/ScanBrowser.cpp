@@ -216,6 +216,13 @@ void ScanBrowser::setScanDir(std::string scanDir)
 
                     istr >> tmp;
                     scanName += tmp + " ";
+
+
+                }
+
+                if (scanName == "" || scanName == " ")
+                {
+                    scanName = "unnamed";
                 }
 
                 mScansSelectionBox->addItem(scanName);
