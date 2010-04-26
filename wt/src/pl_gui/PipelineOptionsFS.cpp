@@ -52,6 +52,9 @@ PipelineOptionsFS::PipelineOptionsFS(WContainerWidget *parent) :
         mStageButtonGroupLayout->addWidget(mStageBoxes[i]);
     }
 
+    mTalairachCheckBox = new WCheckBox("Perform Talairach registration");
+    mStageButtonGroupLayout->addWidget(mTalairachCheckBox);
+
     mPipelineOptionsBoxLayout->setRowStretch(0, -1);
 
     resetAll();
@@ -83,6 +86,8 @@ void PipelineOptionsFS::resetAll()
     {
        mStageBoxes[i]->setChecked(true);
     }
+
+    mTalairachCheckBox->setChecked(false);
 }
 
 ///
@@ -107,6 +112,11 @@ std::string PipelineOptionsFS::getCommandLineString() const
     }
 
     args = "-t " + stageStrStream.str();;
+
+    if (!mTalairachCheckBox->isChecked())
+    {
+        args += " -F -notalairach ";
+    }
 
     return args + " " + PipelineOptions::getCommandLineString();
 }

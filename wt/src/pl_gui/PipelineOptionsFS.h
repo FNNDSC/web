@@ -59,6 +59,9 @@ private:
     /// Buttons for pipeline stages
     WCheckBox *mStageBoxes[NUM_OPTIONAL_FS_STAGES];
 
+    /// Whether to perform Talairach transformation
+    WCheckBox *mTalairachCheckBox;
+
 };
 
 #endif // PIPELINEOPTIONSFS_H
