@@ -68,7 +68,8 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
     // Output directory suffix
     WRegExpValidator *dirSuffixValidator = new WRegExpValidator("[a-zA-Z0-9_+-]+");
     dirSuffixValidator->setMandatory(true);
-    mDirectoryGroupBoxLayout->addWidget(new WLabel("Directory Suffix:"), 0, 0, Wt::AlignRight  | Wt::AlignMiddle);
+    mOutputDirSuffixLabel = new WLabel("Directory Suffix:");
+    mDirectoryGroupBoxLayout->addWidget(mOutputDirSuffixLabel, 0, 0, Wt::AlignRight  | Wt::AlignMiddle);
     mOutputDirSuffix = new WLineEdit("");
     mOutputDirSuffix->setValidator(dirSuffixValidator);
     mOutputDirSuffix->setToolTip("This string will be appended to the directory name that is output for the scans.");

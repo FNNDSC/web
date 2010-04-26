@@ -65,7 +65,7 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
 
     mScansSelectionBox = new WSelectionBox();
     mScansSelectionBox->setStyleClass("groupdiv");
-    mScansSelectionBox->setSelectionMode(Wt::SingleSelection);
+    mScansSelectionBox->setSelectionMode(Wt::ExtendedSelection);
     mScansToProcessList = new WSelectionBox();
     mScansToProcessList->setStyleClass("groupdiv");
     mScansToProcessList->setSelectionMode(Wt::ExtendedSelection);
@@ -216,8 +216,6 @@ void ScanBrowser::setScanDir(std::string scanDir)
 
                     istr >> tmp;
                     scanName += tmp + " ";
-
-
                 }
 
                 if (scanName == "" || scanName == " ")
@@ -275,41 +273,37 @@ void ScanBrowser::setCurAge(std::string age)
 //
 void ScanBrowser::addScanClicked()
 {
-    int currentIndex = mScansSelectionBox->currentIndex();
-    if (currentIndex < 0)
-        return;
 
-    WString curScanText = mScansSelectionBox->itemText(currentIndex);
+    const set<int>& selectedSet = mScansSelectionBox->selectedIndexes();
+    set<int>::const_iterator iter = selectedSet.begin();
 
-    mNewScanData.mMRID = mCurMRID;
-    mNewScanData.mDicomFile = mScansDicomFiles[currentIndex];
-    mNewScanData.mScanDate = mScansDate;
-    mNewScanData.mScanName = curScanText.toUTF8();
-    mNewScanData.mScanDir = mCurScanDir;
-    mNewScanData.mAge = mCurAge;
-
-    bool addScan = true;
-    for (int i = 0; i < mScansToProcessData.size(); i++)
+    while (iter != selectedSet.end())
     {
-        // Check to see if it has already been added, and if so display
-        // a message to the user
-        if(mNewScanData.mMRID == mScansToProcessData[i].mMRID &&
-           mNewScanData.mDicomFile == mScansToProcessData[i].mDicomFile &&
-           mNewScanData.mScanName == mScansToProcessData[i].mScanName)
+        WString curScanText = mScansSelectionBox->itemText(*iter);
+
+        mNewScanData.mMRID = mCurMRID;
+        mNewScanData.mDicomFile = mScansDicomFiles[*iter];
+        mNewScanData.mScanDate = mScansDate;
+        mNewScanData.mScanName = curScanText.toUTF8();
+        mNewScanData.mScanDir = mCurScanDir;
+        mNewScanData.mAge = mCurAge;
+
+        for (int i = 0; i < mScansToProcessData.size(); i++)
         {
-            mMessageBox->setWindowTitle("Scan Already Selected");
-            mMessageBox->setText("Can not add scan: [MRID:] " + mNewScanData.mMRID +
-                                 " [Scan:] " + mNewScanData.mScanName + "\nIt has already been selected for processing.");
-            mMessageBox->setButtons(Wt::Ok);
-            mMessageBox->show();
-            addScan = false;
-            break;
+            // Check to see if it has already been added, and if so display
+            // a message to the user
+            if(mNewScanData.mMRID == mScansToProcessData[i].mMRID &&
+               mNewScanData.mDicomFile == mScansToProcessData[i].mDicomFile &&
+               mNewScanData.mScanName == mScansToProcessData[i].mScanName)
+            {
+                mMessageBox->setWindowTitle("Scan Already Selected");
+                mMessageBox->setText("Can not add scan: [MRID:] " + mNewScanData.mMRID +
+                                     " [Scan:] " + mNewScanData.mScanName + "\nIt has already been selected for processing.");
+                mMessageBox->setButtons(Wt::Ok);
+                mMessageBox->show();
+                return;
+            }
         }
-    }
-
-    if (addScan)
-    {
-        bool addScanWithoutResponse = true;
 
         Enums::PipelineType pipelineType = Enums::PIPELINE_UNKNOWN;
 
@@ -323,7 +317,7 @@ void ScanBrowser::addScanClicked()
         }
         else if(findSeriesMatch(getConfigOptionsPtr()->GetSeriesListFetal(), curScanText.toUTF8()))
         {
-            pipelineType = Enums::PIPELINE_TYPE_FS;
+            pipelineType = Enums::PIPELINE_TYPE_FETAL;
         }
 
         if (pipelineType != Enums::PIPELINE_UNKNOWN)
@@ -336,23 +330,15 @@ void ScanBrowser::addScanClicked()
             {
                 if (pipelineType != mPipelineType)
                 {
-                    mAddScanMessageBox->setWindowTitle("Pipeline Mismatch");
-                    mAddScanMessageBox->setText("[MRID:] " + mNewScanData.mMRID +
-                                                " [Scan:] " + mNewScanData.mScanName + " does not match current pipeline type." +
-                                                "\nAre you sure you want to add it?");
-                    mAddScanMessageBox->setButtons(Wt::Yes | Wt::No);
-                    mAddScanMessageBox->show();
-
-                    addScanWithoutResponse = false;
+                    // Used to display a message here, but do nothing.  It does not require user interaction.
                 }
             }
         }
 
-        if (addScanWithoutResponse)
-        {
-            // Force the scan to be added as if the user clicked "Yes"
-            handleAddScanFinished(Wt::Yes);
-        }
+        // Force the scan to be added as if the user clicked "Yes"
+        handleAddScanFinished(Wt::Yes);
+
+        iter++;
     }
 }
 
@@ -421,6 +407,11 @@ void ScanBrowser::pipelineOverrideClicked()
     WRadioButton *fetalButton = new WRadioButton("Fetal Extraction",
             mPipelineDialog->contents());
     group->addButton(fetalButton, Enums::PIPELINE_TYPE_FETAL + 1);
+    new WBreak(mPipelineDialog->contents());
+
+    WRadioButton *dcmSendButton = new WRadioButton("Send to Remote PACS",
+                mPipelineDialog->contents());
+    group->addButton(dcmSendButton, Enums::PIPELINE_TYPE_DCMSEND + 1);
     new WBreak(mPipelineDialog->contents());
 
     WRadioButton *unknownButton = new WRadioButton("Unknown",
@@ -492,6 +483,9 @@ void ScanBrowser::setCurrentPipeline(Enums::PipelineType pipelineType)
         break;
     case Enums::PIPELINE_TYPE_FS:
         mPipelineModeLabel->setText("Pipeline Type: Structural Reconstruction");
+        break;
+    case Enums::PIPELINE_TYPE_DCMSEND:
+        mPipelineModeLabel->setText("Send to Remote PACS");
         break;
     }
 }

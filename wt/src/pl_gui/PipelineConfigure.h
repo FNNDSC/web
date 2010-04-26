@@ -23,6 +23,7 @@ class PipelineOptions;
 class PipelineOptionsTract;
 class PipelineOptionsFS;
 class PipelineOptionsFetal;
+class PipelineOptionsDcmSend;
 namespace Wt
 {
     class WStackedWidget;
@@ -103,6 +104,9 @@ private:
 
     /// Fetal pipeline options
     PipelineOptionsFetal *mPipelineOptionsFetal;
+
+    /// DICOM Send pipeline options
+    PipelineOptionsDcmSend *mPipelineOptionsDcmSend;
 
     /// Current pipeline options
     PipelineOptions *mPipelineOptionsCurrent;

@@ -57,6 +57,7 @@ ConfigOptions::ConfigOptions() :
         ("mridFilterFile",  value<string>(), "MRI Filter file")
         ("permissionsFile", value<string>(), "Permissions file (XML) for users/groups")
         ("adminGroup",      value<string>(), "Admin group")
+        ("anonCertificate", value<string>(), "Anonymizing certificate")
         ;
 }
 
@@ -183,6 +184,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mAdminGroup = vm["adminGroup"].as<string>();
         }
 
+        if (vm.count("anonCertificate"))
+        {
+            mAnonCertificate = vm["anonCertificate"].as<string>();
+        }
+
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
         WApplication::instance()->log("info") << "[Output Gradient Dir:] " << mOutGradientDir;
@@ -200,6 +206,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[MRID Filter File:] " << mMRIDFilterFile;
         WApplication::instance()->log("info") << "[Permissions File:] " << mPermissionsFile;
         WApplication::instance()->log("info") << "[Admin Group:]" << mAdminGroup;
+        WApplication::instance()->log("info") << "[Anonymizing Certificate:]" << mAnonCertificate;
 
         configFile.close();
     }

@@ -26,6 +26,7 @@ ADD_EXECUTABLE(pl_gui.wt
   PipelineArgTable.cpp
   PipelineConfigure.cpp
   PipelineOptions.cpp
+  PipelineOptionsDcmSend.cpp
   PipelineOptionsFetal.cpp
   PipelineOptionsFS.cpp
   PipelineOptionsTract.cpp

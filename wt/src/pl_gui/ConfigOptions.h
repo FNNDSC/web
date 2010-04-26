@@ -59,6 +59,7 @@ public:
     const std::string& GetMRIDFilterFile()      const { return mMRIDFilterFile; }
     const std::string& GetPermissionsFile()     const { return mPermissionsFile; }
     const std::string& GetAdminGroup()          const { return mAdminGroup; }
+    const std::string& GetAnonCertificate()     const { return mAnonCertificate; }
 
 private:
 
@@ -115,6 +116,9 @@ private:
 
     /// Admin permissions group
     std::string mAdminGroup;
+
+    /// Anonymizing certificate
+    std::string mAnonCertificate;
 };
 
 #endif // CONFIGOPTIONS_H

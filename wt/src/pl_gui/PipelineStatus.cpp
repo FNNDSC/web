@@ -112,8 +112,11 @@ void PipelineStatus::updateAll()
         mPipelineTypeLabel->setText("Structural Reconstruction");
         break;
     case Enums::PIPELINE_TYPE_FETAL:
-            mPipelineTypeLabel->setText("Fetal Extraction");
-            break;
+        mPipelineTypeLabel->setText("Fetal Extraction");
+        break;
+    case Enums::PIPELINE_TYPE_DCMSEND:
+        mPipelineTypeLabel->setText("Send to Remote PACS");
+        break;
     case Enums::PIPELINE_UNKNOWN:
         mPipelineTypeLabel->setText("Unknown");
         break;

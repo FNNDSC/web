@@ -144,9 +144,13 @@ const std::string SelectScans::getCurrentPipelineAsString() const
     {
         return std::string("FS");
     }
-    else
+    else if (getCurrentPipeline() == Enums::PIPELINE_TYPE_FETAL)
     {
         return std::string("fetal");
+    }
+    else
+    {
+        return std::string("dcmsend");
     }
 }
 

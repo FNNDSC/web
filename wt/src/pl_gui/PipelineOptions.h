@@ -108,6 +108,9 @@ protected:
     /// Output directory suffix
     WLineEdit *mOutputDirSuffix;
 
+    /// Output directory suffix label
+    WLabel *mOutputDirSuffixLabel;
+
     /// E-mail user
     WLineEdit *mEmailUser;
 

@@ -13,6 +13,7 @@
 #include "PipelineOptionsFS.h"
 #include "PipelineOptionsTract.h"
 #include "PipelineOptionsFetal.h"
+#include "PipelineOptionsDcmSend.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
@@ -51,9 +52,11 @@ PipelineConfigure::PipelineConfigure(const vector<ScanBrowser::ScanData>& scansT
     mPipelineOptionsTract = new PipelineOptionsTract();
     mPipelineOptionsFS = new PipelineOptionsFS();
     mPipelineOptionsFetal = new PipelineOptionsFetal();
+    mPipelineOptionsDcmSend = new PipelineOptionsDcmSend();
     mStackedPipelineOptions->addWidget(mPipelineOptionsTract);
     mStackedPipelineOptions->addWidget(mPipelineOptionsFS);
     mStackedPipelineOptions->addWidget(mPipelineOptionsFetal);
+    mStackedPipelineOptions->addWidget(mPipelineOptionsDcmSend);
 
 
     WGridLayout *layout = new WGridLayout();
@@ -92,6 +95,7 @@ void PipelineConfigure::resetAll()
     mPipelineOptionsFetal->resetAll();
     mPipelineOptionsTract->resetAll();
     mPipelineOptionsFS->resetAll();
+    mPipelineOptionsDcmSend->resetAll();
     mPipelineStatus->resetAll();
     mPipelineOptionsCurrent = mPipelineOptionsTract;
 }
@@ -116,6 +120,10 @@ void PipelineConfigure::updateAll()
     case Enums::PIPELINE_TYPE_FETAL:
         mStackedPipelineOptions->setCurrentIndex(2);
         mPipelineOptionsCurrent = mPipelineOptionsFetal;
+        break;
+    case Enums::PIPELINE_TYPE_DCMSEND:
+        mStackedPipelineOptions->setCurrentIndex(3);
+        mPipelineOptionsCurrent = mPipelineOptionsDcmSend;
         break;
 
     }
