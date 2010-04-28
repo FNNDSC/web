@@ -30,6 +30,7 @@
 #include <Wt/WButtonGroup>
 #include <Wt/WRadioButton>
 #include <Wt/WDialog>
+#include <Wt/WLogger>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -121,7 +122,7 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
 
 
     // Connect signals to slots
-    mScansSelectionBox->activated().connect(SLOT(this, ScanBrowser::scanSelectionChanged));
+    mScansSelectionBox->changed().connect(SLOT(this, ScanBrowser::scanSelectionChanged));
     mAddScanButton->clicked().connect(SLOT(this, ScanBrowser::addScanClicked));
     mRemoveScanButton->clicked().connect(SLOT(this, ScanBrowser::removeScanClicked));
     mPipelineOverrideButton->clicked().connect(SLOT(this, ScanBrowser::pipelineOverrideClicked));
@@ -453,14 +454,22 @@ void ScanBrowser::handlePipelineDialogClosed(WDialog::DialogCode dialogCode)
 ///
 //  Scan selection changed
 //
-void ScanBrowser::scanSelectionChanged(int index)
+void ScanBrowser::scanSelectionChanged()
 {
-    if (index >= 0 && index < mScansDicomFiles.size())
+    const set<int>& selectedSet = mScansSelectionBox->selectedIndexes();
+    set<int>::const_iterator iter = selectedSet.begin();
+
+    // Use the first selected scan
+    if (iter != selectedSet.end())
     {
-        string dicomFile = mScansDicomFiles[index];
+        int index = *iter;
 
+        if (index >= 0 && index < mScansDicomFiles.size())
+        {
+            string dicomFile = mScansDicomFiles[index];
 
-        mMRIInfoBox->setDicomFileName(mCurScanDir + "/mri_info/" + dicomFile);
+            mMRIInfoBox->setDicomFileName(mCurScanDir + "/mri_info/" + dicomFile);
+        }
     }
 }
 

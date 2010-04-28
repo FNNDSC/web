@@ -140,7 +140,7 @@ private:
     ///
     //  Scan selection changed
     //
-    void scanSelectionChanged(int index);
+    void scanSelectionChanged();
 
     ///
     /// Handle pipeline dialog closed [slot]
