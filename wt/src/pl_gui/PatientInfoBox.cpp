@@ -241,6 +241,5 @@ void PatientInfoBox::setInfoData(PatientEnum patientEnum, const std::string& str
 		data = boost::any(std::string("Unknown"));
 	}
 
-	WApplication::instance()->log("debug") << str;
 	mModel->setData(patientEnum, 1, data);
 }
