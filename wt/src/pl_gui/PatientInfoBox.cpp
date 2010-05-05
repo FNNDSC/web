@@ -11,6 +11,8 @@
 //
 #include "PatientInfoBox.h"
 #include "ConfigOptions.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WStandardItem>
@@ -64,7 +66,6 @@ PatientInfoBox::PatientInfoBox(WContainerWidget *parent) :
     mTreeView = new WTreeView();
     mTreeView->setModel(mModel);
     mTreeView->setRootIsDecorated(false);
-    mTreeView->setColumn1Fixed(true);
     mTreeView->setSelectionMode(NoSelection);
     mTreeView->setSortingEnabled(false);
     mTreeView->setAlternatingRowColors(true);
@@ -240,5 +241,6 @@ void PatientInfoBox::setInfoData(PatientEnum patientEnum, const std::string& str
 		data = boost::any(std::string("Unknown"));
 	}
 
+	WApplication::instance()->log("debug") << str;
 	mModel->setData(patientEnum, 1, data);
 }
