@@ -138,7 +138,7 @@ void JobStatus::setJob(const std::string& clusterShFile, const std::string& meta
     context ctx;
     ctx.add(capture_stream(stdout_fileno));
     ctx.environment = current_environment();
-    ctx.environment["PATH"] = getConfigOptionsPtr()->GetScriptDir() + "/bin:/usr/bin:/usr/local/bin:/opt/local/bin:" + ctx.environment["PATH"];
+    ctx.environment["PATH"] = getConfigOptionsPtr()->GetScriptDir() + ":/bin:/usr/bin:/usr/local/bin:/opt/local/bin:" + ctx.environment["PATH"];
 
     child c = launch_shell(cmdToExecute, ctx);
     boost::processes::status s = c.wait();
@@ -245,7 +245,7 @@ void JobStatus::killButtonClicked()
     context ctx;
     ctx.add(capture_stream(stdout_fileno));
     ctx.environment = current_environment();
-    ctx.environment["PATH"] = getConfigOptionsPtr()->GetScriptDir() + ":" + ctx.environment["PATH"];
+    ctx.environment["PATH"] = getConfigOptionsPtr()->GetScriptDir() + ":/bin:/usr/bin:/usr/local/bin:/opt/local/bin:" + ctx.environment["PATH"];
 
     child c = launch_shell(cmdToExecute, ctx);
     boost::processes::status s = c.wait();
