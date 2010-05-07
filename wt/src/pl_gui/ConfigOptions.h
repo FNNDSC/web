@@ -51,6 +51,8 @@ public:
     const std::string& GetSeriesListFetal()     const { return mSeriesListFetal; }
     const std::string& GetScriptDir()           const { return mScriptDir; }
     const std::string& GetClusterName()         const { return mClusterName; }
+    const std::string& GetClusterHeadNode()     const { return mClusterHeadNode; }
+    const std::string& GetClusterType()         const { return mClusterType; }
     const std::string& GetPackageDir()          const { return mPackageDir; }
     const std::string& GetConfigXML()           const { return mConfigXML; }
     const std::string& GetCPUUsageFile()        const { return mCPUUsageFile; }
@@ -60,6 +62,7 @@ public:
     const std::string& GetPermissionsFile()     const { return mPermissionsFile; }
     const std::string& GetAdminGroup()          const { return mAdminGroup; }
     const std::string& GetAnonCertificate()     const { return mAnonCertificate; }
+    const std::string& GetJobIDPrefix()         const { return mJobIDPrefix; }
 
 private:
 
@@ -93,6 +96,12 @@ private:
     /// Cluster name
     std::string mClusterName;
 
+    /// Cluster head node
+    std::string mClusterHeadNode;
+
+    /// Cluster type
+    std::string mClusterType;
+
     /// Package dir
     std::string mPackageDir;
 
@@ -119,6 +128,9 @@ private:
 
     /// Anonymizing certificate
     std::string mAnonCertificate;
+
+    /// Job ID Prefix
+    std::string mJobIDPrefix;
 };
 
 #endif // CONFIGOPTIONS_H

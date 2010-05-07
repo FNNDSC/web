@@ -71,7 +71,7 @@ public:
     ///
     /// Signal new result clicked (single click)
     ///
-    Wt::Signal<std::string, std::string, std::string>& resultClicked()  {   return mResultClicked; }
+    Wt::Signal<std::string, std::string, std::string, std::string>& resultClicked()  {   return mResultClicked; }
 
 private:
 
@@ -109,7 +109,7 @@ private:
     Wt::Signal<std::string, std::string,std::string> mResultSelected;
 
     /// Result clicked signal
-    Wt::Signal<std::string, std::string,std::string> mResultClicked;
+    Wt::Signal<std::string, std::string,std::string,std::string> mResultClicked;
 
     /// Model representing cluster jobs
     WStandardItemModel *mModel;

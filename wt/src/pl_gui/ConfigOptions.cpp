@@ -49,6 +49,8 @@ ConfigOptions::ConfigOptions() :
         ("seriesListFS",    value<string>(), "Series list freesurfer (comma separated)")
         ("seriesListFetal", value<string>(), "Series list fetal (comma separated)")
         ("clusterName",     value<string>(), "Cluster name")
+        ("clusterHeadNode", value<string>(), "Cluster head node")
+        ("clusterType",     value<string>(), "Cluster type")
         ("packageDir",      value<string>(), "Package directory")
         ("configXML",       value<string>(), "Config XML file")
         ("cpuUsageFile",    value<string>(), "CPU Usage File")
@@ -58,6 +60,7 @@ ConfigOptions::ConfigOptions() :
         ("permissionsFile", value<string>(), "Permissions file (XML) for users/groups")
         ("adminGroup",      value<string>(), "Admin group")
         ("anonCertificate", value<string>(), "Anonymizing certificate")
+        ("jobIDPrefix",     value<string>(), "Job ID Prefix")
         ;
 }
 
@@ -144,6 +147,16 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mClusterName = vm["clusterName"].as<string>();
         }
 
+        if (vm.count("clusterHeadNode"))
+        {
+            mClusterHeadNode = vm["clusterHeadNode"].as<string>();
+        }
+
+        if (vm.count("clusterType"))
+        {
+            mClusterType = vm["clusterType"].as<string>();
+        }
+
         if (vm.count("packageDir"))
         {
             mPackageDir = vm["packageDir"].as<string>();
@@ -189,6 +202,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mAnonCertificate = vm["anonCertificate"].as<string>();
         }
 
+        if (vm.count("jobIDPrefix"))
+        {
+            mJobIDPrefix = vm["jobIDPrefix"].as<string>();
+        }
+
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
         WApplication::instance()->log("info") << "[Output Gradient Dir:] " << mOutGradientDir;
@@ -196,8 +214,10 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[Script Dir:] " << mScriptDir;
         WApplication::instance()->log("info") << "[SeriesListTract:] " << mSeriesListTract;
         WApplication::instance()->log("info") << "[SeriesListFS:] " << mSeriesListFS;
-        WApplication::instance()->log("info") << "[SeriesListFetak:] " << mSeriesListFetal;
+        WApplication::instance()->log("info") << "[SeriesListFetal:] " << mSeriesListFetal;
         WApplication::instance()->log("info") << "[Cluster Name:] " << mClusterName;
+        WApplication::instance()->log("info") << "[Cluster Type:] " << mClusterType;
+        WApplication::instance()->log("info") << "[Cluster Head Node:] " << mClusterHeadNode;
         WApplication::instance()->log("info") << "[Package Dir:] " << mPackageDir;
         WApplication::instance()->log("info") << "[Results Config XML:] " << mConfigXML;
         WApplication::instance()->log("info") << "[CPU Usage file:] " << mCPUUsageFile;
@@ -207,6 +227,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[Permissions File:] " << mPermissionsFile;
         WApplication::instance()->log("info") << "[Admin Group:]" << mAdminGroup;
         WApplication::instance()->log("info") << "[Anonymizing Certificate:]" << mAnonCertificate;
+        WApplication::instance()->log("info") << "[Job ID Prefix:]" << mJobIDPrefix;
 
         configFile.close();
     }

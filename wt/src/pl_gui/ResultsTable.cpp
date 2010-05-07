@@ -162,13 +162,20 @@ void ResultsTable::jobClicked(const WModelIndex& item)
     boost::any d = mSortFilterProxyModel->data(modelRow, 0, UserRole);
     boost::any d1 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 1);
     boost::any d2 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 2);
+    boost::any d3 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 3);
     if (!d.empty() && !d1.empty() && !d2.empty())
     {
         WString clusterCommand = boost::any_cast<WString>(d);
         WString metaScript = boost::any_cast<WString>(d1);
         WString arguments = boost::any_cast<WString>(d2);
 
-        mResultClicked.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8());
+        WString jobID;
+        if (!d3.empty())
+        {
+            jobID = boost::any_cast<WString>(d3);
+        }
+
+        mResultClicked.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8(), jobID.toUTF8());
     }
 }
 
@@ -248,6 +255,7 @@ bool ResultsTable::populateResultsTable()
         setDataColumn(clusterJobNode, "Command", row, 0, UserRole);
         setDataColumn(clusterJobNode, "MetaScript", row, 0, UserRole + 1);
         setDataColumn(clusterJobNode, "Arguments", row, 0, UserRole + 2);
+        setDataColumn(clusterJobNode, "JobId", row, 0, UserRole + 3);
 
         // Set display data
         setDataColumn(clusterJobNode, "User", row, 1);

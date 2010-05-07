@@ -17,6 +17,7 @@
 #include "MRIBrowser.h"
 #include "MonitorLogTab.h"
 #include "MonitorResultsTab.h"
+#include "JobStatus.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -90,16 +91,22 @@ ResultsPage::ResultsPage(const MRIBrowser *mriBrowser, WContainerWidget *parent)
     userBox->setColumnStretch(7, 3);
 
     mPipelineArgTable = new PipelineArgTable();
-    mPipelineArgTable->setMinimumSize(WLength(1000, WLength::Pixel),
+    mPipelineArgTable->setMinimumSize(WLength::Auto,
                                       WLength(150, WLength::Pixel));
-    mPipelineArgTable->setMaximumSize(WLength(1000, WLength::Pixel),
+    mPipelineArgTable->setMaximumSize(WLength::Auto,
                                       WLength(150, WLength::Pixel));
+
+    mJobStatus = new JobStatus();
+    WHBoxLayout *bottomLayout = new WHBoxLayout();
+    bottomLayout->addWidget(mPipelineArgTable);
+    bottomLayout->addWidget(mJobStatus);
+
 
 
     WGridLayout *browserLayout = new WGridLayout();
     browserLayout->addLayout(userBox, 0, 0);
     browserLayout->addWidget(mResultsTable, 1, 0);
-    browserLayout->addWidget(mPipelineArgTable, 2, 0);
+    browserLayout->addLayout(bottomLayout, 2, 0);
     browserLayout->setRowStretch(0, -1);
     browserLayout->setRowStretch(1, 1);
     browserLayout->setRowStretch(2, -1);
@@ -186,6 +193,7 @@ void ResultsPage::destroyQt()
 void ResultsPage::resetAll()
 {
     mResultsTable->resetAll();
+    mJobStatus->resetAll();
 
     resetUser(getCurrentUserName());
 }
@@ -287,9 +295,14 @@ void ResultsPage::backPushed()
 ///
 //  New result clicked (single click) [slot]
 //
-void ResultsPage::resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments)
+void ResultsPage::resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments, std::string jobID)
 {
     mPipelineArgTable->setScript(metaScript, arguments);
+
+    if (jobID != "")
+    {
+        mJobStatus->setJob(clusterShFile, metaScript, jobID);
+    }
 }
 
 ///

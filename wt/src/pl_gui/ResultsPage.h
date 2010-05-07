@@ -31,6 +31,7 @@ class MonitorLogTab;
 class MonitorResultsTab;
 class MRIBrowser;
 class PipelineArgTable;
+class JobStatus;
 
 using namespace Wt;
 
@@ -120,7 +121,7 @@ private:
     ///
     /// New result clicked (single click) [slot]
     ///
-    void resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments);
+    void resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments, std::string jobID);
 
     ///
     /// Refresh clicked [slot]
@@ -163,6 +164,9 @@ private:
 
     /// Pipeline arguments table
     PipelineArgTable *mPipelineArgTable;
+
+    /// Job Status
+    JobStatus *mJobStatus;
 };
 
 #endif // RESULTSPAGE_H

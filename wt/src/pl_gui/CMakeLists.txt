@@ -12,6 +12,7 @@ ADD_EXECUTABLE(pl_gui.wt
   ClusterLoadPage.cpp
   FileBrowser.cpp
   FilePreviewBox.cpp
+  JobStatus.cpp
   LogFileBrowser.cpp
   LogFileTailer.cpp
   LoginPage.cpp
