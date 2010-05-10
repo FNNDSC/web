@@ -51,7 +51,7 @@ public:
     /// Populate with script data
     ///
     void setJob(const std::string& clusterShFile, const std::string& metaScript,
-                const std::string& jobId);
+                const std::string& jobId, const std::string& jobOwner);
 
 private:
 
@@ -69,6 +69,9 @@ private:
 
     /// Job ID
     std::string mJobID;
+
+    /// Job owner
+    std::string mJobOwner;
 
     /// Label for status image
     WLabel *mStatusImage;

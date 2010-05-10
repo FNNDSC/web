@@ -393,16 +393,9 @@ void PipelineApp::projectChosen(std::string projectPath)
     mStackedWidget->setCurrentIndex(2);
     mSubjectPage->resetAll();
 
-    if (firstTime)
-    {
-        mResultsPage->resetAll();
-    }
-    else
-    {
-        // Resetting the entire page causes problems, so just reset the
-        // user
-        mResultsPage->resetUser(mCurrentUser);
-    }
+    // This used to cause a crash in previous version of Wt, but after upgrading to Wt 3.1.2 it
+    // seems to have fixed itself
+    mResultsPage->resetAll();
 
     mCurrentProjectLabel->setText(WString("Current Project: [{1}]").arg(path(projectPath).stem()));
 

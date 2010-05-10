@@ -116,11 +116,12 @@ void JobStatus::resetAll()
 //  Populate table with data
 //
 void JobStatus::setJob(const std::string& clusterShFile, const std::string& metaScriptFile,
-                       const std::string& jobID)
+                       const std::string& jobID, const std::string& jobOwner)
 {
     mClusterShFile = clusterShFile;
     mMetaScript = metaScriptFile;
     mJobID = jobID;
+    mJobOwner = jobOwner;
 
     // Cluster script dir
     std::string metaScriptLog = path(clusterShFile).branch_path().string() + "/" + metaScriptFile + ".std";
@@ -164,7 +165,10 @@ void JobStatus::setJob(const std::string& clusterShFile, const std::string& meta
         }
         if (status == "RUNNING")
         {
-            mKillButton->enable();
+            if (getCurrentUserName() == jobOwner)
+            {
+                mKillButton->enable();
+            }
             mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
         }
     }
@@ -252,5 +256,5 @@ void JobStatus::killButtonClicked()
 
     mKillButton->disable();
 
-    setJob(mClusterShFile, mMetaScript, mJobID);
+    setJob(mClusterShFile, mMetaScript, mJobID, mJobOwner);
 }

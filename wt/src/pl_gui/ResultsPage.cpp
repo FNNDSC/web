@@ -295,13 +295,14 @@ void ResultsPage::backPushed()
 ///
 //  New result clicked (single click) [slot]
 //
-void ResultsPage::resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments, std::string jobID)
+void ResultsPage::resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments,
+                                std::string jobID, std::string userName)
 {
     mPipelineArgTable->setScript(metaScript, arguments);
 
     if (jobID != "")
     {
-        mJobStatus->setJob(clusterShFile, metaScript, jobID);
+        mJobStatus->setJob(clusterShFile, metaScript, jobID, userName);
     }
 }
 

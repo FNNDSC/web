@@ -163,6 +163,8 @@ void ResultsTable::jobClicked(const WModelIndex& item)
     boost::any d1 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 1);
     boost::any d2 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 2);
     boost::any d3 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 3);
+    boost::any d4 = mSortFilterProxyModel->data(modelRow, 1, DisplayRole);
+
     if (!d.empty() && !d1.empty() && !d2.empty())
     {
         WString clusterCommand = boost::any_cast<WString>(d);
@@ -175,7 +177,14 @@ void ResultsTable::jobClicked(const WModelIndex& item)
             jobID = boost::any_cast<WString>(d3);
         }
 
-        mResultClicked.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8(), jobID.toUTF8());
+        WString user;
+        if (!d4.empty())
+        {
+            user = boost::any_cast<WString>(d4);
+        }
+
+        mResultClicked.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8(),
+                            jobID.toUTF8(), user.toUTF8());
     }
 }
 

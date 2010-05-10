@@ -121,7 +121,8 @@ private:
     ///
     /// New result clicked (single click) [slot]
     ///
-    void resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments, std::string jobID);
+    void resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments,
+                       std::string jobID, std::string userName);
 
     ///
     /// Refresh clicked [slot]
