@@ -55,7 +55,7 @@ PipelineOptionsFS::PipelineOptionsFS(WContainerWidget *parent) :
     mTalairachCheckBox = new WCheckBox("Perform Talairach registration");
     mStageButtonGroupLayout->addWidget(mTalairachCheckBox);
 
-    mPipelineOptionsBoxLayout->setRowStretch(0, -1);
+    //    mPipelineOptionsBoxLayout->setRowStretch(0, -1);
 
     resetAll();
 }

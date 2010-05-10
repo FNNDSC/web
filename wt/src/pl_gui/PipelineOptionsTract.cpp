@@ -251,7 +251,7 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
 
     // Add to the base class layout
     mPipelineOptionsBoxLayout->addLayout(settingsHBoxLayout, 1, 0);
-    mPipelineOptionsBoxLayout->setRowStretch(0, -1);
+    //    mPipelineOptionsBoxLayout->setRowStretch(0, -1);
     mPipelineOptionsBoxLayout->setRowStretch(1, 1);
 
 
