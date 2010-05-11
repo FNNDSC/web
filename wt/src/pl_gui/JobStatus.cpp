@@ -158,6 +158,8 @@ void JobStatus::resetAll()
 void JobStatus::setJob(const std::string& clusterShFile, const std::string& metaScriptFile,
                        const std::string& jobID, const std::string& jobOwner)
 {
+    boost::mutex::scoped_lock lock(mUpdateMutex);
+
     resetAll();
 
     mClusterShFile = clusterShFile;
@@ -214,148 +216,154 @@ void JobStatus::updateStatus()
     {
         if (mUpdateStatus)
         {
-            // Do status update here
-            // Cluster script dir
-            std::string metaScriptLog = path(mClusterShFile).branch_path().string() + "/" + mMetaScript + ".std";
+            boost::mutex::scoped_lock lock(mUpdateMutex);
 
-            // Run the cluster status script to get the status of the job
-            // Determine the password salt by using ypmatch to get
-            std::string cmdToExecute;
-            cmdToExecute = "cluster_status.bash -J " + getConfigOptionsPtrTS(mApp)->GetJobIDPrefix() + mJobID;
-            cmdToExecute += " -C "+ getConfigOptionsPtrTS(mApp)->GetClusterType();
-            if (getConfigOptionsPtrTS(mApp)->GetClusterHeadNode() != "")
+            if (mClusterShFile != "" && mJobID != "")
             {
-                cmdToExecute += " -r " + getConfigOptionsPtrTS(mApp)->GetClusterHeadNode();
-            }
 
-            context ctx;
-            ctx.add(capture_stream(stdout_fileno));
-            ctx.environment = current_environment();
-            ctx.environment["PATH"] = getConfigOptionsPtrTS(mApp)->GetScriptDir() + ":/bin:/usr/bin:/usr/local/bin:/opt/local/bin:" + ctx.environment["PATH"];
+                // Do status update here
+                // Cluster script dir
+                std::string metaScriptLog = path(mClusterShFile).branch_path().string() + "/" + mMetaScript + ".std";
 
-            child c = launch_shell(cmdToExecute, ctx);
-            boost::processes::status s = c.wait();
-
-            // Get the returned encoded password
-            stream<boost::processes::pipe_end> is(c.get_stdout());
-            std::string process;
-            std::string status;
-
-            StatusEnum curStatus = STATUS_UNSET;
-
-
-            try
-            {
-                is >> process;
-                is >> status;
-
-                if (status != "")
+                // Run the cluster status script to get the status of the job
+                // Determine the password salt by using ypmatch to get
+                std::string cmdToExecute;
+                cmdToExecute = "cluster_status.bash -J " + getConfigOptionsPtrTS(mApp)->GetJobIDPrefix() + mJobID;
+                cmdToExecute += " -C "+ getConfigOptionsPtrTS(mApp)->GetClusterType();
+                if (getConfigOptionsPtrTS(mApp)->GetClusterHeadNode() != "")
                 {
-                    if (status == "QUEUED")
+                    cmdToExecute += " -r " + getConfigOptionsPtrTS(mApp)->GetClusterHeadNode();
+                }
+
+                context ctx;
+                ctx.add(capture_stream(stdout_fileno));
+                ctx.environment = current_environment();
+                ctx.environment["PATH"] = getConfigOptionsPtrTS(mApp)->GetScriptDir() + ":/bin:/usr/bin:/usr/local/bin:/opt/local/bin:" + ctx.environment["PATH"];
+
+                child c = launch_shell(cmdToExecute, ctx);
+                boost::processes::status s = c.wait();
+
+                // Get the returned encoded password
+                stream<boost::processes::pipe_end> is(c.get_stdout());
+                std::string process;
+                std::string status;
+
+                StatusEnum curStatus = STATUS_UNSET;
+
+
+                try
+                {
+                    is >> process;
+                    is >> status;
+
+                    if (status != "")
                     {
-                        curStatus = STATUS_QUEUED;
+                        if (status == "QUEUED")
+                        {
+                            curStatus = STATUS_QUEUED;
+                        }
+                        else
+                        {
+                            curStatus = STATUS_RUNNING;
+                        }
                     }
                     else
                     {
-                        curStatus = STATUS_RUNNING;
+                        curStatus = STATUS_UNKNOWN;
                     }
                 }
-                else
+                catch(...)
                 {
                     curStatus = STATUS_UNKNOWN;
+
                 }
-            }
-            catch(...)
-            {
-                curStatus = STATUS_UNKNOWN;
 
-            }
-
-            // See if we can figure out what the status of the job is
-            // by looking at the meta log file
-            if (curStatus == STATUS_UNKNOWN)
-            {
-                if (!exists(metaScriptLog))
+                // See if we can figure out what the status of the job is
+                // by looking at the meta log file
+                if (curStatus == STATUS_UNKNOWN)
                 {
-                    curStatus = STATUS_WAITING;
-                }
-                else
-                {
-                    // Use the following command to get the result code from the script:
-                    //  tail -2 <filename> | grep code | awk '{print $5}'
-                    // This looks at the "Shutting down with code #..." at the bottom of the script
-                    cmdToExecute = "tail -2 " + metaScriptLog + "| grep code | awk '{print $5}'";
-
-                    child c = launch_shell(cmdToExecute, ctx);
-                    boost::processes::status s = c.wait();
-
-                    // Get the result code
-                    stream<boost::processes::pipe_end> is(c.get_stdout());
-
-                    try
+                    if (!exists(metaScriptLog))
                     {
-                        std::string returnCode;
-                        is >> returnCode;
+                        curStatus = STATUS_WAITING;
+                    }
+                    else
+                    {
+                        // Use the following command to get the result code from the script:
+                        //  tail -2 <filename> | grep code | awk '{print $5}'
+                        // This looks at the "Shutting down with code #..." at the bottom of the script
+                        cmdToExecute = "tail -2 " + metaScriptLog + "| grep code | awk '{print $5}'";
 
-                        if (returnCode == "0")
+                        child c = launch_shell(cmdToExecute, ctx);
+                        boost::processes::status s = c.wait();
+
+                        // Get the result code
+                        stream<boost::processes::pipe_end> is(c.get_stdout());
+
+                        try
                         {
-                            curStatus = STATUS_COMPLETED_SUCCESS;
+                            std::string returnCode;
+                            is >> returnCode;
+
+                            if (returnCode == "0")
+                            {
+                                curStatus = STATUS_COMPLETED_SUCCESS;
+                            }
+                            else
+                            {
+                                curStatus = STATUS_COMPLETED_FAILURE;
+                            }
                         }
-                        else
+                        catch(...)
                         {
                             curStatus = STATUS_COMPLETED_FAILURE;
                         }
                     }
-                    catch(...)
-                    {
-                        curStatus = STATUS_COMPLETED_FAILURE;
-                    }
                 }
-            }
 
-            if (curStatus != mCurStatus)
-            {
-                // First, take the lock to safely manipulate the UI outside of the
-                // normal event loop, by having exclusive access to the session.
-                WApplication::UpdateLock lock = mApp->getUpdateLock();
-
-                mCurStatus = curStatus;
-                switch (curStatus)
+                if (curStatus != mCurStatus)
                 {
-                case STATUS_UNKNOWN:
-                    mStatusLabel->setText("UNKNOWN");
-                    mStatusImage->setImage(new WImage("icons/lg-alertY-glass.png"));
-                    break;
-                case STATUS_RUNNING:
-                case STATUS_QUEUED:
-                    if (curStatus == STATUS_RUNNING)
-                        mStatusLabel->setText("RUNNING");
-                    else
-                        mStatusLabel->setText("QUEUED");
-                    mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
-                    if (getCurrentUserName() == mJobOwner)
-                    {
-                        mKillButton->enable();
-                    }
-                    break;
-                case STATUS_WAITING:
-                    mStatusLabel->setText("WAITING TO BE QUEUED");
-                    mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
-                    break;
-                case STATUS_COMPLETED_SUCCESS:
-                    mStatusLabel->setText("COMPLETED (SUCCESS)");
-                    mStatusImage->setImage(new WImage("icons/lg-success-glass.png"));
-                    break;
-                case STATUS_COMPLETED_FAILURE:
-                    mStatusLabel->setText("COMPLETED (FAILURE)");
-                    mStatusImage->setImage(new WImage("icons/lg-failed-glass.png"));
-                    break;
-                default:
-                    // Unset state, don't display anything
-                    break;
-                }
+                    // First, take the lock to safely manipulate the UI outside of the
+                    // normal event loop, by having exclusive access to the session.
+                    WApplication::UpdateLock lock = mApp->getUpdateLock();
 
-                mApp->triggerUpdate();
+                    mCurStatus = curStatus;
+                    switch (curStatus)
+                    {
+                    case STATUS_UNKNOWN:
+                        mStatusLabel->setText("UNKNOWN");
+                        mStatusImage->setImage(new WImage("icons/lg-alertY-glass.png"));
+                        break;
+                    case STATUS_RUNNING:
+                    case STATUS_QUEUED:
+                        if (curStatus == STATUS_RUNNING)
+                            mStatusLabel->setText("RUNNING");
+                        else
+                            mStatusLabel->setText("QUEUED");
+                        mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
+                        if (getCurrentUserName() == mJobOwner)
+                        {
+                            mKillButton->enable();
+                        }
+                        break;
+                    case STATUS_WAITING:
+                        mStatusLabel->setText("WAITING TO BE QUEUED");
+                        mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
+                        break;
+                    case STATUS_COMPLETED_SUCCESS:
+                        mStatusLabel->setText("COMPLETED (SUCCESS)");
+                        mStatusImage->setImage(new WImage("icons/lg-success-glass.png"));
+                        break;
+                    case STATUS_COMPLETED_FAILURE:
+                        mStatusLabel->setText("COMPLETED (FAILURE)");
+                        mStatusImage->setImage(new WImage("icons/lg-failed-glass.png"));
+                        break;
+                    default:
+                        // Unset state, don't display anything
+                        break;
+                    }
+
+                    mApp->triggerUpdate();
+                }
             }
         }
 

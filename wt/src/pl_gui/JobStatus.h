@@ -135,6 +135,9 @@ private:
 
     /// Do update
     volatile bool mUpdateStatus;
+
+    /// Mutex
+    boost::mutex mUpdateMutex;
 };
 
 #endif // JOBSTATUS_H
