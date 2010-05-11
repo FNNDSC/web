@@ -55,7 +55,10 @@ using namespace boost::filesystem;
 //  Constructor
 //
 JobStatus::JobStatus(WContainerWidget *parent) :
-    WContainerWidget(parent)
+    WContainerWidget(parent),
+    mStopUpdateThread(false),
+    mUpdateStatus(false),
+    mApp(WApplication::instance())
 {
     setStyleClass("tabdiv");
 
@@ -79,6 +82,8 @@ JobStatus::JobStatus(WContainerWidget *parent) :
 
     mKillButton->clicked().connect(SLOT(this, JobStatus::killButtonClicked));
 
+    mThread = new boost::thread(boost::bind(&JobStatus::updateStatus, this));
+
     resetAll();
 
 }
@@ -99,6 +104,36 @@ JobStatus::~JobStatus()
 
 
 ///
+//  Start updating
+//
+void JobStatus::startUpdate()
+{
+    mUpdateStatus = true;
+}
+
+///
+//  Stop updating
+//
+void JobStatus::stopUpdate()
+{
+    mUpdateStatus = false;
+}
+
+///
+// Finalize the widget (pre-destruction)
+//
+void JobStatus::finalize()
+{
+    if (mThread != NULL)
+    {
+        mStopUpdateThread = true;
+        mThread->join();
+        delete mThread;
+        mThread = NULL;
+    }
+}
+
+///
 //  Reset to default state
 //
 void JobStatus::resetAll()
@@ -107,9 +142,14 @@ void JobStatus::resetAll()
     mStatusLabel->setText("");
     mKillButton->disable();
 
+    mCurStatus = STATUS_UNSET;
+
     mClusterShFile = "";
     mMetaScript = "";
     mJobID = "";
+    mJobOwner = "";
+
+    stopUpdate();
 }
 
 ///
@@ -118,111 +158,18 @@ void JobStatus::resetAll()
 void JobStatus::setJob(const std::string& clusterShFile, const std::string& metaScriptFile,
                        const std::string& jobID, const std::string& jobOwner)
 {
+    resetAll();
+
     mClusterShFile = clusterShFile;
     mMetaScript = metaScriptFile;
     mJobID = jobID;
     mJobOwner = jobOwner;
 
-    // Cluster script dir
-    std::string metaScriptLog = path(clusterShFile).branch_path().string() + "/" + metaScriptFile + ".std";
+    mStatusImage->setImage(new WImage("icons/ajax-loader-trans.gif"));
+    mStatusLabel->setText("Determing status...");
 
-    // Run the cluster status script to get the status of the job
-    // Determine the password salt by using ypmatch to get
-    std::string cmdToExecute;
-    cmdToExecute = "cluster_status.bash -J " + getConfigOptionsPtr()->GetJobIDPrefix() + jobID;
-    cmdToExecute += " -C "+ getConfigOptionsPtr()->GetClusterType();
-    if (getConfigOptionsPtr()->GetClusterHeadNode() != "")
-    {
-        cmdToExecute += " -r " + getConfigOptionsPtr()->GetClusterHeadNode();
-    }
-
-    context ctx;
-    ctx.add(capture_stream(stdout_fileno));
-    ctx.environment = current_environment();
-    ctx.environment["PATH"] = getConfigOptionsPtr()->GetScriptDir() + ":/bin:/usr/bin:/usr/local/bin:/opt/local/bin:" + ctx.environment["PATH"];
-
-    child c = launch_shell(cmdToExecute, ctx);
-    boost::processes::status s = c.wait();
-
-    // Get the returned encoded password
-    stream<boost::processes::pipe_end> is(c.get_stdout());
-    std::string process;
-    std::string status;
-
-
-    try
-    {
-        is >> process;
-        is >> status;
-
-        if (status != "")
-        {
-            mStatusLabel->setText(status);
-        }
-        else
-        {
-            mStatusLabel->setText("UNKNOWN");
-        }
-        if (status == "RUNNING")
-        {
-            if (getCurrentUserName() == jobOwner)
-            {
-                mKillButton->enable();
-            }
-            mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
-        }
-    }
-    catch(...)
-    {
-        mStatusLabel->setText("UNKNOWN");
-        mStatusImage->setImage(new WImage("icons/lg-alertY-glass.png"));
-    }
-
-    // See if we can figure out what the status of the job is
-    // by looking at the meta log file
-    if (mStatusLabel->text() == "UNKNOWN")
-    {
-        if (!exists(metaScriptLog))
-        {
-            mStatusLabel->setText("WAITING TO BE QUEUED");
-            mStatusImage->setImage(new WImage("icons/lg-alertY-glass.png"));
-        }
-        else
-        {
-            // Use the following command to get the result code from the script:
-            //  tail -2 <filename> | grep code | awk '{print $5}'
-            // This looks at the "Shutting down with code #..." at the bottom of the script
-            cmdToExecute = "tail -2 " + metaScriptLog + "| grep code | awk '{print $5}'";
-
-            child c = launch_shell(cmdToExecute, ctx);
-            boost::processes::status s = c.wait();
-
-            // Get the result code
-            stream<boost::processes::pipe_end> is(c.get_stdout());
-
-            try
-            {
-                std::string returnCode;
-                is >> returnCode;
-
-                if (returnCode == "0")
-                {
-                    mStatusLabel->setText("COMPLETED (SUCCESS)");
-                    mStatusImage->setImage(new WImage("icons/lg-success-glass.png"));
-                }
-                else
-                {
-                    mStatusLabel->setText("COMPLETED (FAILURE)");
-                    mStatusImage->setImage(new WImage("icons/lg-failed-glass.png"));
-                }
-            }
-            catch(...)
-            {
-                mStatusLabel->setText("COMPLETED (FAILURE)");
-                mStatusImage->setImage(new WImage("icons/lg-failed-glass.png"));
-            }
-        }
-    }
+    // Trigger the thread to start updating
+    startUpdate();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -255,6 +202,165 @@ void JobStatus::killButtonClicked()
     boost::processes::status s = c.wait();
 
     mKillButton->disable();
-
-    setJob(mClusterShFile, mMetaScript, mJobID, mJobOwner);
 }
+
+
+///
+//  Update thread for checking for status updates
+//
+void JobStatus::updateStatus()
+{
+    while (!mStopUpdateThread)
+    {
+        if (mUpdateStatus)
+        {
+            // Do status update here
+            // Cluster script dir
+            std::string metaScriptLog = path(mClusterShFile).branch_path().string() + "/" + mMetaScript + ".std";
+
+            // Run the cluster status script to get the status of the job
+            // Determine the password salt by using ypmatch to get
+            std::string cmdToExecute;
+            cmdToExecute = "cluster_status.bash -J " + getConfigOptionsPtrTS(mApp)->GetJobIDPrefix() + mJobID;
+            cmdToExecute += " -C "+ getConfigOptionsPtrTS(mApp)->GetClusterType();
+            if (getConfigOptionsPtrTS(mApp)->GetClusterHeadNode() != "")
+            {
+                cmdToExecute += " -r " + getConfigOptionsPtrTS(mApp)->GetClusterHeadNode();
+            }
+
+            context ctx;
+            ctx.add(capture_stream(stdout_fileno));
+            ctx.environment = current_environment();
+            ctx.environment["PATH"] = getConfigOptionsPtrTS(mApp)->GetScriptDir() + ":/bin:/usr/bin:/usr/local/bin:/opt/local/bin:" + ctx.environment["PATH"];
+
+            child c = launch_shell(cmdToExecute, ctx);
+            boost::processes::status s = c.wait();
+
+            // Get the returned encoded password
+            stream<boost::processes::pipe_end> is(c.get_stdout());
+            std::string process;
+            std::string status;
+
+            StatusEnum curStatus = STATUS_UNSET;
+
+
+            try
+            {
+                is >> process;
+                is >> status;
+
+                if (status != "")
+                {
+                    if (status == "QUEUED")
+                    {
+                        curStatus = STATUS_QUEUED;
+                    }
+                    else
+                    {
+                        curStatus = STATUS_RUNNING;
+                    }
+                }
+                else
+                {
+                    curStatus = STATUS_UNKNOWN;
+                }
+            }
+            catch(...)
+            {
+                curStatus = STATUS_UNKNOWN;
+
+            }
+
+            // See if we can figure out what the status of the job is
+            // by looking at the meta log file
+            if (curStatus == STATUS_UNKNOWN)
+            {
+                if (!exists(metaScriptLog))
+                {
+                    curStatus = STATUS_WAITING;
+                }
+                else
+                {
+                    // Use the following command to get the result code from the script:
+                    //  tail -2 <filename> | grep code | awk '{print $5}'
+                    // This looks at the "Shutting down with code #..." at the bottom of the script
+                    cmdToExecute = "tail -2 " + metaScriptLog + "| grep code | awk '{print $5}'";
+
+                    child c = launch_shell(cmdToExecute, ctx);
+                    boost::processes::status s = c.wait();
+
+                    // Get the result code
+                    stream<boost::processes::pipe_end> is(c.get_stdout());
+
+                    try
+                    {
+                        std::string returnCode;
+                        is >> returnCode;
+
+                        if (returnCode == "0")
+                        {
+                            curStatus = STATUS_COMPLETED_SUCCESS;
+                        }
+                        else
+                        {
+                            curStatus = STATUS_COMPLETED_FAILURE;
+                        }
+                    }
+                    catch(...)
+                    {
+                        curStatus = STATUS_COMPLETED_FAILURE;
+                    }
+                }
+            }
+
+            if (curStatus != mCurStatus)
+            {
+                // First, take the lock to safely manipulate the UI outside of the
+                // normal event loop, by having exclusive access to the session.
+                WApplication::UpdateLock lock = mApp->getUpdateLock();
+
+                mCurStatus = curStatus;
+                switch (curStatus)
+                {
+                case STATUS_UNKNOWN:
+                    mStatusLabel->setText("UNKNOWN");
+                    mStatusImage->setImage(new WImage("icons/lg-alertY-glass.png"));
+                    break;
+                case STATUS_RUNNING:
+                case STATUS_QUEUED:
+                    if (curStatus == STATUS_RUNNING)
+                        mStatusLabel->setText("RUNNING");
+                    else
+                        mStatusLabel->setText("QUEUED");
+                    mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
+                    if (getCurrentUserName() == mJobOwner)
+                    {
+                        mKillButton->enable();
+                    }
+                    break;
+                case STATUS_WAITING:
+                    mStatusLabel->setText("WAITING TO BE QUEUED");
+                    mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
+                    break;
+                case STATUS_COMPLETED_SUCCESS:
+                    mStatusLabel->setText("COMPLETED (SUCCESS)");
+                    mStatusImage->setImage(new WImage("icons/lg-success-glass.png"));
+                    break;
+                case STATUS_COMPLETED_FAILURE:
+                    mStatusLabel->setText("COMPLETED (FAILURE)");
+                    mStatusImage->setImage(new WImage("icons/lg-failed-glass.png"));
+                    break;
+                default:
+                    // Unset state, don't display anything
+                    break;
+                }
+
+                mApp->triggerUpdate();
+            }
+        }
+
+        // Sleep for 1 second
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    }
+}
+

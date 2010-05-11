@@ -223,6 +223,7 @@ void ResultsPage::finalize()
 {
     mMonitorLogTab->finalize();
     mMonitorResultsTab->finalize();
+    mJobStatus->finalize();
 }
 
 ///
@@ -231,6 +232,7 @@ void ResultsPage::finalize()
 void ResultsPage::startUpdate()
 {
     mMonitorLogTab->startUpdate();
+    mJobStatus->stopUpdate();
 }
 
 ///
@@ -239,6 +241,7 @@ void ResultsPage::startUpdate()
 void ResultsPage::stopUpdate()
 {
     mMonitorLogTab->stopUpdate();
+    mJobStatus->stopUpdate();
     backPushed();
 }
 
