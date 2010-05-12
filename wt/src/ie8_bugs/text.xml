@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<messages>
+  <message id="page-title">
+        Repro Test App
+  </message>
+  
+  <message id="page-top-text">
+        Repro Test App
+  </message>
+  
+  
+  <message id="file-bug">
+        <font size="1">
+                Fix me please! :)
+        </font>
+  </message>
+  

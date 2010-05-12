@@ -1,0 +1,190 @@
+body, html {
+    height: 100%;
+    margin: 0px;
+    font-family: verdana,helvetica,tahoma,sans-serif;
+    font-size: 10pt;
+}
+
+div.Wt-popupmenu {
+    background: white;
+    color: black;
+    border: 1px solid #666666;
+    z-index: 200;
+    cursor: default;
+}
+
+div.Wt-popupmenu .notselected, div.Wt-popupmenu .selected {
+    padding: 2px 0px;
+}
+
+div.Wt-popupmenu .selected {
+    background: blue;
+    color: white;
+}
+
+div.Wt-popupmenu .separator {
+    border-top: 1px solid #CCCCCC;
+    border-bottom: 1px solid #DDDDDD;
+    margin: 0px 3px;
+}
+
+.maindiv {
+    background-color: #e0ecff
+    
+}
+
+.topdiv {
+    background-color: #00539b
+}
+
+.bottomdiv {
+    background-color: #e0ecff
+}
+
+.tabdiv {
+    background-color: #e0ecff
+}
+
+
+.toptabdiv {
+    background-color: #e0ecff
+}
+
+.titlediv {
+    background-color: #00539b;
+    color: #e0ecff;
+    font-size: 18px;
+}
+
+.logintitlediv {
+    color: #00539b;
+    font-size: 18px;
+}
+
+.logindiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+}
+
+.projectdiv {
+    background-color: #00539b;
+    color: #e0ecff;
+    font-size: 12px;
+}
+
+
+.Wt-treeview {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+    font-family: verdana,helvetica,tahoma,sans-serif;
+    font-size: 8pt;
+    white-space: nowrap;
+
+}
+
+/*
+.Wt-treeview .Wt-tv-node .Wt-tv-row .Wt-tv-c:hover {
+     background-color: #FFFFAA;
+}
+
+.Wt-treeview .Wt-tv-node .Wt-tv-row:hover {
+    background-color: #FFFFAA;
+}
+*/
+
+
+.groupdiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+}
+
+.pipelinediv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+}
+
+.optiongroupdiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+}
+
+
+.smallgroupdiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+    font-family: sans-serif;
+    font-size: 10pt;
+}
+
+.verysmallgroupdiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+    font-family: sans-serif;
+    font-size: 8pt;
+}
+
+.whitelabeldiv {
+    background-color: white;
+    border: none;
+}
+
+.logdiv {
+    background-color: black;
+    color: white;
+}
+
+.textpreviewdiv {
+    color: white;
+}
+
+.textpreviewscroll {
+    background-color: black;
+}
+
+.logdivred {
+    background-color: black; /* Didn't look so good red */
+    color: white;
+}
+
+.mriinfodiv {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+}
+
+
+.title {
+    font-weight: bold;
+}
+
+.redtext {
+    color: red;
+}
+
+.about {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+    font-size: 80%;
+}
+
+.suggest {
+    background-color: #e0ecff;
+    color: #1010cc;
+    border: 1px solid #666666;
+    cursor: default;
+    font-size: smaller;
+    padding: 2px;
+}
+
+.suggest span {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.suggest .highlight {
+    padding: 0px;
+    font-weight: bold;
+}
+
+.suggest .sel {
+    background-color: #C3D9FF;
+}
