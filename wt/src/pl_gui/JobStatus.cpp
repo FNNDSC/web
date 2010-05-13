@@ -216,12 +216,12 @@ void JobStatus::updateStatus()
     {
         if (mUpdateStatus)
         {
-            boost::mutex::scoped_lock lock(mUpdateMutex);
+            // Lock mutex for safety again JobStatus::setJob()
+            bool updateStatus = false;
+            mUpdateMutex.lock();
 
             if (mClusterShFile != "" && mJobID != "")
             {
-
-                // Do status update here
                 // Cluster script dir
                 std::string metaScriptLog = path(mClusterShFile).branch_path().string() + "/" + mMetaScript + ".std";
 
@@ -275,7 +275,6 @@ void JobStatus::updateStatus()
                 catch(...)
                 {
                     curStatus = STATUS_UNKNOWN;
-
                 }
 
                 // See if we can figure out what the status of the job is
@@ -322,48 +321,56 @@ void JobStatus::updateStatus()
 
                 if (curStatus != mCurStatus)
                 {
-                    // First, take the lock to safely manipulate the UI outside of the
-                    // normal event loop, by having exclusive access to the session.
-                    WApplication::UpdateLock lock = mApp->getUpdateLock();
-
+                    updateStatus = true;
                     mCurStatus = curStatus;
-                    switch (curStatus)
-                    {
-                    case STATUS_UNKNOWN:
-                        mStatusLabel->setText("UNKNOWN");
-                        mStatusImage->setImage(new WImage("icons/lg-alertY-glass.png"));
-                        break;
-                    case STATUS_RUNNING:
-                    case STATUS_QUEUED:
-                        if (curStatus == STATUS_RUNNING)
-                            mStatusLabel->setText("RUNNING");
-                        else
-                            mStatusLabel->setText("QUEUED");
-                        mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
-                        if (getCurrentUserName() == mJobOwner)
-                        {
-                            mKillButton->enable();
-                        }
-                        break;
-                    case STATUS_WAITING:
-                        mStatusLabel->setText("WAITING TO BE QUEUED");
-                        mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
-                        break;
-                    case STATUS_COMPLETED_SUCCESS:
-                        mStatusLabel->setText("COMPLETED (SUCCESS)");
-                        mStatusImage->setImage(new WImage("icons/lg-success-glass.png"));
-                        break;
-                    case STATUS_COMPLETED_FAILURE:
-                        mStatusLabel->setText("COMPLETED (FAILURE)");
-                        mStatusImage->setImage(new WImage("icons/lg-failed-glass.png"));
-                        break;
-                    default:
-                        // Unset state, don't display anything
-                        break;
-                    }
-
-                    mApp->triggerUpdate();
                 }
+	        }
+
+            // Unlock mutex before doing mApp->getUpdateLock().  This is crucial because
+            // otherwise a deadlock can occur from setJob() locking this same mutex.
+            mUpdateMutex.unlock();
+            if (updateStatus == true)
+            {
+                // First, take the lock to safely manipulate the UI outside of the
+                // normal event loop, by having exclusive access to the session.
+                WApplication::UpdateLock lock = mApp->getUpdateLock();
+ 
+                switch (mCurStatus)
+                {
+                case STATUS_UNKNOWN:
+                    mStatusLabel->setText("UNKNOWN");
+                    mStatusImage->setImage(new WImage("icons/lg-alertY-glass.png"));
+                    break;
+                case STATUS_RUNNING:
+                case STATUS_QUEUED:
+                    if (mCurStatus == STATUS_RUNNING)
+                        mStatusLabel->setText("RUNNING");
+                    else
+                        mStatusLabel->setText("QUEUED");
+                    mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
+                    if (getCurrentUserName() == mJobOwner)
+                    {
+                        mKillButton->enable();
+                    }
+                    break;
+                case STATUS_WAITING:
+                    mStatusLabel->setText("WAITING TO BE QUEUED");
+                    mStatusImage->setImage(new WImage("icons/lg-alertO-glass.png"));
+                    break;
+                case STATUS_COMPLETED_SUCCESS:
+                    mStatusLabel->setText("COMPLETED (SUCCESS)");
+                    mStatusImage->setImage(new WImage("icons/lg-success-glass.png"));
+                    break;
+                case STATUS_COMPLETED_FAILURE:
+                    mStatusLabel->setText("COMPLETED (FAILURE)");
+                    mStatusImage->setImage(new WImage("icons/lg-failed-glass.png"));
+                    break;
+                default:
+                    // Unset state, don't display anything
+                    break;
+                }
+
+                mApp->triggerUpdate();
             }
         }
 
