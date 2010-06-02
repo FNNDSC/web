@@ -102,8 +102,6 @@ PipelineOptionsFetal::PipelineOptionsFetal(WContainerWidget *parent) :
 
     // Add to the base class layout
     mPipelineOptionsBoxLayout->addWidget(fetalExtractionBox, 1, 0);
-    mPipelineOptionsBoxLayout->setRowStretch(0, -1);
-    mPipelineOptionsBoxLayout->setRowStretch(1, 1);
 
     resetAll();
 }

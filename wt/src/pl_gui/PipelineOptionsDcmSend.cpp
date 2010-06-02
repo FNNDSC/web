@@ -92,8 +92,6 @@ PipelineOptionsDcmSend::PipelineOptionsDcmSend(WContainerWidget *parent) :
 
     // Add to the base class layout
     mPipelineOptionsBoxLayout->addWidget(dcmSendExtractionBox, 1, 0);
-    mPipelineOptionsBoxLayout->setRowStretch(0, -1);
-    mPipelineOptionsBoxLayout->setRowStretch(1, 1);
 
     mStageBoxes[0]->clicked().connect(SLOT(this, PipelineOptionsDcmSend::anonymizeClicked));
 
