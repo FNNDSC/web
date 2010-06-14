@@ -82,6 +82,10 @@ div.Wt-popupmenu .separator {
 
 }
 
+.Wt-treeview div, .Wt-treeview span {
+    white-space: nowrap;
+}
+
 /*
 .Wt-treeview .Wt-tv-node .Wt-tv-row .Wt-tv-c:hover {
      background-color: #FFFFAA;
@@ -96,6 +100,7 @@ div.Wt-popupmenu .separator {
 .groupdiv {
     background-color: white;
     border: 1px solid #C3D9FF;
+    width: 100%;
 }
 
 .pipelinediv {
