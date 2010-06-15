@@ -310,7 +310,7 @@ void MRIBrowser::populateMRIDs(const std::string& mridXMLFile)
     {
         int row = mMRIModel->rowCount();
         mMRIModel->insertRows(row, 1);
-        mMRIModel->setData(row, 0, boost::any(WString("ReproTest{1}").arg(i)), DisplayRole);
+        mMRIModel->setData(row, 0, boost::any(WString("ReproTest{1}with-dashage-for-some-word-wrappage").arg(i)), DisplayRole);
         mMRIModel->item(row)->setIcon("icons/folder.gif");
     }
 #if 0

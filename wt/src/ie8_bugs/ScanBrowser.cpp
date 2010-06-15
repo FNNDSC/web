@@ -56,12 +56,12 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     mPipelineDialog(NULL),
     mPipelineDialogGroup(NULL)
 {
-    //mPatientInfoBox = new PatientInfoBox();
+    mPatientInfoBox = new PatientInfoBox();
     mMRIInfoBox = new MRIInfoBox();
     mScansToProcessBox = new WGroupBox("Scans to Process");
 
     mMRIInfoBox->setStyleClass("groupdiv");
-    //mPatientInfoBox->setStyleClass("verysmallgroupdiv");
+    mPatientInfoBox->setStyleClass("verysmallgroupdiv");
     mScansToProcessBox->setStyleClass("groupdiv");
 
     mScansSelectionBox = new WSelectionBox();
@@ -104,7 +104,7 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
 
 
     WGridLayout *topLayout = new WGridLayout();
-    //topLayout->addWidget(mPatientInfoBox, 0, 0);
+    topLayout->addWidget(mPatientInfoBox, 0, 0);
     topLayout->addWidget(mScansToProcessBox, 0, 1);
     topLayout->setColumnStretch(1, 1);
 
