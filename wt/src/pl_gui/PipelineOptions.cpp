@@ -74,6 +74,7 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
     mOutputDirSuffix->setValidator(dirSuffixValidator);
     mOutputDirSuffix->setToolTip("This string will be appended to the directory name that is output for the scans.");
     mOutputDirSuffix->setMinimumSize(200, WLength::Auto);
+    mOutputDirSuffix->resize(200, WLength::Auto);
     mDirectoryGroupBoxLayout->addWidget(mOutputDirSuffix, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
 
     // E-mail user
@@ -82,6 +83,7 @@ PipelineOptions::PipelineOptions(WContainerWidget *parent) :
     mDirectoryGroupBoxLayout->addWidget(mEmailCheckBox, 1, 0, Wt::AlignRight  | Wt::AlignMiddle);
     mEmailUser = new WLineEdit();
     mEmailUser->setMinimumSize(200, WLength::Auto);
+    mEmailUser->resize(200, WLength::Auto);
     mDirectoryGroupBoxLayout->addWidget(mEmailUser, 1, 1, Wt::AlignLeft | Wt::AlignMiddle);
     mDirectoryGroupBoxLayout->setColumnStretch(1, 1);
 

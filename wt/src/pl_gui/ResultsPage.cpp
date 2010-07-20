@@ -76,6 +76,7 @@ ResultsPage::ResultsPage(const MRIBrowser *mriBrowser, WContainerWidget *parent)
 
     mSearchLineEdit = new WLineEdit("");
     mSearchLineEdit->setMinimumSize(150, WLength::Auto);
+    mSearchLineEdit->resize(150, WLength::Auto);
 
     mSearchPushButton = new WPushButton("GO");
     WPushButton *clearButton = new WPushButton("Clear");
@@ -91,6 +92,7 @@ ResultsPage::ResultsPage(const MRIBrowser *mriBrowser, WContainerWidget *parent)
     userBox->setColumnStretch(7, 3);
 
     mPipelineArgTable = new PipelineArgTable();
+    mPipelineArgTable->resize(WLength::Auto, 150);
     mPipelineArgTable->setMinimumSize(WLength::Auto,
                                       WLength(150, WLength::Pixel));
     mPipelineArgTable->setMaximumSize(WLength::Auto,

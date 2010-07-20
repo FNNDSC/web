@@ -70,6 +70,7 @@ PatientInfoBox::PatientInfoBox(WContainerWidget *parent) :
     mTreeView->setSortingEnabled(false);
     mTreeView->setAlternatingRowColors(true);
     mTreeView->setHeaderHeight(0);
+    mTreeView->resize(300, WLength::Auto);
     mTreeView->setMinimumSize(300, WLength::Auto);
 
     // Create the patient info box

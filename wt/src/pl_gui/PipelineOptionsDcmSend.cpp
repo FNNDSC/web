@@ -73,10 +73,13 @@ PipelineOptionsDcmSend::PipelineOptionsDcmSend(WContainerWidget *parent) :
 
     mHostNameEdit = new WLineEdit("");
     mHostNameEdit->setMinimumSize(250, WLength::Auto);
+    mHostNameEdit->resize(250, WLength::Auto);
     mPortEdit = new WLineEdit("");
     mPortEdit->setMinimumSize(250, WLength::Auto);
+    mPortEdit->resize(250, WLength::Auto);
     mAETitleEdit = new WLineEdit("");
     mAETitleEdit->setMinimumSize(250, WLength::Auto);
+    mAETitleEdit->resize(250, WLength::Auto);
 
     dcmSendLayout->addWidget(hostNameText, 0, 0, AlignRight);
     dcmSendLayout->addWidget(mHostNameEdit, 0, 1, AlignLeft);

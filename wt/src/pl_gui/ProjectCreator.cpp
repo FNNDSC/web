@@ -138,6 +138,7 @@ ProjectCreator::ProjectCreator(WContainerWidget *parent) :
     mProjectNameEdit = new WLineEdit("", mCreateProjectDialog->contents());
     mProjectNameEdit->setValidator(projectNameValidator);
     mProjectNameEdit->setMinimumSize(WLength(250, WLength::Pixel), WLength::Auto);
+    mProjectNameEdit->resize(250, WLength::Auto);
     WBreak *brk = new WBreak(mCreateProjectDialog->contents());
 
     WPushButton *okButton = new WPushButton("Ok", mCreateProjectDialog->contents());

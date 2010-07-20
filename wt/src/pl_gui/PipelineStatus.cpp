@@ -63,6 +63,7 @@ PipelineStatus::PipelineStatus(const std::vector<ScanBrowser::ScanData> &scansTo
     mScansToProcessList = new WSelectionBox();
     mScansToProcessList->setStyleClass("groupdiv");
     mScansToProcessList->setMinimumSize(WLength(250, WLength::Pixel), WLength::Auto);
+    mScansToProcessList->resize(250, WLength::Auto);
     mScansToProcessList->setSelectionMode(Wt::NoSelection);
     selectedScansBoxLayout->addWidget(mScansToProcessList);
     selectedScansBox->setLayout(selectedScansBoxLayout);

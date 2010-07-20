@@ -84,12 +84,14 @@ ProjectPage::ProjectPage(WContainerWidget *parent) :
     topContainer->setLayout(topLayout);
 	
     mProjectChooser = new ProjectChooser();
+    mProjectChooser->resize(512, 512);
     mProjectChooser->setMinimumSize(WLength(512, WLength::Pixel),
                                     WLength(512, WLength::Pixel));
 
     mProjectChooser->setMaximumSize(WLength(512, WLength::Pixel),
                                     WLength(512, WLength::Pixel));
     mProjectCreator = new ProjectCreator();
+    mProjectCreator->resize(512, 512);
     mProjectCreator->setMinimumSize(WLength(512, WLength::Pixel),
                                     WLength(512, WLength::Pixel));
     mProjectCreator->setMaximumSize(WLength(512, WLength::Pixel),

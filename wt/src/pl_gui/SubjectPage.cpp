@@ -77,8 +77,10 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
 
     mNextButton = new WPushButton("Next ->");
     mNextButton->setMinimumSize(WLength(65, WLength::Pixel), WLength::Auto);
+    mNextButton->resize(65, WLength::Auto);
     mBackButton = new WPushButton("<- Back");
     mBackButton->setMinimumSize(WLength(65, WLength::Pixel), WLength::Auto);
+    mBackButton->resize(65, WLength::Auto);
 
     mRefreshMRIBrowserButton = new WPushButton("New scan received, click to refresh MRID list.");
     mLoadingImage = new WImage("icons/ajax-loader-2.gif");

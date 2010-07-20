@@ -67,6 +67,7 @@ ResultsBrowser::ResultsBrowser(WContainerWidget *parent) :
 {
     mTreeView->selectionChanged().connect(SLOT(this, ResultsBrowser::resultChanged));
     mTreeView->setMinimumSize(400, WLength::Auto);
+    mTreeView->resize(400, WLength::Auto);
 
 
     mDownloadButton = new WPushButton("Download All Results");
