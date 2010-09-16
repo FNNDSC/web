@@ -88,7 +88,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mMRITreeView->setSelectionMode(SingleSelection);
     mMRITreeView->expandToDepth(1);
     mMRITreeView->selectionChanged().connect(SLOT(this, MRIBrowser::mriChanged));
-    mMRITreeView->setHeaderHeight(0);
+    //    mMRITreeView->setHeaderHeight(0);
 
     // options for email address suggestions
     WSuggestionPopup::Options searchOptions

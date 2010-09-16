@@ -11,6 +11,7 @@ ENDIF(BOOST_WT_MT_FOUND)
 ADD_DEFINITIONS(-DWT_DEPRECATED_3_0_0)
 
 SUBDIRS(
+  ie8_bugs
   mri_gui_prototype
   pl_gui
 )

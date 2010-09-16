@@ -76,12 +76,22 @@ ResultsTable::ResultsTable(WContainerWidget *parent) :
     mModel->setHeaderData(10, boost::any(WString::fromUTF8("Pipeline")));
     mModel->invisibleRootItem()->setRowCount(0);
 
+    mSortFilterProxyModel = new ResultsFilterProxyModel(this);
+    mSortFilterProxyModel->setSourceModel(mModel);
+    mSortFilterProxyModel->setDynamicSortFilter(true);
+    mSortFilterProxyModel->setFilterKeyColumn(0);
+    mSortFilterProxyModel->setFilterRole(DisplayRole);
+    mSortFilterProxyModel->sort(0, DescendingOrder);
+    mSortFilterProxyModel->setUserColumn(1);
+
     mTreeView = new WTreeView();
     mTreeView->setRootIsDecorated(false);
     mTreeView->setAlternatingRowColors(true);
     mTreeView->setSelectionMode(SingleSelection);
     mTreeView->doubleClicked().connect(SLOT(this, ResultsTable::jobSelected));
     mTreeView->clicked().connect(SLOT(this, ResultsTable::jobClicked));
+    mTreeView->setModel(mSortFilterProxyModel);
+    mTreeView->setColumnWidth(0, WLength(125, WLength::Pixel));
 
     WVBoxLayout *layout = new WVBoxLayout();
     layout->addWidget(mTreeView);
@@ -110,25 +120,9 @@ ResultsTable::~ResultsTable()
 //
 void ResultsTable::resetAll()
 {
-    if (mSortFilterProxyModel != NULL)
-    {
-        delete mSortFilterProxyModel;
-    }
-
     mModel->removeRows(0, mModel->rowCount());
 
     populateResultsTable();
-
-    mSortFilterProxyModel = new ResultsFilterProxyModel(this);
-    mSortFilterProxyModel->setSourceModel(mModel);
-    mSortFilterProxyModel->setDynamicSortFilter(true);
-    mSortFilterProxyModel->setFilterKeyColumn(0);
-    mSortFilterProxyModel->setFilterRole(DisplayRole);
-    mSortFilterProxyModel->sort(0, DescendingOrder);
-    mSortFilterProxyModel->setUserColumn(1);
-
-    mTreeView->setModel(mSortFilterProxyModel);
-    mTreeView->setColumnWidth(0, WLength(125, WLength::Pixel));
 }
 
 
