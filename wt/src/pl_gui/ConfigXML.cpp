@@ -99,6 +99,38 @@ WStandardItemModel* ConfigXML::getResultsPipelineTree(const std::string& pipelin
 }
 
 ///
+// Get the <Input> list for the pipeline by name
+//
+const std::vector<ConfigXML::InputNode>* ConfigXML::getPipelineInputs(const std::string& pipelineName)
+{
+    if (mPipelineMap.find(pipelineName) == mPipelineMap.end())
+    {
+        return NULL;
+    }
+
+    return (&mPipelineMap[pipelineName]->mInputList);
+}
+
+///
+//  Get the maximum number of inputs used by any pipeline
+//
+int ConfigXML::getMaxPipelineInputs() const
+{
+    int maxInputs = 0;
+
+    std::map<std::string, PipelineConf*>::const_iterator mapIter = mPipelineMap.begin();
+    while(mapIter != mPipelineMap.end())
+    {
+        int curSize = mapIter->second->mInputList.size();
+        if (curSize > maxInputs)
+            maxInputs = curSize;
+        mapIter++;
+    }
+
+    return maxInputs;
+}
+
+///
 /// Get the <Options> map for the pipeline by name
 /// \param pipelineName Name of pipeline to get tree for
 /// \return Pointer option node tree or NULL if the pipeline is not found.
@@ -322,12 +354,6 @@ bool ConfigXML::parsePipelineNode(mxml_node_t *pipelineNode, const std::string& 
     }
 
     mxml_node_t *filePatternsNode = mxmlFindElement(pipelineNode, pipelineNode, "FilePatterns", NULL, NULL, MXML_DESCEND);
-    if (filePatternsNode == false)
-    {
-        WApplication::instance()->log("error") << "No patterns specified for " << pipelineName << ". Ignoring.";
-        return false;
-    }
-
     mxml_node_t *filePatternNode;
 
     // Iterate over the <FilePattern> nodes
@@ -361,6 +387,24 @@ bool ConfigXML::parsePipelineNode(mxml_node_t *pipelineNode, const std::string& 
     {
         result = result && parseOptionNode(mPipelineMap[pipelineName]->mOptionMap, optionNode, configPath);
     }
+
+    // Iterate over the <Input> nodes
+    mxml_node_t *inputsNode = mxmlFindElement(pipelineNode, pipelineNode, "Inputs", NULL, NULL, MXML_DESCEND);
+    mxml_node_t *inputNode;
+
+    for (inputNode = mxmlFindElement(inputsNode, inputsNode,
+                                     "Input",
+                                     NULL, NULL,
+                                     MXML_DESCEND);
+        inputNode != NULL;
+        inputNode = mxmlFindElement(inputNode, inputsNode,
+                                    "Input",
+                                    NULL, NULL,
+                                    MXML_NO_DESCEND))
+    {
+        result = result && parseInputNode(mPipelineMap[pipelineName]->mInputList, inputNode, configPath);
+    }
+
 
     return result;
 }
@@ -515,6 +559,38 @@ bool ConfigXML::parseOptionArgNode(std::list<OptionArgNode>& optionArgs, mxml_no
     newNode.mTag = tag;
     newNode.mDesc = desc;
     optionArgs.push_back(newNode);
+
+    return true;
+}
+
+///
+//  Parse <Input> node
+//
+bool ConfigXML::parseInputNode(std::vector<InputNode>& inputList, mxml_node_t *inputNode,
+                               const std::string& configPath)
+{
+    if (inputNode == NULL)
+    {
+        return false;
+    }
+
+    const char* name = mxmlElementGetAttr(inputNode, "name");
+    if (name == NULL)
+    {
+        WApplication::instance()->log("error") << "No name specified for <Input> node. Ignoring.";
+        return false;
+    }
+
+    const char* arg = mxmlElementGetAttr(inputNode, "arg");
+
+    InputNode newNode;
+    newNode.mName = name;
+    newNode.mArg = "";
+    if (arg != NULL)
+    {
+        newNode.mArg = arg;
+    }
+    inputList.push_back(newNode);
 
     return true;
 }

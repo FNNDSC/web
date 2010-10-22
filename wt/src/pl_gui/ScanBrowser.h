@@ -16,6 +16,7 @@
 #include <Wt/WDialog>
 #include <vector>
 #include <string>
+#include "ScansToProcessTable.h"
 #include "GlobalEnums.h"
 
 namespace Wt
@@ -40,27 +41,6 @@ using namespace Wt;
 class ScanBrowser : public WContainerWidget
 {
 public:
-    /// Storage of scan data
-    typedef struct
-    {
-        /// MRID
-        std::string mMRID;
-
-        /// Scan DICOM file
-        std::string mDicomFile;
-
-        /// Scan name
-        std::string mScanName;
-
-        /// Scan directory
-        std::string mScanDir;
-
-        /// Age
-        std::string mAge;
-
-        /// Scan date
-        std::string mScanDate;
-    } ScanData;
 
     ///
     /// Constructor
@@ -103,9 +83,24 @@ public:
     const Enums::PipelineType& getCurrentPipeline() const { return mPipelineType;	}
 
     ///
+    /// Get the currently selected pipeline as a string
+    ///
+    const std::string getCurrentPipelineAsString() const;
+
+    ///
     /// Get the list of currently selected scans
     ///
-    const std::vector<ScanData>& getScansToProcess() const { return mScansToProcessData; }
+    std::vector<ScansToProcessTable::ScanData> getScansToProcess(int inputIndex = 0) const;
+
+    ///
+    /// Get the ScansToProcessTable widget
+    ///
+    const ScansToProcessTable* getScansToProcessTable() const { return mScansToProcessTable; }
+
+    ///
+    /// Handle scan selected for remove
+    ///
+    void scanSelectedForRemove(bool selected);
 
 private:
 
@@ -152,11 +147,6 @@ private:
     ///
     void handleMessageBoxFinished(StandardButton dialogCode);
 
-    ///
-    /// Handle message box finished [slot]
-    ///
-    void handleAddScanFinished(StandardButton dialogCode);
-
 private:
 
     /// Signal for when scan is add
@@ -172,16 +162,16 @@ private:
     WGroupBox *mScansToProcessBox;
 
     /// Push button to add scans
-    WPushButton *mAddScanButton;
+    std::vector<WPushButton*> mAddScanButtonList;
 
     /// Push button to remove scans
-    WPushButton *mRemoveScanButton;
+    WPushButton* mRemoveScanButton;
 
     /// Scans selection box
     WSelectionBox *mScansSelectionBox;
 
-    /// Currently selected scans
-    WSelectionBox *mScansToProcessList;
+    /// Scans to process table
+    ScansToProcessTable *mScansToProcessTable;
 
     /// Current pipeline mode
     WLabel *mPipelineModeLabel;
@@ -191,9 +181,6 @@ private:
 
     /// Current pipeline type
     Enums::PipelineType mPipelineType;
-
-    /// List of scans to process
-    std::vector<ScanData> mScansToProcessData;
 
     /// List of DICOM files for currently selected scans
     std::vector<std::string> mScansDicomFiles;
@@ -211,7 +198,7 @@ private:
     std::string mCurAge;
 
     /// Current scan to add
-    ScanData mNewScanData;
+    ScansToProcessTable::ScanData mNewScanData;
 
     /// Pipeline select dialog
     WDialog *mPipelineDialog;

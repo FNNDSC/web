@@ -88,7 +88,7 @@ private:
     ///
     void handleMessageBoxFinished(StandardButton dialogCode);
 
-private:
+protected:
 
     /// Buttons for pipeline stages
     WCheckBox *mStageBoxes[NUM_OPTIONAL_TRACT_STAGES];

@@ -14,6 +14,8 @@
 #include "PatientInfoBox.h"
 #include "MRIInfoBox.h"
 #include "ConfigOptions.h"
+#include "ConfigXML.h"
+#include "ScansToProcessTable.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>
@@ -67,34 +69,51 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
     mScansSelectionBox = new WSelectionBox();
     mScansSelectionBox->setStyleClass("groupdiv");
     mScansSelectionBox->setSelectionMode(Wt::ExtendedSelection);
-    mScansToProcessList = new WSelectionBox();
-    mScansToProcessList->setStyleClass("groupdiv");
-    mScansToProcessList->setSelectionMode(Wt::ExtendedSelection);
+
 
     mPipelineModeLabel = new WLabel("");
-    mPipelineOverrideButton = new WPushButton("Override");
+    mPipelineOverrideButton = new WPushButton("Choose Pipeline...");
 
-    mAddScanButton = new WPushButton("Add");
-    mRemoveScanButton = new WPushButton("Remove");
+    // Determine the maximum number of inputs that any pipeline
+    // uses and setup the GUI according to this
+    int maxInputs = getConfigXMLPtr()->getMaxPipelineInputs();
+
+    WHBoxLayout *addScanButtonLayout = new WHBoxLayout();
+    for (int i = 0; i < maxInputs; i++ )
+    {
+        mAddScanButtonList.push_back(new WPushButton("Add"));
+        addScanButtonLayout->addWidget(mAddScanButtonList[i]);
+        if (i == 0)
+        {
+            mAddScanButtonList[i]->disable();
+        }
+        else
+        {
+            mAddScanButtonList[i]->hide();
+        }
+
+        mAddScanButtonList[i]->clicked().connect(SLOT(this, ScanBrowser::addScanClicked));
+    }
 
     WGridLayout *scanLayout = new WGridLayout();
     scanLayout->addWidget(mScansSelectionBox, 0, 0);
-    scanLayout->addWidget(mAddScanButton, 1, 0, Wt::AlignCenter);
+    scanLayout->addLayout(addScanButtonLayout, 1, 0, Wt::AlignCenter);
     scanLayout->setRowStretch(0, 1);
 
     WGridLayout *scansToProcessLayout = new WGridLayout();
-    scansToProcessLayout->addWidget(mScansToProcessList, 0, 0);
-    scansToProcessLayout->addWidget(mRemoveScanButton, 1, 0, Wt::AlignCenter);
     scansToProcessLayout->setRowStretch(0, 1);
-
+    mScansToProcessTable = new ScansToProcessTable();
+    mRemoveScanButton = new WPushButton("Remove");
+    scansToProcessLayout->addWidget(mScansToProcessTable, 0, 0, Wt::AlignLeft);
+    scansToProcessLayout->addWidget(mRemoveScanButton, 1, 0, Wt::AlignCenter);
 
     WHBoxLayout *hBox = new WHBoxLayout();
     hBox->addLayout(scanLayout);
     hBox->addLayout(scansToProcessLayout);
 
     WHBoxLayout *pipelineTypeLayout = new WHBoxLayout();
-    pipelineTypeLayout->addWidget(mPipelineModeLabel);
     pipelineTypeLayout->addWidget(mPipelineOverrideButton);
+    pipelineTypeLayout->addWidget(mPipelineModeLabel);
 
     WGridLayout *scansToProcessBoxLayout = new WGridLayout();
     scansToProcessBoxLayout->addLayout(hBox, 0, 0);
@@ -105,27 +124,25 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
 
     WGridLayout *topLayout = new WGridLayout();
     topLayout->addWidget(mPatientInfoBox, 0, 0);
-    topLayout->addWidget(mScansToProcessBox, 0, 1);
+    topLayout->addWidget(mMRIInfoBox, 0, 1);
     topLayout->setColumnStretch(1, 1);
 
 
     WGridLayout *layout = new WGridLayout();
-    layout->addLayout(topLayout, 0, 0);
-    layout->addWidget(mMRIInfoBox, 1, 0);
+    layout->addWidget(mScansToProcessBox, 0, 0);
+    layout->addLayout(topLayout, 1, 0);
     layout->setRowStretch(0, -1);
     layout->setRowStretch(1, -1);
 
     mMessageBox = new WMessageBox();
     mMessageBox->buttonClicked().connect(SLOT(this, ScanBrowser::handleMessageBoxFinished));
-    mAddScanMessageBox = new WMessageBox;
-    mAddScanMessageBox->buttonClicked().connect(SLOT(this, ScanBrowser::handleAddScanFinished));
 
 
     // Connect signals to slots
     mScansSelectionBox->changed().connect(SLOT(this, ScanBrowser::scanSelectionChanged));
-    mAddScanButton->clicked().connect(SLOT(this, ScanBrowser::addScanClicked));
-    mRemoveScanButton->clicked().connect(SLOT(this, ScanBrowser::removeScanClicked));
     mPipelineOverrideButton->clicked().connect(SLOT(this, ScanBrowser::pipelineOverrideClicked));
+    mRemoveScanButton->clicked().connect(SLOT(this, ScanBrowser::removeScanClicked));
+    mScansToProcessTable->scanSelected().connect(SLOT(this, ScanBrowser::scanSelectedForRemove));
 
     setLayout(layout);
 
@@ -138,7 +155,6 @@ ScanBrowser::ScanBrowser(WContainerWidget *parent) :
 ScanBrowser::~ScanBrowser()
 {
     delete mMessageBox;
-    delete mAddScanMessageBox;
 }
 
 
@@ -159,11 +175,12 @@ void ScanBrowser::resetAll()
     mScansDate = "";
     mScansSelectionBox->setCurrentIndex(0);
     setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
-    mScansToProcessList->clear();
-    mScansToProcessData.clear();
 
     mPatientInfoBox->resetAll();
     mMRIInfoBox->resetAll();
+    mScansToProcessTable->resetAll();
+
+    mRemoveScanButton->disable();
 }
 
 ///
@@ -263,6 +280,37 @@ void ScanBrowser::setCurAge(std::string age)
     mCurAge = age;
 }
 
+///
+//  Get pipeline type as string (for command line arg)
+//
+const std::string ScanBrowser::getCurrentPipelineAsString() const
+{
+    if (getCurrentPipeline() == Enums::PIPELINE_TYPE_TRACT)
+    {
+        return std::string("tract");
+    }
+    else if (getCurrentPipeline() == Enums::PIPELINE_TYPE_FS)
+    {
+        return std::string("fs");
+    }
+    else if (getCurrentPipeline() == Enums::PIPELINE_TYPE_FETAL)
+    {
+        return std::string("fetal");
+    }
+    else if (getCurrentPipeline() == Enums::PIPELINE_TYPE_CONNECTOME)
+    {
+        return std::string("connectome");
+    }
+    else if (getCurrentPipeline() == Enums::PIPELINE_TYPE_DCMSEND)
+    {
+        return std::string("dcmsend");
+    }
+    else
+    {
+        return std::string("unknown");
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Private Members
@@ -274,6 +322,23 @@ void ScanBrowser::setCurAge(std::string age)
 //
 void ScanBrowser::addScanClicked()
 {
+    WObject *sender = WObject::sender();
+
+    // Find which add button sent this signal
+    int index = 0;
+    while(index < mAddScanButtonList.size())
+    {
+        if ( (WObject*)mAddScanButtonList[index] == sender)
+        {
+            break;
+        }
+        index++;
+    }
+    if (index >= mAddScanButtonList.size())
+    {
+        WApplication::instance()->log("error") << "Unable to determine which button sent message.";
+        return;
+    }
 
     const set<int>& selectedSet = mScansSelectionBox->selectedIndexes();
     set<int>::const_iterator iter = selectedSet.begin();
@@ -289,86 +354,32 @@ void ScanBrowser::addScanClicked()
         mNewScanData.mScanDir = mCurScanDir;
         mNewScanData.mAge = mCurAge;
 
-        for (int i = 0; i < mScansToProcessData.size(); i++)
-        {
-            // Check to see if it has already been added, and if so display
-            // a message to the user
-            if(mNewScanData.mMRID == mScansToProcessData[i].mMRID &&
-               mNewScanData.mDicomFile == mScansToProcessData[i].mDicomFile &&
-               mNewScanData.mScanName == mScansToProcessData[i].mScanName)
-            {
-                mMessageBox->setWindowTitle("Scan Already Selected");
-                mMessageBox->setText("Can not add scan: [MRID:] " + mNewScanData.mMRID +
-                                     " [Scan:] " + mNewScanData.mScanName + "\nIt has already been selected for processing.");
-                mMessageBox->setButtons(Wt::Ok);
-                mMessageBox->show();
-                return;
-            }
-        }
+        mScansToProcessTable->addEntry(index, mNewScanData);
 
-        Enums::PipelineType pipelineType = Enums::PIPELINE_UNKNOWN;
-
-        if (findSeriesMatch(getConfigOptionsPtr()->GetSeriesListTract(), curScanText.toUTF8()))
-        {
-            pipelineType = Enums::PIPELINE_TYPE_TRACT;
-        }
-        else if(findSeriesMatch(getConfigOptionsPtr()->GetSeriesListFS(), curScanText.toUTF8()))
-        {
-            pipelineType = Enums::PIPELINE_TYPE_FS;
-        }
-        else if(findSeriesMatch(getConfigOptionsPtr()->GetSeriesListFetal(), curScanText.toUTF8()))
-        {
-            pipelineType = Enums::PIPELINE_TYPE_FETAL;
-        }
-
-        if (pipelineType != Enums::PIPELINE_UNKNOWN)
-        {
-            if (mPipelineType == Enums::PIPELINE_UNKNOWN)
-            {
-                setCurrentPipeline(pipelineType);
-            }
-            else
-            {
-                if (pipelineType != mPipelineType)
-                {
-                    // Used to display a message here, but do nothing.  It does not require user interaction.
-                }
-            }
-        }
-
-        // Force the scan to be added as if the user clicked "Yes"
-        handleAddScanFinished(Wt::Yes);
-
+        mScanAdded.emit(mScansToProcessTable->validateTable());
         iter++;
     }
 }
 
 
 ///
+/// Get the list of currently selected scans
+///
+std::vector<ScansToProcessTable::ScanData> ScanBrowser::getScansToProcess(int inputIndex) const
+{
+    return mScansToProcessTable->getScansToProcess(inputIndex);
+}
+
+///
 //  Remove scan clicked [slot]
 //
 void ScanBrowser::removeScanClicked()
 {
-    const set<int>& selectedSet = mScansToProcessList->selectedIndexes();
-    set<int>::const_iterator iter = selectedSet.begin();
-
-    while (iter != selectedSet.end())
-    {
-        int index = *iter;
-
-        mScansToProcessData.erase(mScansToProcessData.begin() + index);
-        mScansToProcessList->removeItem(index);
-
-        iter++;
-    }
+    mScansToProcessTable->removeSelected();
+    mRemoveScanButton->disable();
 
     // Emit a signal with whether a scan is selected
-    mScanAdded.emit(!mScansToProcessData.empty());
-
-    if (mScansToProcessData.empty())
-    {
-        setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
-    }
+    mScanAdded.emit(mScansToProcessTable->validateTable());
 }
 
 ///
@@ -415,12 +426,19 @@ void ScanBrowser::pipelineOverrideClicked()
     group->addButton(dcmSendButton, Enums::PIPELINE_TYPE_DCMSEND + 1);
     new WBreak(mPipelineDialog->contents());
 
-    WRadioButton *unknownButton = new WRadioButton("Unknown",
-            mPipelineDialog->contents());
-    group->addButton(unknownButton, Enums::PIPELINE_UNKNOWN + 1);
+    WRadioButton *connectomeButton = new WRadioButton("Connectome",
+                    mPipelineDialog->contents());
+    group->addButton(connectomeButton, Enums::PIPELINE_TYPE_CONNECTOME + 1);
     new WBreak(mPipelineDialog->contents());
 
-    group->setCheckedButton(group->button(mPipelineType + 1));
+    if (mPipelineType != Enums::PIPELINE_UNKNOWN)
+    {
+        group->setCheckedButton(group->button(mPipelineType + 1));
+    }
+    else
+    {
+        group->setCheckedButton(group->button(Enums::PIPELINE_TYPE_FS + 1));
+    }
 
     new WBreak(mPipelineDialog->contents());
 
@@ -429,6 +447,9 @@ void ScanBrowser::pipelineOverrideClicked()
 
     ok->clicked().connect(SLOT(mPipelineDialog, WDialog::accept));
     cancel->clicked().connect(SLOT(mPipelineDialog, WDialog::reject));
+
+    new WBreak(mPipelineDialog->contents());
+    new WBreak(mPipelineDialog->contents());
 
     mPipelineDialog->finished().connect(SLOT(this, ScanBrowser::handlePipelineDialogClosed));
 
@@ -443,6 +464,43 @@ void ScanBrowser::handlePipelineDialogClosed(WDialog::DialogCode dialogCode)
     if (dialogCode == WDialog::Accepted)
     {
         setCurrentPipeline((Enums::PipelineType)(mPipelineDialogGroup->checkedId() - 1));
+
+        // Get the input list associated with the current pipeline
+        std::string curPipeline = getCurrentPipelineAsString() + "_meta.bash";
+        const std::vector<ConfigXML::InputNode>* inputList = getConfigXMLPtr()->getPipelineInputs(curPipeline);
+        if (inputList != NULL)
+        {
+            mScansToProcessTable->setPipelineInputs(*inputList);
+
+            int i = 0;
+            for (i = 0; i < inputList->size(); i++)
+            {
+                mAddScanButtonList[i]->setText("Add " + (*inputList)[i].mName);
+                mAddScanButtonList[i]->show();
+                mAddScanButtonList[i]->enable();
+            }
+
+            for( ; i < mAddScanButtonList.size(); i++)
+            {
+                mAddScanButtonList[i]->hide();
+            }
+        }
+        else
+        {
+            for(int i = 0 ; i < mAddScanButtonList.size(); i++)
+            {
+                if (i == 0)
+                {
+                    mAddScanButtonList[i]->setText("Add");
+                    mAddScanButtonList[i]->disable();
+                }
+                else
+                {
+                    mAddScanButtonList[i]->hide();
+                }
+            }
+        }
+
     }
 
     delete mPipelineDialog;
@@ -482,7 +540,7 @@ void ScanBrowser::setCurrentPipeline(Enums::PipelineType pipelineType)
     switch(mPipelineType)
     {
     case Enums::PIPELINE_UNKNOWN:
-        mPipelineModeLabel->setText("Pipeline Type: UNKNOWN");
+        mPipelineModeLabel->setText("Choose pipeline to continue");
         break;
     case Enums::PIPELINE_TYPE_TRACT:
         mPipelineModeLabel->setText("Pipeline Type: Tractography");
@@ -494,7 +552,10 @@ void ScanBrowser::setCurrentPipeline(Enums::PipelineType pipelineType)
         mPipelineModeLabel->setText("Pipeline Type: Structural Reconstruction");
         break;
     case Enums::PIPELINE_TYPE_DCMSEND:
-        mPipelineModeLabel->setText("Send to Remote PACS");
+        mPipelineModeLabel->setText("Pipeline Type: Send to Remote PACS");
+        break;
+    case Enums::PIPELINE_TYPE_CONNECTOME:
+        mPipelineModeLabel->setText("Pipeline Type: Connectome");
         break;
     }
 }
@@ -527,25 +588,19 @@ void ScanBrowser::handleMessageBoxFinished(StandardButton)
     mMessageBox->hide();
 }
 
+
 ///
-//  Handle message box finished [slot]
-//
-void ScanBrowser::handleAddScanFinished(StandardButton button)
+/// Handle scan selected for remove
+///
+void ScanBrowser::scanSelectedForRemove(bool selected)
 {
-    if (button == Wt::Yes)
+    if (selected)
     {
-        mScansToProcessList->addItem("[MRID:] " + mNewScanData.mMRID + " [Scan:] " + mNewScanData.mScanName);
-        mScansToProcessData.push_back(mNewScanData);
+        mRemoveScanButton->enable();
     }
-
-    // Emit a signal with whether a scan is selected
-    mScanAdded.emit(!mScansToProcessData.empty());
-
-    if (mScansToProcessData.empty())
+    else
     {
-        setCurrentPipeline(Enums::PIPELINE_UNKNOWN);
+        mRemoveScanButton->disable();
     }
-
-    mAddScanMessageBox->hide();
 }
 

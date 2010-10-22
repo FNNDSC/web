@@ -10,6 +10,7 @@
 //  GPL v2
 //
 #include "PipelineStatus.h"
+#include "SelectScans.h"
 #include "GlobalEnums.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
@@ -37,12 +38,8 @@ using namespace std;
 ///
 //  Constructor
 //
-PipelineStatus::PipelineStatus(const std::vector<ScanBrowser::ScanData> &scansToProcess,
-                               const Enums::PipelineType &pipelineType,
-                               WContainerWidget *parent) :
-    WContainerWidget(parent),
-    mScansToProcessData(scansToProcess),
-    mPipelineType(pipelineType)
+PipelineStatus::PipelineStatus(WContainerWidget *parent) :
+    WContainerWidget(parent)
 {
     setStyleClass("tabdiv");
 
@@ -60,12 +57,9 @@ PipelineStatus::PipelineStatus(const std::vector<ScanBrowser::ScanData> &scansTo
 
     // Selected Scans box
     WVBoxLayout *selectedScansBoxLayout = new WVBoxLayout();
-    mScansToProcessList = new WSelectionBox();
-    mScansToProcessList->setStyleClass("groupdiv");
-    mScansToProcessList->setMinimumSize(WLength(250, WLength::Pixel), WLength::Auto);
-    mScansToProcessList->resize(250, WLength::Auto);
-    mScansToProcessList->setSelectionMode(Wt::NoSelection);
-    selectedScansBoxLayout->addWidget(mScansToProcessList);
+    mScansToProcessTable = new ScansToProcessTable();
+    mScansToProcessTable->resize(WLength(350, WLength::Pixel), WLength::Auto);
+    selectedScansBoxLayout->addWidget(mScansToProcessTable);
     selectedScansBox->setLayout(selectedScansBoxLayout);
 
     layout->addWidget(pipelineTypeBox);
@@ -96,15 +90,15 @@ PipelineStatus::~PipelineStatus()
 void PipelineStatus::resetAll()
 {
     mPipelineTypeLabel->setText("Unknown");
-    mScansToProcessList->clear();
+    mScansToProcessTable->resetAll();
 }
 
 ///
 //  Update all elements of widget to current values (on next clicked)
 //
-void PipelineStatus::updateAll()
+void PipelineStatus::updateAll(SelectScans *selectScans)
 {
-    switch(mPipelineType)
+    switch(selectScans->getCurrentPipeline())
     {
     case Enums::PIPELINE_TYPE_TRACT:
         mPipelineTypeLabel->setText("Tractography");
@@ -118,19 +112,16 @@ void PipelineStatus::updateAll()
     case Enums::PIPELINE_TYPE_DCMSEND:
         mPipelineTypeLabel->setText("Send to Remote PACS");
         break;
+    case Enums::PIPELINE_TYPE_CONNECTOME:
+        mPipelineTypeLabel->setText("Connectome");
+        break;
     case Enums::PIPELINE_UNKNOWN:
         mPipelineTypeLabel->setText("Unknown");
         break;
     }
 
     // Update the scans to process list
-    mScansToProcessList->clear();
-    for(int i = 0; i < mScansToProcessData.size(); i++)
-    {
-        WString itemStr;
-        mScansToProcessList->addItem("[MRID:] " + mScansToProcessData[i].mMRID +
-                                     " [Scan:] " + mScansToProcessData[i].mScanName);
-    }
+    mScansToProcessTable->copyTable(selectScans->getScansToProcessTable());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

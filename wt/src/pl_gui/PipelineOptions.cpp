@@ -150,6 +150,8 @@ bool PipelineOptions::validate() const
         mMessageBox->show();
         return false;
     }
+
+    return true;
 }
 
 
@@ -172,6 +174,11 @@ std::string PipelineOptions::getCommandLineString() const
     {
         args += " -M " + mEmailUser->text().toUTF8();
     }
+    if (getConfigOptionsPtr()->GetAnalysisDir() != "")
+    {
+        args += " --migrate-analysis " + getConfigOptionsPtr()->GetAnalysisDir();
+    }
+
 
     return args;
 }

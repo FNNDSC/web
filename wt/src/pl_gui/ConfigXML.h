@@ -19,6 +19,7 @@
 #include <string>
 #include <map>
 #include <list>
+#include <vector>
 #include <mxml.h>
 
 
@@ -56,6 +57,16 @@ public:
 
     } PreviewPatternNode;
 
+    /// Input node
+    typedef struct
+    {
+        /// Display name for input
+        std::string mName;
+
+        /// Command-line argument flag (if applicable)
+        std::string mArg;
+
+    } InputNode;
 
     ///
     /// Constructor
@@ -82,6 +93,18 @@ public:
     ///         or NULL if the pipeline is not found.
     ///
     WStandardItemModel* getResultsPipelineTree(const std::string& pipelineName);
+
+    ///
+    /// Get the <Input> list for the pipeline by name
+    /// \param pipelineName Name of pipeline to get inputs for
+    /// \return Pointer input node list or NULL if the pipeline is not found.
+    ///
+    const std::vector<InputNode>* getPipelineInputs(const std::string& pipelineName);
+
+    ///
+    //  Get the maximum number of inputs used by any pipeline
+    //
+    int getMaxPipelineInputs() const;
 
 
     ///
@@ -111,6 +134,8 @@ public:
     ///
     const std::list<PreviewPatternNode>& getPreviewPatterns() const;
 
+    ///
+
 protected:
 
     /// Option Argument node
@@ -138,6 +163,8 @@ protected:
 
     } OptionNode;
 
+
+
     /// Pipeline structure
     class PipelineConf
     {
@@ -156,6 +183,9 @@ protected:
 
         /// Option map
         std::map<std::string, OptionNode*> mOptionMap;
+
+        /// List of inputs
+        std::vector<InputNode> mInputList;
     };
 
     ///
@@ -190,6 +220,13 @@ protected:
     ///
     bool parseOptionArgNode(std::list<OptionArgNode>& optionArgs, mxml_node_t *optionArgNode,
                              const std::string& configPath);
+
+    ///
+    ///  Parse <Input> node
+    ///
+    bool parseInputNode(std::vector<InputNode>& inputLIst, mxml_node_t *inputNode,
+                         const std::string& configPath);
+
 
     ///
     ///  Parse <[Text|Image]FilePattern> node

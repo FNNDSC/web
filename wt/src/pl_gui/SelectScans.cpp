@@ -131,28 +131,6 @@ void SelectScans::destroyQt()
     mMRIBrowser->destroyQt();
 }
 
-///
-//  Get pipeline type as string (for command line arg)
-//
-const std::string SelectScans::getCurrentPipelineAsString() const
-{
-    if (getCurrentPipeline() == Enums::PIPELINE_TYPE_TRACT)
-    {
-        return std::string("tract");
-    }
-    else if (getCurrentPipeline() == Enums::PIPELINE_TYPE_FS)
-    {
-        return std::string("FS");
-    }
-    else if (getCurrentPipeline() == Enums::PIPELINE_TYPE_FETAL)
-    {
-        return std::string("fetal");
-    }
-    else
-    {
-        return std::string("dcmsend");
-    }
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 //

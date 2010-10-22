@@ -77,12 +77,17 @@ public:
     ///
     /// Get pipeline type as string (for command line arg)
     ///
-    const std::string getCurrentPipelineAsString() const;
+    const std::string getCurrentPipelineAsString() const { return mScanBrowser->getCurrentPipelineAsString(); }
 
     ///
     /// Get the list of currently selected scans
     ///
-    const std::vector<ScanBrowser::ScanData>& getScansToProcess() const { return mScanBrowser->getScansToProcess(); }
+    std::vector<ScansToProcessTable::ScanData> getScansToProcess(int inputIndex) const { return mScanBrowser->getScansToProcess(inputIndex); }
+
+    ///
+    /// Get the ScansToProcessTable widget
+    ///
+    const ScansToProcessTable* getScansToProcessTable() const { return mScanBrowser->getScansToProcessTable(); }
 
     ///
     /// Get the MRI browser

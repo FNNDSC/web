@@ -13,7 +13,7 @@
 #define PIPELINESTATUS_H
 
 #include <Wt/WContainerWidget>
-#include "ScanBrowser.h"
+#include "ScansToProcessTable.h"
 #include "GlobalEnums.h"
 
 namespace Wt
@@ -21,6 +21,8 @@ namespace Wt
     class WLabel;
     class WSelectionBox;
 }
+
+class SelectScans;
 
 using namespace Wt;
 
@@ -34,9 +36,7 @@ public:
     ///
     /// Constructor
     ///
-    PipelineStatus(const std::vector<ScanBrowser::ScanData> &scansToProcess,
-                   const Enums::PipelineType &pipelineType,
-                   WContainerWidget *parent = 0);
+    PipelineStatus(WContainerWidget *parent = 0);
 
     ///
     /// Destructor
@@ -51,7 +51,7 @@ public:
     ///
     ///  Update all elements of widget to current values (on next clicked)
     ///
-    void updateAll();
+    void updateAll(SelectScans *selectScans);
 
 private:
 
@@ -66,13 +66,7 @@ private:
     WLabel *mPipelineTypeLabel;
 
     /// Currently selected scans
-    WSelectionBox *mScansToProcessList;
-
-    /// Scans to process (passed in from SubjectPage)
-    const std::vector<ScanBrowser::ScanData>& mScansToProcessData;
-
-    /// Current pipeline type (passed in from SubjectPage)
-    const Enums::PipelineType& mPipelineType;
+    ScansToProcessTable *mScansToProcessTable;
 
 };
 

@@ -42,12 +42,10 @@ ConfigOptions::ConfigOptions() :
     mOptionDesc->add_options()
         ("dicomDir",        value<string>(), "Base DICOM directory")
         ("outDir",          value<string>(), "Base output directory")
+        ("analysisDir",     value<string>(), "Base analysis directory")
         ("outGradientDir",  value<string>(), "Gradient output directory")
         ("projectDir",      value<string>(), "Project directory")
         ("scriptDir",       value<string>(), "Base scripts directory")
-        ("seriesListTract", value<string>(), "Series list tractography (comma separated)")
-        ("seriesListFS",    value<string>(), "Series list freesurfer (comma separated)")
-        ("seriesListFetal", value<string>(), "Series list fetal (comma separated)")
         ("clusterName",     value<string>(), "Cluster name")
         ("clusterHeadNode", value<string>(), "Cluster head node")
         ("clusterType",     value<string>(), "Cluster type")
@@ -112,6 +110,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mOutDir = vm["outDir"].as<string>();
         }
 
+        if (vm.count("analysisDir"))
+        {
+            mAnalysisDir = vm["analysisDir"].as<string>();
+        }
+
         if (vm.count("outGradientDir"))
         {
             mOutGradientDir = vm["outGradientDir"].as<string>();
@@ -120,21 +123,6 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         if (vm.count("projectDir"))
         {
             mProjectDir = vm["projectDir"].as<string>();
-        }
-
-        if (vm.count("seriesListTract"))
-        {
-            mSeriesListTract = vm["seriesListTract"].as<string>();
-        }
-
-        if (vm.count("seriesListFS"))
-        {
-            mSeriesListFS = vm["seriesListFS"].as<string>();
-        }
-
-        if (vm.count("seriesListFetal"))
-        {
-            mSeriesListFetal = vm["seriesListFetal"].as<string>();
         }
 
         if (vm.count("scriptDir"))
@@ -209,12 +197,10 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
 
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
+        WApplication::instance()->log("info") << "[Analysis Dir:] " << mAnalysisDir;
         WApplication::instance()->log("info") << "[Output Gradient Dir:] " << mOutGradientDir;
         WApplication::instance()->log("info") << "[Project Dir:] " << mProjectDir;
         WApplication::instance()->log("info") << "[Script Dir:] " << mScriptDir;
-        WApplication::instance()->log("info") << "[SeriesListTract:] " << mSeriesListTract;
-        WApplication::instance()->log("info") << "[SeriesListFS:] " << mSeriesListFS;
-        WApplication::instance()->log("info") << "[SeriesListFetal:] " << mSeriesListFetal;
         WApplication::instance()->log("info") << "[Cluster Name:] " << mClusterName;
         WApplication::instance()->log("info") << "[Cluster Type:] " << mClusterType;
         WApplication::instance()->log("info") << "[Cluster Head Node:] " << mClusterHeadNode;

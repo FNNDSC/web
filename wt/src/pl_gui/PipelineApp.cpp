@@ -13,7 +13,6 @@
 //
 #include "PipelineApp.h"
 #include "SubjectPage.h"
-#include "MonitorPage.h"
 #include "ResultsPage.h"
 #include "ResultsPage.h"
 #include "ProjectPage.h"
@@ -176,7 +175,6 @@ void PipelineApp::create()
 {
     // Create all Qt Objects
     mSubjectPage->createQt();
-    mMonitorPage->createQt();
     mResultsPage->createQt();
 }
 
@@ -187,7 +185,6 @@ void PipelineApp::destroy()
 {
     // Destroy Qt Objects
     mSubjectPage->destroyQt();
-    mMonitorPage->destroyQt();
     mResultsPage->destroyQt();
 
 }
@@ -198,7 +195,6 @@ void PipelineApp::destroy()
 void PipelineApp::finalize()
 {
     mSubjectPage->finalize();
-    mMonitorPage->finalize();
     mResultsPage->finalize();
 }
 
@@ -249,10 +245,8 @@ void PipelineApp::createUI()
     topTab->setStyleClass("toptabdiv");
     mSubjectPage = new SubjectPage();
     mResultsPage = new ResultsPage(mSubjectPage->getMRIBrowser());
-    mMonitorPage = new MonitorPage(mSubjectPage->getMRIBrowser());
     topTab->addTab(mSubjectPage, "Subjects");
     topTab->addTab(mResultsPage, "Results");
-    topTab->addTab(mMonitorPage, "Monitor Cluster");
     topTab->addTab(new WText(w->tr("cluster-load-page"), XHTMLUnsafeText), "Cluster Load");
     topTab->currentChanged().connect(this, &PipelineApp::mainTabChanged);
 
@@ -271,8 +265,6 @@ void PipelineApp::createUI()
     mSubjectPage->resize(WLength(100.0, WLength::Percentage),
                          WLength(100.0, WLength::Percentage));
     mResultsPage->resize(WLength(100.0, WLength::Percentage),
-                         WLength(100.0, WLength::Percentage));
-    mMonitorPage->resize(WLength(100.0, WLength::Percentage),
                          WLength(100.0, WLength::Percentage));
 
     mMainSiteWidget->setLayout(layout);
@@ -319,21 +311,14 @@ void PipelineApp::mainTabChanged(int currentIndex)
     switch (currentIndex)
     {
     case SUBJECTS_TAB:
-        mMonitorPage->stopUpdate();
         mResultsPage->stopUpdate();
         break;
 
     case RESULTS_TAB:
         mResultsPage->startUpdate();
-        mMonitorPage->stopUpdate();
         break;
 
-    case MONITOR_CLUSTER_TAB:
-        mMonitorPage->resetAll();
-        mResultsPage->stopUpdate();
-        break;
     case CLUSTER_LOAD_TAB:
-        mMonitorPage->stopUpdate();
         mResultsPage->stopUpdate();
         break;
     }
@@ -439,6 +424,7 @@ WApplication *createApplication(const WEnvironment& env)
     PipelineApp *app = new PipelineApp(env);
     app->setTwoPhaseRenderingThreshold(0);
     app->useStyleSheet("styles.css");
+    app->setCssTheme("polished");
     app->refresh();
 
     // Set the loading indicator to be an overlay box

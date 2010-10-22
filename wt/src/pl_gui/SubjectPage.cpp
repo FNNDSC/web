@@ -16,6 +16,7 @@
 #include "SelectScans.h"
 #include "PipelineConfigure.h"
 #include "ConfigOptions.h"
+#include "ConfigXML.h"
 #include "SubmitJobDialog.h"
 #include "MRIBrowser.h"
 #include <Wt/WApplication>
@@ -41,6 +42,7 @@
 #include <string>
 #include <stdlib.h>
 #include <ctime>
+#include <vector>
 
 ///
 //  Namespaces
@@ -66,8 +68,7 @@ SubjectPage::SubjectPage(WContainerWidget *parent) :
 
     WGridLayout *layout = new WGridLayout();
     mSelectScans = new SelectScans();
-    mPipelineConfigure = new PipelineConfigure(mSelectScans->getScansToProcess(),
-                                               mSelectScans->getCurrentPipeline());
+    mPipelineConfigure = new PipelineConfigure();
 
     mStackedStage = new WStackedWidget();
     mStackedStage->addWidget(mSelectScans);
@@ -242,7 +243,7 @@ void SubjectPage::nextClicked()
 
         mBackButton->enable();
         mStackedStage->setCurrentIndex((int)PIPELINE_CONFIGURE);
-        mPipelineConfigure->updateAll();
+        mPipelineConfigure->updateAll(mSelectScans);
         mSubjectState = PIPELINE_CONFIGURE;
         mNextButton->setText("Finish");
         break;
@@ -329,8 +330,8 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
 
     std::string curDate = (WDate::currentDate().toString("yyyyMMdd")).toUTF8();
 
-    const std::vector<ScanBrowser::ScanData>& scansToProcess = mSelectScans->getScansToProcess();
 
+    const std::vector<ScansToProcessTable::ScanData>& scansToProcess = mSelectScans->getScansToProcess(0);
     for (int i = 0; i < scansToProcess.size(); i++)
     {
         // This table defines a batch run geared towards processing
@@ -349,6 +350,8 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
         //                         actual processed *filenames*.
         //       <DIRsuffix>     : An output suffix that is appended
         //                         to processed *dirnames*.
+        //       <AdditionalArgs>: Optional additional arguments to
+        //                         script.
         //
 
         std::string age = scansToProcess[i].mAge;
@@ -362,7 +365,28 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
         tmpFile << path(scansToProcess[i].mScanDir).leaf() << ";"
                 << scansToProcess[i].mDicomFile << ";"
                 << "-" << date << "_" << age << "-" << curDate << "-" << timeSpec.tv_sec << timeSpec.tv_nsec << "-" << mPipelineConfigure->getOutputFileSuffix() << ";"
-                << "-" << date << "_" << age << "-" << curDate << "-" << timeSpec.tv_sec << timeSpec.tv_nsec << "-" << mPipelineConfigure->getOutputDirSuffix() << endl;
+                << "-" << date << "_" << age << "-" << curDate << "-" << timeSpec.tv_sec << timeSpec.tv_nsec << "-" << mPipelineConfigure->getOutputDirSuffix();
+
+        // Add additional arguments from scans
+        // This grew out of the connectome pipeline requiring multiple input scans.  What we do here is loop
+        // through the scan table and pull out the DICOM file for each additional argument and append it to
+        // the end of the line.  This allows for multiple scans to be associated with a run.
+        const std::string& pipelineString = mSelectScans->getCurrentPipelineAsString();
+        const std::vector<ConfigXML::InputNode>* inputList = getConfigXMLPtr()->getPipelineInputs(pipelineString + "_meta.bash");
+        if (inputList != NULL)
+        {
+            tmpFile << ";";
+            for (int arg = 1; arg < inputList->size(); arg++)
+            {
+                const std::vector<ScansToProcessTable::ScanData>& curArgScansToProcess = mSelectScans->getScansToProcess(arg);
+                const ConfigXML::InputNode &inputNode = (*inputList)[arg];
+
+                // Use ':' for ' ', pl_batch.bash will do the subsitution back to spaces.
+                tmpFile << ":" << inputNode.mArg << ":" << curArgScansToProcess[i].mDicomFile;
+            }
+        }
+
+        tmpFile << endl;
 
     }
     tmpFile.close();
@@ -468,7 +492,7 @@ void SubjectPage::handleSubmitScans(WDialog::DialogCode dialogCode)
             ifstream ifs(scheduleFileName.c_str(), ios::in);
 
             int linesInFile = getNumberOfLines(scheduleFileName.c_str());
-            int linesToRead = mSelectScans->getScansToProcess().size();
+            int linesToRead = mSelectScans->getScansToProcess(0).size();
             int startLine = (linesInFile - linesToRead) + 1;
             int line = 0;
 

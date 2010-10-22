@@ -6,6 +6,9 @@
 	<PreviewPattern pattern=".*\.hdr" files=".*\.jpg"/>
 	<PreviewPattern pattern=".*\.img" files=".*\.jpg"/>
 	<Pipeline name="tract_meta.bash" tag="tract" desc="Tractography">
+		<Inputs>
+			<Input name="Diffusion" />
+		</Inputs>
 		<FilePatterns>
 			<FilePattern dir="true" name=".*-stage-2-.*">
 				<FilePattern dir="true" name="final-trackvis">
@@ -27,7 +30,7 @@
 				<FilePattern dir="true" name="SAG">
 					<FilePattern dir="false" name=".*\.png" recurse="false" />
 				</FilePattern>
-			</FilePattern>	
+			</FilePattern>
 		</FilePatterns>
 		<Options>
 		  <Option tag="-k" desc="ECC" notgiven="ON">
@@ -40,84 +43,195 @@
             <OptionArg tag="hardi" desc="HARDI" />
           </Option>
           <Option tag="--m1" desc="Mask 1 Volume" notgiven="" >
-            <OptionArg tag="DWI" desc="DWI" />            
+            <OptionArg tag="DWI" desc="DWI" />
             <OptionArg tag="FA" desc="FA" />
             <OptionArg tag="ADC" desc="ADC" />
           </Option>
           <Option tag="--m1-lower-threshold" desc="Mask 1 Lower Threshold" notgiven="" >
-            <OptionArg tag="*" desc="*" />            
+            <OptionArg tag="*" desc="*" />
           </Option>
           <Option tag="--m1-upper-threshold" desc="Mask 1 Upper Threshold" notgiven="" >
-            <OptionArg tag="*" desc="*" />            
+            <OptionArg tag="*" desc="*" />
           </Option>
           <Option tag="--m2" desc="Mask 2 Volume" notgiven="" >
-            <OptionArg tag="DWI" desc="DWI" />            
+            <OptionArg tag="DWI" desc="DWI" />
             <OptionArg tag="FA" desc="FA" />
             <OptionArg tag="ADC" desc="ADC" />
           </Option>
           <Option tag="--m2-lower-threshold" desc="Mask 2 Lower Threshold" notgiven="" >
-            <OptionArg tag="*" desc="*" />            
+            <OptionArg tag="*" desc="*" />
           </Option>
           <Option tag="--m2-upper-threshold" desc="Mask 2 Upper Threshold" notgiven="" >
-            <OptionArg tag="*" desc="*" />            
-          </Option>            
+            <OptionArg tag="*" desc="*" />
+          </Option>
           <Option tag="-B" desc="B0 Volumes" notgiven="" >
-            <OptionArg tag="*" desc="*" />                      
+            <OptionArg tag="*" desc="*" />
           </Option>
           <Option tag="-g" desc="Gradient File" notgiven="" >
-            <OptionArg tag="*" desc="*" />                      
-          </Option>                
-          <Option tag="-X" desc="Invert X" notgiven="" />                                  
+            <OptionArg tag="*" desc="*" />
+          </Option>
+          <Option tag="-X" desc="Invert X" notgiven="" />
           <Option tag="-Y" desc="Invert Y" notgiven="" />
-          <Option tag="-Z" desc="Invert Z" notgiven="" />                                                                      
-		</Options>						
+          <Option tag="-Z" desc="Invert Z" notgiven="" />
+		</Options>
 	</Pipeline>
 	<Pipeline name="fs_meta.bash" tag="fs" desc="Structural Reconstruction">
+		<Inputs>
+			<Input name="T1" />
+		</Inputs>
 		<FilePatterns>
 			<FilePattern dir="true" name="label">
-				<FilePattern dir="false" name=".*" recurse="false" />				
+				<FilePattern dir="false" name=".*" recurse="false" />
 			</FilePattern>
 			<FilePattern dir="true" name="log">
-				<FilePattern dir="false" name=".*" recurse="false" />				
-			</FilePattern>			
+				<FilePattern dir="false" name=".*" recurse="false" />
+			</FilePattern>
 			<FilePattern dir="true" name="mri">
 				<FilePattern dir="false" name=".*" recurse="false" />
 				<FilePattern dir="true" name="transforms">
-					<FilePattern dir="false" name=".*" recurse="false" />				
-				</FilePattern>							
+					<FilePattern dir="false" name=".*" recurse="false" />
+				</FilePattern>
 				<FilePattern dir="true" name="orig">
-					<FilePattern dir="false" name=".*" recurse="false" />				
-				</FilePattern>							
+					<FilePattern dir="false" name=".*" recurse="false" />
+				</FilePattern>
 			</FilePattern>
 			<FilePattern dir="true" name="scripts">
-				<FilePattern dir="false" name=".*" recurse="false" />				
-			</FilePattern>			
+				<FilePattern dir="false" name=".*" recurse="false" />
+			</FilePattern>
 			<FilePattern dir="true" name="stats">
-				<FilePattern dir="false" name=".*" recurse="false" />				
+				<FilePattern dir="false" name=".*" recurse="false" />
 			</FilePattern>
 			<FilePattern dir="true" name="surf">
-				<FilePattern dir="false" name=".*" recurse="false" />				
-			</FilePattern>			
-		</FilePatterns>		
+				<FilePattern dir="false" name=".*" recurse="false" />
+			</FilePattern>
+		</FilePatterns>
 	</Pipeline>
 	<Pipeline name="fetal_meta.bash" tag="fetal" desc="Fetal Extraction">
+		<Inputs>
+			<Input name="MRI" />
+		</Inputs>
 		<FilePatterns>
 			<FilePattern dir="true" name=".*-stage-2-.*">
 				<FilePattern dir="false" name=".*\.hdr" recurse="false" />
 				<FilePattern dir="false" name=".*\.img" recurse="false" />
-				<FilePattern dir="false" name=".*\.nii" recurse="false" />				
+				<FilePattern dir="false" name=".*\.nii" recurse="false" />
 			</FilePattern>
-		</FilePatterns>		
+		</FilePatterns>
 		<Options>
             <Option tag="-s" desc="Slice Selection for Extraction" notgiven="">
                  <OptionArg tag="*" desc="*" />
             </Option>
             <Option tag="-g" desc="Margin in Voxels" notgiven="">
                  <OptionArg tag="*" desc="*" />
-            </Option>          
+            </Option>
             <Option tag="-H" desc="Head Circumference (cm)" notgiven="">
                  <OptionArg tag="*" desc="*" />
             </Option>
         </Options>
+	</Pipeline>
+	<Pipeline name="dcmsend_meta.bash" tag="dcmsend" desc="Send to Remote PACS">
+		<Inputs>
+			<Input name="DICOM" />
+		</Inputs>
+	</Pipeline>
+	<Pipeline name="connectome_meta.bash" tag="connectome" desc="Connectome">
+		<Inputs>
+			<Input name="Diffusion" />
+			<Input name="T1" arg="-1" />
+		</Inputs>
+		<FilePatterns>
+			<FilePattern dir="true" name=".*-stage-2-.*">
+				<FilePattern dir="true" name="final-trackvis">
+					<FilePattern dir="false" name=".*\.trk" recurse="false" />
+				</FilePattern>
+			</FilePattern>
+			<FilePattern dir="true" name=".*-stage-2-.*">
+				<FilePattern dir="true" name=".*stage-3.*">
+					<FilePattern dir="false" name=".*\.nii" recurse="false" />
+				</FilePattern>
+			</FilePattern>
+			<FilePattern dir="true" name=".*-stage-3-.*">
+				<FilePattern dir="true" name="AXI">
+					<FilePattern dir="false" name=".*\.png" recurse="false" />
+				</FilePattern>
+				<FilePattern dir="true" name="COR">
+					<FilePattern dir="false" name=".*\.png" recurse="false" />
+				</FilePattern>
+				<FilePattern dir="true" name="SAG">
+					<FilePattern dir="false" name=".*\.png" recurse="false" />
+				</FilePattern>
+			</FilePattern>
+			<FilePattern dir="true" name="3-register">
+                <FilePattern dir="false" name=".*" recurse="false" />
+            </FilePattern>
+            <FilePattern dir="true" name="4-freesurfer">
+                <FilePattern dir="true" name="label">
+                    <FilePattern dir="false" name=".*" recurse="false" />
+                </FilePattern>
+                <FilePattern dir="true" name="log">
+                    <FilePattern dir="false" name=".*" recurse="false" />
+                </FilePattern>
+                <FilePattern dir="true" name="mri">
+                    <FilePattern dir="false" name=".*" recurse="false" />
+                    <FilePattern dir="true" name="transforms">
+                        <FilePattern dir="false" name=".*" recurse="false" />
+                    </FilePattern>
+                    <FilePattern dir="true" name="orig">
+                        <FilePattern dir="false" name=".*" recurse="false" />
+                    </FilePattern>
+                </FilePattern>
+                <FilePattern dir="true" name="scripts">
+                    <FilePattern dir="false" name=".*" recurse="false" />
+                </FilePattern>
+                <FilePattern dir="true" name="stats">
+                    <FilePattern dir="false" name=".*" recurse="false" />
+                </FilePattern>
+                <FilePattern dir="true" name="surf">
+                    <FilePattern dir="false" name=".*" recurse="false" />
+                </FilePattern>
+            </FilePattern>
+		</FilePatterns>
+		<Options>
+		  <Option tag="-k" desc="ECC" notgiven="ON">
+		       <OptionArg tag="" desc="OFF" />
+		  </Option>
+		  <Option tag="-A" desc="Recon Algorithm" notgiven="FACT">
+            <OptionArg tag="rk2" desc="2nd Order Runga-Kutta" />
+          </Option>
+          <Option tag="-I" desc="Image Model" notgiven="DTI">
+            <OptionArg tag="hardi" desc="HARDI" />
+          </Option>
+          <Option tag="--m1" desc="Mask 1 Volume" notgiven="" >
+            <OptionArg tag="DWI" desc="DWI" />
+            <OptionArg tag="FA" desc="FA" />
+            <OptionArg tag="ADC" desc="ADC" />
+          </Option>
+          <Option tag="--m1-lower-threshold" desc="Mask 1 Lower Threshold" notgiven="" >
+            <OptionArg tag="*" desc="*" />
+          </Option>
+          <Option tag="--m1-upper-threshold" desc="Mask 1 Upper Threshold" notgiven="" >
+            <OptionArg tag="*" desc="*" />
+          </Option>
+          <Option tag="--m2" desc="Mask 2 Volume" notgiven="" >
+            <OptionArg tag="DWI" desc="DWI" />
+            <OptionArg tag="FA" desc="FA" />
+            <OptionArg tag="ADC" desc="ADC" />
+          </Option>
+          <Option tag="--m2-lower-threshold" desc="Mask 2 Lower Threshold" notgiven="" >
+            <OptionArg tag="*" desc="*" />
+          </Option>
+          <Option tag="--m2-upper-threshold" desc="Mask 2 Upper Threshold" notgiven="" >
+            <OptionArg tag="*" desc="*" />
+          </Option>
+          <Option tag="-B" desc="B0 Volumes" notgiven="" >
+            <OptionArg tag="*" desc="*" />
+          </Option>
+          <Option tag="-g" desc="Gradient File" notgiven="" >
+            <OptionArg tag="*" desc="*" />
+          </Option>
+          <Option tag="-X" desc="Invert X" notgiven="" />
+          <Option tag="-Y" desc="Invert Y" notgiven="" />
+          <Option tag="-Z" desc="Invert Z" notgiven="" />
+		</Options>
 	</Pipeline>
 </Results>

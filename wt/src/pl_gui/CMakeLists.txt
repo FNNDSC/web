@@ -27,6 +27,7 @@ ADD_EXECUTABLE(pl_gui.wt
   PipelineArgTable.cpp
   PipelineConfigure.cpp
   PipelineOptions.cpp
+  PipelineOptionsConnectome.cpp
   PipelineOptionsDcmSend.cpp
   PipelineOptionsFetal.cpp
   PipelineOptionsFS.cpp
@@ -41,6 +42,7 @@ ADD_EXECUTABLE(pl_gui.wt
   ResultsPage.cpp
   ResultsTable.cpp
   ScanBrowser.cpp
+  ScansToProcessTable.cpp
   SearchTerm.cpp
   SelectScans.cpp
   SubjectPage.cpp

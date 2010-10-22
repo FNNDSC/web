@@ -44,11 +44,9 @@ public:
     // Accessors
     const std::string& GetDicomDir()            const { return mDicomDir; }
     const std::string& GetOutDir()              const { return mOutDir; }
+    const std::string& GetAnalysisDir()         const { return mAnalysisDir; }
     const std::string& GetOutGradientDir()      const { return mOutGradientDir; }
     const std::string& GetProjectDir()          const { return mProjectDir; }
-    const std::string& GetSeriesListTract()     const { return mSeriesListTract; }
-    const std::string& GetSeriesListFS()        const { return mSeriesListFS; }
-    const std::string& GetSeriesListFetal()     const { return mSeriesListFetal; }
     const std::string& GetScriptDir()           const { return mScriptDir; }
     const std::string& GetClusterName()         const { return mClusterName; }
     const std::string& GetClusterHeadNode()     const { return mClusterHeadNode; }
@@ -72,20 +70,14 @@ private:
     /// Dicom directory
     std::string mDicomDir;
 
-    /// Series list (tract)
-    std::string mSeriesListTract;
-
-    /// Series list (FS)
-    std::string mSeriesListFS;
-
-    /// Series list (Fetal)
-    std::string mSeriesListFetal;
-
     /// Script dir
     std::string mScriptDir;
 
     /// Output directory
     std::string mOutDir;
+
+    /// Analysis directory
+    std::string mAnalysisDir;
 
     /// Output gradient directory
     std::string mOutGradientDir;

@@ -22,6 +22,7 @@ namespace Enums
         PIPELINE_TYPE_FS,
         PIPELINE_TYPE_FETAL,
         PIPELINE_TYPE_DCMSEND,
+        PIPELINE_TYPE_CONNECTOME,
 
         NUM_PIPELINES
 

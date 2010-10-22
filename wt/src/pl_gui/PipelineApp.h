@@ -26,7 +26,6 @@ namespace Wt
 
 using namespace Wt;
 
-class MonitorPage;
 class ConfigOptions;
 class ConfigXML;
 class SubjectPage;
@@ -130,12 +129,8 @@ private:
     {
         SUBJECTS_TAB = 0,
         RESULTS_TAB = 1,
-        MONITOR_CLUSTER_TAB = 2,
-        CLUSTER_LOAD_TAB = 3
+        CLUSTER_LOAD_TAB = 2
     } PageEnum;
-
-    /// Monitor page
-    MonitorPage *mMonitorPage;
 
     /// Results page
     ResultsPage *mResultsPage;

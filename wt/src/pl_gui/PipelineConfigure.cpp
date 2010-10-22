@@ -14,6 +14,8 @@
 #include "PipelineOptionsTract.h"
 #include "PipelineOptionsFetal.h"
 #include "PipelineOptionsDcmSend.h"
+#include "PipelineOptionsConnectome.h"
+#include "SelectScans.h"
 #include <Wt/WContainerWidget>
 #include <Wt/WGridLayout>
 #include <Wt/WHBoxLayout>
@@ -37,27 +39,24 @@ using namespace std;
 ///
 //  Constructor
 //
-PipelineConfigure::PipelineConfigure(const vector<ScanBrowser::ScanData>& scansToProcess,
-                                     const Enums::PipelineType& pipelineType,
-                                     WContainerWidget *parent) :
-    WContainerWidget(parent),
-    mScansToProcessData(scansToProcess),
-    mPipelineType(pipelineType)
+PipelineConfigure::PipelineConfigure(WContainerWidget *parent) :
+    WContainerWidget(parent)
 {
     setStyleClass("tabdiv");
 
-    mPipelineStatus = new PipelineStatus(scansToProcess, pipelineType);
+    mPipelineStatus = new PipelineStatus();
     mStackedPipelineOptions = new WStackedWidget();
 
     mPipelineOptionsTract = new PipelineOptionsTract();
     mPipelineOptionsFS = new PipelineOptionsFS();
     mPipelineOptionsFetal = new PipelineOptionsFetal();
     mPipelineOptionsDcmSend = new PipelineOptionsDcmSend();
+    mPipelineOptionsConnectome = new PipelineOptionsConnectome();
     mStackedPipelineOptions->addWidget(mPipelineOptionsTract);
     mStackedPipelineOptions->addWidget(mPipelineOptionsFS);
     mStackedPipelineOptions->addWidget(mPipelineOptionsFetal);
     mStackedPipelineOptions->addWidget(mPipelineOptionsDcmSend);
-
+    mStackedPipelineOptions->addWidget(mPipelineOptionsConnectome);
 
     WGridLayout *layout = new WGridLayout();
     layout->addWidget(mPipelineStatus, 0, 0);
@@ -103,10 +102,11 @@ void PipelineConfigure::resetAll()
 ///
 ///  Update all elements of widget to current values (on next clicked)
 ///
-void PipelineConfigure::updateAll()
+void PipelineConfigure::updateAll(SelectScans *selectScans)
 {
-    mPipelineStatus->updateAll();
-
+    mScansToProcessData = selectScans->getScansToProcess(0);
+    mPipelineType = selectScans->getCurrentPipeline();
+    mPipelineStatus->updateAll(selectScans);
     switch(mPipelineType)
     {
     case Enums::PIPELINE_TYPE_TRACT:
@@ -124,6 +124,10 @@ void PipelineConfigure::updateAll()
     case Enums::PIPELINE_TYPE_DCMSEND:
         mStackedPipelineOptions->setCurrentIndex(3);
         mPipelineOptionsCurrent = mPipelineOptionsDcmSend;
+        break;
+    case Enums::PIPELINE_TYPE_CONNECTOME:
+        mStackedPipelineOptions->setCurrentIndex(4);
+        mPipelineOptionsCurrent = mPipelineOptionsConnectome;
         break;
 
     }

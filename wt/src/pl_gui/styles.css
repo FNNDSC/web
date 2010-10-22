@@ -30,7 +30,7 @@ div.Wt-popupmenu .separator {
 
 .maindiv {
     background-color: #e0ecff
-    
+
 }
 
 .topdiv {
@@ -81,6 +81,17 @@ div.Wt-popupmenu .separator {
     white-space: nowrap;
 
 }
+
+.Wt-tableview {
+    background-color: white;
+    border: 1px solid #C3D9FF;
+    font-family: verdana,helvetica,tahoma,sans-serif;
+    font-size: 8pt;
+    white-space: nowrap;
+    width: 100%
+
+}
+
 
 .Wt-treeview div, .Wt-treeview span {
     white-space: nowrap;

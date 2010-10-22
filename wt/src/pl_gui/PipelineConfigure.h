@@ -24,6 +24,7 @@ class PipelineOptionsTract;
 class PipelineOptionsFS;
 class PipelineOptionsFetal;
 class PipelineOptionsDcmSend;
+class PipelineOptionsConnectome;
 namespace Wt
 {
     class WStackedWidget;
@@ -42,9 +43,7 @@ public:
     ///
     /// Constructor
     ///
-    PipelineConfigure(const std::vector<ScanBrowser::ScanData> &scansToProcess,
-                      const Enums::PipelineType &pipelineType,
-                      WContainerWidget *parent = 0);
+    PipelineConfigure(WContainerWidget *parent=NULL);
 
     ///
     /// Destructor
@@ -59,7 +58,7 @@ public:
     ///
     ///  Update all elements of widget to current values (on next clicked)
     ///
-    void updateAll();
+    void updateAll(SelectScans *selectScans);
 
     ///
     /// Check whether the options are valid
@@ -108,15 +107,17 @@ private:
     /// DICOM Send pipeline options
     PipelineOptionsDcmSend *mPipelineOptionsDcmSend;
 
+    /// Connectome pipeline options
+    PipelineOptionsConnectome *mPipelineOptionsConnectome;
+
     /// Current pipeline options
     PipelineOptions *mPipelineOptionsCurrent;
 
+    /// Scans to process
+    std::vector<ScansToProcessTable::ScanData> mScansToProcessData;
 
-    /// Scans to process (passed in from SubjectPage)
-    const std::vector<ScanBrowser::ScanData>& mScansToProcessData;
-
-    /// Current pipeline type (passed in from SubjectPage)
-    const Enums::PipelineType& mPipelineType;
+    /// Current pipeline type
+    Enums::PipelineType mPipelineType;
 
 };
 
