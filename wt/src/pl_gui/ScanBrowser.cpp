@@ -181,6 +181,20 @@ void ScanBrowser::resetAll()
     mScansToProcessTable->resetAll();
 
     mRemoveScanButton->disable();
+
+    for (int i = 0; i < mAddScanButtonList.size(); i++)
+    {
+        if (i == 0)
+        {
+            mAddScanButtonList[i]->setText("Add");
+            mAddScanButtonList[i]->disable();
+        }
+        else
+        {
+            mAddScanButtonList[i]->hide();
+        }
+    }
+
 }
 
 ///
