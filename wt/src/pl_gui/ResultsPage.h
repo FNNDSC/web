@@ -116,13 +116,15 @@ private:
     ///
     /// New result selected (double click) [slot]
     ///
-    void resultSelected(std::string clusterShFile, std::string metaScript, std::string arguments);
+    void resultSelected(std::string clusterShFile, std::string metaScript, std::string arguments,
+                           std::string jobID, std::string userName, std::string project);
+
 
     ///
     /// New result clicked (single click) [slot]
     ///
     void resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments,
-                       std::string jobID, std::string userName);
+                       std::string jobID, std::string userName, std::string project);
 
     ///
     /// Refresh clicked [slot]

@@ -56,9 +56,20 @@ public:
     void setSearchTerm(bool search, std::string searchTerm = "");
 
     ///
+    /// Set project filter
+    ///
+    void setProjectFilter(bool filter, std::string projectFilter = "");
+
+    ///
     /// Set user column
     ///
     void setUserColumn(int col);
+
+    ///
+    ///  Set user column
+    ///
+    void setProjectColumnAndRole(int col, int role);
+
 
 protected:
 
@@ -75,14 +86,26 @@ private:
     /// Search Term enabled
     bool mSearchTerm;
 
+    /// Project filter enabled
+    bool mProjectFilter;
+
     /// Location of user column in model
     int mUserColumn;
+
+    /// Location of the project column in model
+    int mProjectColumn;
+
+    /// Role of project in model column
+    int mProjectRole;
 
     /// User filter
     WRegExp mUserFilterRegExp;
 
     /// Search term
     WRegExp mSearchTermRegExp;
+
+    ///Project filter
+    WRegExp mProjectFilterRegExp;
 
 };
 

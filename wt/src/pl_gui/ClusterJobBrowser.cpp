@@ -87,9 +87,7 @@ void ClusterJobBrowser::resetAll()
     mClusterJobTreeView->setSelectedIndexes(noSelection);
     mClusterJobModel->clear();
 
-    string scheduleFileName = getConfigOptionsPtr()->GetOutDir() +
-                               "/" +  getConfigOptionsPtr()->GetClusterName() +
-                               "/schedule.log";
+    string scheduleFileName = getConfigOptionsPtr()->GetClusterDir() + "/schedule.log";
     populateClusterJobs(scheduleFileName);
 
     if (mClusterJobModel->rowCount() == 0)

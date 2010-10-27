@@ -132,24 +132,13 @@ void ResultsTable::resetAll()
 }
 
 
+
 ///
 //  Called when item is selected form list [slot]
 //
 void ResultsTable::jobSelected(const WModelIndex& item)
 {
-    int modelRow = item.row();
-
-    boost::any d = mSortFilterProxyModel->data(modelRow, 0, UserRole);
-    boost::any d1 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 1);
-    boost::any d2 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 2);
-    if (!d.empty() && !d1.empty() && !d2.empty())
-    {
-        WString clusterCommand = boost::any_cast<WString>(d);
-        WString metaScript = boost::any_cast<WString>(d1);
-        WString arguments = boost::any_cast<WString>(d2);
-
-        mResultSelected.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8());
-    }
+    emitJobClickedOrSelected(item, false);
 }
 
 ///
@@ -157,35 +146,7 @@ void ResultsTable::jobSelected(const WModelIndex& item)
 //
 void ResultsTable::jobClicked(const WModelIndex& item)
 {
-    int modelRow = item.row();
-
-    boost::any d = mSortFilterProxyModel->data(modelRow, 0, UserRole);
-    boost::any d1 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 1);
-    boost::any d2 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 2);
-    boost::any d3 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 3);
-    boost::any d4 = mSortFilterProxyModel->data(modelRow, 1, DisplayRole);
-
-    if (!d.empty() && !d1.empty() && !d2.empty())
-    {
-        WString clusterCommand = boost::any_cast<WString>(d);
-        WString metaScript = boost::any_cast<WString>(d1);
-        WString arguments = boost::any_cast<WString>(d2);
-
-        WString jobID;
-        if (!d3.empty())
-        {
-            jobID = boost::any_cast<WString>(d3);
-        }
-
-        WString user;
-        if (!d4.empty())
-        {
-            user = boost::any_cast<WString>(d4);
-        }
-
-        mResultClicked.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8(),
-                            jobID.toUTF8(), user.toUTF8());
-    }
+    emitJobClickedOrSelected(item, true);
 }
 
 ///
@@ -206,6 +167,15 @@ void ResultsTable::setSearchTerm(bool search, std::string searchTerm)
     mTreeView->sortByColumn(0, DescendingOrder);
 }
 
+///
+//  Set project
+//
+void ResultsTable::setProjectFilter(bool filter, std::string projectFilter)
+{
+    mSortFilterProxyModel->setProjectFilter(filter, projectFilter);
+    mTreeView->sortByColumn(0, DescendingOrder);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -219,9 +189,7 @@ void ResultsTable::setSearchTerm(bool search, std::string searchTerm)
 bool ResultsTable::populateResultsTable()
 {
     std::string scheduleLogFile;
-    scheduleLogFile = getConfigOptionsPtr()->GetOutDir() +
-                           "/" +  getConfigOptionsPtr()->GetClusterName() +
-                           "/schedule.log.xml";
+    scheduleLogFile = getConfigOptionsPtr()->GetClusterDir() + "/schedule.log.xml";
 
     FILE *fp = fopen(scheduleLogFile.c_str(), "r");
     if (fp == NULL)
@@ -265,6 +233,7 @@ bool ResultsTable::populateResultsTable()
         setDataColumn(clusterJobNode, "MetaScript", row, 0, UserRole + 1);
         setDataColumn(clusterJobNode, "Arguments", row, 0, UserRole + 2);
         setDataColumn(clusterJobNode, "JobId", row, 0, UserRole + 3);
+        setDataColumn(clusterJobNode, "Project", row, 0, UserRole + 4);
 
         // Set display data
         setDataColumn(clusterJobNode, "User", row, 1);
@@ -305,6 +274,58 @@ void ResultsTable::setDataColumn(mxml_node_t *node, const char* name, int row, i
 }
 
 
+///
+/// Handle emitting result clicked or selected (they do the same thing except
+/// for the signal so combined into one function)
+///
+void ResultsTable::emitJobClickedOrSelected(const WModelIndex& item, bool clicked)
+{
 
+    int modelRow = item.row();
+
+    boost::any d = mSortFilterProxyModel->data(modelRow, 0, UserRole);
+    boost::any d1 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 1);
+    boost::any d2 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 2);
+    boost::any d3 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 3);
+    boost::any d4 = mSortFilterProxyModel->data(modelRow, 1, DisplayRole);
+    boost::any d5 = mSortFilterProxyModel->data(modelRow, 0, UserRole + 4);
+
+    if (!d.empty() && !d1.empty() && !d2.empty())
+    {
+        WString clusterCommand = boost::any_cast<WString>(d);
+        WString metaScript = boost::any_cast<WString>(d1);
+        WString arguments = boost::any_cast<WString>(d2);
+
+        WString jobID;
+        if (!d3.empty())
+        {
+            jobID = boost::any_cast<WString>(d3);
+        }
+
+        WString user;
+        if (!d4.empty())
+        {
+            user = boost::any_cast<WString>(d4);
+        }
+
+        WString project;
+        if (!d5.empty())
+        {
+            project = boost::any_cast<WString>(d5);
+        }
+
+        if (clicked)
+        {
+            mResultClicked.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8(),
+                                jobID.toUTF8(), user.toUTF8(), project.toUTF8());
+        }
+        else
+        {
+            mResultSelected.emit(clusterCommand.toUTF8(), metaScript.toUTF8(), arguments.toUTF8(),
+                                jobID.toUTF8(), user.toUTF8(), project.toUTF8());
+        }
+    }
+
+}
 
 

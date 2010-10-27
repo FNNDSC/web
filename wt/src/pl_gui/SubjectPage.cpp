@@ -393,9 +393,7 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
 
     // Get the number of lines in the current log file
     std::string scheduleFileName;
-    scheduleFileName = getConfigOptionsPtr()->GetOutDir() +
-                       "/" +  getConfigOptionsPtr()->GetClusterName() +
-                       "/schedule.log";
+    scheduleFileName = getConfigOptionsPtr()->GetClusterDir() + "/schedule.log";
     int scheduleLines = getNumberOfLines(scheduleFileName.c_str());
 
     // Now run pl_batch.bash to queue up into the schedule
@@ -485,9 +483,7 @@ void SubjectPage::handleSubmitScans(WDialog::DialogCode dialogCode)
         if(submitForProcessing(mSubmitJobDialog->getCommandLine()))
         {
             std::string logEntriesToDisplay;
-            std::string scheduleFileName = getConfigOptionsPtr()->GetOutDir() +
-                                           "/" +  getConfigOptionsPtr()->GetClusterName() +
-                                           "/schedule.log";
+            std::string scheduleFileName = getConfigOptionsPtr()->GetClusterDir() + "/schedule.log";
 
             ifstream ifs(scheduleFileName.c_str(), ios::in);
 

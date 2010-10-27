@@ -499,10 +499,11 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mPopup = new Wt::WSuggestionPopup(Wt::WSuggestionPopup::generateMatcherJS(searchOptions),
                                       Wt::WSuggestionPopup::generateReplacerJS(searchOptions),
                                       searchContainer);
-    mPopup->setStyleClass("suggest");
+    //mPopup->setStyleClass("suggest");
     mPopup->forEdit(mSearchLineEdit);
     mPopup->setModel(mSortFilterProxyModel);
     mPopup->setModelColumn(0);
+    mPopup->setPopup(true);
 
     WGridLayout *searchLayout = new WGridLayout();
     searchLayout->addWidget(searchContainer, 0, 0, AlignRight);

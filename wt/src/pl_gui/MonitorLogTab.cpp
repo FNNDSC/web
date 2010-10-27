@@ -168,7 +168,7 @@ void MonitorLogTab::stopUpdate()
 ///
 //  Handle job selection changes
 //
-void MonitorLogTab::jobSelectedChanged(std::string jobSelectedFile)
+void MonitorLogTab::jobSelectedChanged(std::string jobSelectedFile, std::string userName, std::string project)
 {
 
     path logBaseDir = path(jobSelectedFile).branch_path();
@@ -189,13 +189,12 @@ void MonitorLogTab::jobSelectedChanged(std::string jobSelectedFile)
         logDirName.erase(logDirName.begin(), logDirName.begin() + 3);
 
         std::string postProcDir = getConfigOptionsPtr()->GetOutDir() + "/" +
+                                  userName + "/" + project + "/" +
                                   mrid + logDirName;
 
         WApplication::instance()->log("debug") << "ScanDir: " << scanDir;
         WApplication::instance()->log("debug") << "PostProcDir: " << postProcDir;
         mLogFileBrowser->setPostProcDir(postProcDir);
-
-
     }
     mLogFileBrowser->resetAll();
     mLogFileBrowser->show();

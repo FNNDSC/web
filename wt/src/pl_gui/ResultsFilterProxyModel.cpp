@@ -32,7 +32,9 @@ using namespace std;
 //
 ResultsFilterProxyModel::ResultsFilterProxyModel(WObject *parent) :
     WSortFilterProxyModel(parent),
-    mUserColumn(0)
+    mUserColumn(0),
+    mProjectColumn(0),
+    mProjectRole(0)
 {
     resetAll();
 }
@@ -58,8 +60,10 @@ void ResultsFilterProxyModel::resetAll()
 {
     mUserFilter = false;
     mSearchTerm = false;
+    mProjectFilter = false;
     mUserFilterRegExp.setPattern(".*");
     mSearchTermRegExp.setPattern(".*");
+    mProjectFilterRegExp.setPattern(".*");
 }
 
 ///
@@ -82,6 +86,16 @@ void ResultsFilterProxyModel::setSearchTerm(bool search, std::string searchTerm)
 }
 
 ///
+//  Set project filter
+//
+void ResultsFilterProxyModel::setProjectFilter(bool filter, std::string projectFilter)
+{
+    mProjectFilter = filter;
+    mProjectFilterRegExp.setPattern(projectFilter);
+}
+
+
+///
 //  Set user column
 //
 void ResultsFilterProxyModel::setUserColumn(int col)
@@ -89,6 +103,15 @@ void ResultsFilterProxyModel::setUserColumn(int col)
     mUserColumn = col;
 }
 
+
+///
+//  Set user column
+//
+void ResultsFilterProxyModel::setProjectColumnAndRole(int col, int role)
+{
+    mProjectColumn = col;
+    mProjectRole = role;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -103,15 +126,27 @@ void ResultsFilterProxyModel::setUserColumn(int col)
 bool ResultsFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& sourceParent) const
 {
     // Quick check to see if any filters are on
-    if (mUserFilter == false && mSearchTerm == false)
+    if (mUserFilter == false && mSearchTerm == false && mProjectFilter == false)
         return true;
 
     bool matchedUser = false;
     bool matchedSearch = false;
+    bool matchedProject = false;
     for(int col = 0; col < sourceModel()->columnCount(); col++)
     {
-        boost::any data = sourceModel()->index(sourceRow, col, sourceParent).data(filterRole());
+        if (col == mProjectColumn && mProjectFilter)
+        {
+            boost::any projData = sourceModel()->index(sourceRow, col, sourceParent).data(mProjectRole);
 
+            if (!projData.empty())
+            {
+                WString s = asString(projData);
+
+                matchedProject = mProjectFilterRegExp.exactMatch(s);
+            }
+        }
+
+        boost::any data = sourceModel()->index(sourceRow, col, sourceParent).data(filterRole());
         if (!data.empty())
         {
             WString s = asString(data);
@@ -130,6 +165,14 @@ bool ResultsFilterProxyModel::filterAcceptRow(int sourceRow, const WModelIndex& 
                     matchedSearch = true;
                 }
             }
+        }
+    }
+
+    if (mProjectFilter)
+    {
+        if (!matchedProject)
+        {
+            return false;
         }
     }
 

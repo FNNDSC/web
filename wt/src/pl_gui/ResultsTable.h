@@ -64,14 +64,19 @@ public:
     void setSearchTerm(bool search, std::string searchTerm = "");
 
     ///
+    ///  Set project
+    ///
+    void setProjectFilter(bool filter, std::string projectFilter = "");
+
+    ///
     /// Signal new result selected (double click)
     ///
-    Wt::Signal<std::string, std::string, std::string>& resultSelected()  {   return mResultSelected; }
+    Wt::Signal<std::string, std::string,std::string,std::string,std::string, std::string>& resultSelected()  {   return mResultSelected; }
 
     ///
     /// Signal new result clicked (single click)
     ///
-    Wt::Signal<std::string, std::string, std::string, std::string, std::string>& resultClicked()  {   return mResultClicked; }
+    Wt::Signal<std::string, std::string,std::string,std::string,std::string, std::string>& resultClicked()  {   return mResultClicked; }
 
 private:
 
@@ -102,14 +107,19 @@ private:
     ///
     WStandardItem* translateScriptArgs(const std::string& metaScript, const std::string& arguments);
 
+    ///
+    /// Handle emitting result clicked or selected (they do the same thing except
+    /// for the signal so combined into one function)
+    ///
+    void emitJobClickedOrSelected(const WModelIndex& item, bool clicked);
 
 private:
 
     /// Result selected signal
-    Wt::Signal<std::string, std::string,std::string> mResultSelected;
+    Wt::Signal<std::string, std::string,std::string,std::string,std::string, std::string> mResultSelected;
 
     /// Result clicked signal
-    Wt::Signal<std::string, std::string,std::string,std::string,std::string> mResultClicked;
+    Wt::Signal<std::string, std::string,std::string,std::string,std::string, std::string> mResultClicked;
 
     /// Model representing cluster jobs
     WStandardItemModel *mModel;

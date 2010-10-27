@@ -46,7 +46,7 @@ ConfigOptions::ConfigOptions() :
         ("outGradientDir",  value<string>(), "Gradient output directory")
         ("projectDir",      value<string>(), "Project directory")
         ("scriptDir",       value<string>(), "Base scripts directory")
-        ("clusterName",     value<string>(), "Cluster name")
+        ("clusterDir",      value<string>(), "Cluster schedule directory")
         ("clusterHeadNode", value<string>(), "Cluster head node")
         ("clusterType",     value<string>(), "Cluster type")
         ("packageDir",      value<string>(), "Package directory")
@@ -130,9 +130,9 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mScriptDir = vm["scriptDir"].as<string>();
         }
 
-        if (vm.count("clusterName"))
+        if (vm.count("clusterDir"))
         {
-            mClusterName = vm["clusterName"].as<string>();
+            mClusterDir = vm["clusterDir"].as<string>();
         }
 
         if (vm.count("clusterHeadNode"))
@@ -201,7 +201,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[Output Gradient Dir:] " << mOutGradientDir;
         WApplication::instance()->log("info") << "[Project Dir:] " << mProjectDir;
         WApplication::instance()->log("info") << "[Script Dir:] " << mScriptDir;
-        WApplication::instance()->log("info") << "[Cluster Name:] " << mClusterName;
+        WApplication::instance()->log("info") << "[Cluster Dir:] " << mClusterDir;
         WApplication::instance()->log("info") << "[Cluster Type:] " << mClusterType;
         WApplication::instance()->log("info") << "[Cluster Head Node:] " << mClusterHeadNode;
         WApplication::instance()->log("info") << "[Package Dir:] " << mPackageDir;

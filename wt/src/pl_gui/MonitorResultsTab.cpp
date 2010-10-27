@@ -132,7 +132,7 @@ void MonitorResultsTab::finalize()
 ///
 //  Handle job selection changes
 //
-void MonitorResultsTab::jobSelectedChanged(std::string jobSelectedFile)
+void MonitorResultsTab::jobSelectedChanged(std::string jobSelectedFile, std::string userName, std::string project)
 {
     path logBaseDir = path(jobSelectedFile).branch_path();
     std::string scanDir = logBaseDir.branch_path().string();
@@ -154,6 +154,7 @@ void MonitorResultsTab::jobSelectedChanged(std::string jobSelectedFile)
        logDirName.erase(logDirName.begin(), logDirName.begin() + 3);
 
        std::string postProcDir = getConfigOptionsPtr()->GetOutDir() + "/" +
+                                 userName + "/" + project + "/" +
                                  mrid + logDirName;
 
        mResultsBrowser->setResultsBaseDir(postProcDir);

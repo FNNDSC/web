@@ -84,7 +84,7 @@ public:
     ///
     /// Handle job selection changes
     ///
-    void jobSelectedChanged(std::string jobSelectedFile);
+    void jobSelectedChanged(std::string jobSelectedFile, std::string userName, std::string project);
 
 private:
 

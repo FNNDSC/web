@@ -301,7 +301,7 @@ void ResultsPage::backPushed()
 //  New result clicked (single click) [slot]
 //
 void ResultsPage::resultClicked(std::string clusterShFile, std::string metaScript, std::string arguments,
-                                std::string jobID, std::string userName)
+                                std::string jobID, std::string userName, std::string project)
 {
     mPipelineArgTable->setScript(metaScript, arguments);
 
@@ -314,11 +314,12 @@ void ResultsPage::resultClicked(std::string clusterShFile, std::string metaScrip
 ///
 //  New result selected (double click) [slot]
 //
-void ResultsPage::resultSelected(std::string clusterShFile, std::string metaScript, std::string arguments)
+void ResultsPage::resultSelected(std::string clusterShFile, std::string metaScript, std::string arguments,
+                                 std::string jobID, std::string userName, std::string project)
 {
     std::string jobSelectedFile = path(clusterShFile).branch_path().string() + "/" + metaScript;
-    mMonitorLogTab->jobSelectedChanged(jobSelectedFile);
-    mMonitorResultsTab->jobSelectedChanged(jobSelectedFile);
+    mMonitorLogTab->jobSelectedChanged(jobSelectedFile, userName, project);
+    mMonitorResultsTab->jobSelectedChanged(jobSelectedFile, userName, project);
     mStackedWidget->setCurrentIndex(1);
 }
 

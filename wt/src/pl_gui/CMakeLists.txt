@@ -2,7 +2,7 @@ SUBDIRS(lib)
 
 QT4_GENERATE_MOC(${CMAKE_CURRENT_SOURCE_DIR}/QtFileSystemWatcher.h
                  ${CMAKE_CURRENT_BINARY_DIR}/moccedQtFileSystemWatcher.cpp)
-                 
+
 ADD_EXECUTABLE(pl_gui.wt
   ArchiveFileResource.cpp
   ConfigOptions.cpp
@@ -17,8 +17,7 @@ ADD_EXECUTABLE(pl_gui.wt
   LogFileTailer.cpp
   LoginPage.cpp
   MonitorLogTab.cpp
-  MonitorPage.cpp
-  MonitorResultsTab.cpp 
+  MonitorResultsTab.cpp
   MRIBrowser.cpp
   MRIInfoBox.cpp
   PatientInfoBox.cpp

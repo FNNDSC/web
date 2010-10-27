@@ -48,7 +48,7 @@ public:
     const std::string& GetOutGradientDir()      const { return mOutGradientDir; }
     const std::string& GetProjectDir()          const { return mProjectDir; }
     const std::string& GetScriptDir()           const { return mScriptDir; }
-    const std::string& GetClusterName()         const { return mClusterName; }
+    const std::string& GetClusterDir()          const { return mClusterDir; }
     const std::string& GetClusterHeadNode()     const { return mClusterHeadNode; }
     const std::string& GetClusterType()         const { return mClusterType; }
     const std::string& GetPackageDir()          const { return mPackageDir; }
@@ -85,8 +85,8 @@ private:
     /// Project base directory
     std::string mProjectDir;
 
-    /// Cluster name
-    std::string mClusterName;
+    /// Cluster schedule directory
+    std::string mClusterDir;
 
     /// Cluster head node
     std::string mClusterHeadNode;

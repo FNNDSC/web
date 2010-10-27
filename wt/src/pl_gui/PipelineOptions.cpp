@@ -166,9 +166,13 @@ std::string PipelineOptions::getCommandLineString() const
     //               -O <outputDir>   (output directory from config file)
     //
     std::string args = "-v 10 -c -C ";
+    args += getConfigOptionsPtr()->GetClusterDir();
 
-    args += getConfigOptionsPtr()->GetClusterName();
-    args += " -O " + getConfigOptionsPtr()->GetOutDir();
+    // Output to <outdir>/<username>/<suffix>
+    std::string outDir = getConfigOptionsPtr()->GetOutDir() + "/" +
+                         getCurrentUserName() + "/" + getOutputDirSuffix();
+
+    args += " -O " + outDir;
     args += " -n " + getCurrentUserName();
     if (mEmailCheckBox->isChecked() && !mEmailUser->text().empty())
     {
