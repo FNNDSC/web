@@ -486,6 +486,11 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mMRITreeView->selectionChanged().connect(SLOT(this, MRIBrowser::mriChanged));
     mMRITreeView->setHeaderHeight(0);
 
+#ifdef SUGGESTION_POPUP
+    // This is broken in Wt as of 09/15/10.  I have filed a report on the Wt-interest list.
+    // Until it is fixed, I am disabling this feature.  Leaving the code here in an
+    // #ifdef with the hopes it will be fixed eventually.
+
     // options for email address suggestions
     WSuggestionPopup::Options searchOptions
      = { "<span class=\"highlight\">", // highlightBeginTag
@@ -504,6 +509,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mPopup->setModel(mSortFilterProxyModel);
     mPopup->setModelColumn(0);
     mPopup->setPopup(true);
+#endif
 
     WGridLayout *searchLayout = new WGridLayout();
     searchLayout->addWidget(searchContainer, 0, 0, AlignRight);
@@ -682,7 +688,13 @@ void MRIBrowser::refreshMRIList()
     mMRITreeView->setModel(mSortFilterProxyModel);
     mMRITreeView->setColumnWidth(0, WLength(125, WLength::Pixel));
 
+#ifdef SUGGESTION_POPUP
+    // This is broken in Wt as of 09/15/10.  I have filed a report on the Wt-interest list.
+    // Until it is fixed, I am disabling this feature.  Leaving the code here in an
+    // #ifdef with the hopes it will be fixed eventually.
     mPopup->setModel(mSortFilterProxyModel);
+#endif
+
     resetAll();
 
     setFilterFile(mFilterFilePath);
