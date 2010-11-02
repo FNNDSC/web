@@ -61,9 +61,9 @@ void ResultsFilterProxyModel::resetAll()
     mUserFilter = false;
     mSearchTerm = false;
     mProjectFilter = false;
-    mUserFilterRegExp.setPattern(".*");
-    mSearchTermRegExp.setPattern(".*");
-    mProjectFilterRegExp.setPattern(".*");
+    mUserFilterRegExp.setPattern(".*", WFlags<RegExpFlag>());
+    mSearchTermRegExp.setPattern(".*", WFlags<RegExpFlag>());
+    mProjectFilterRegExp.setPattern(".*", WFlags<RegExpFlag>());
 }
 
 ///
@@ -72,7 +72,7 @@ void ResultsFilterProxyModel::resetAll()
 void ResultsFilterProxyModel::setUserFilter(bool filter, std::string userFilter)
 {
     mUserFilter = filter;
-    mUserFilterRegExp.setPattern(userFilter);
+    mUserFilterRegExp.setPattern(userFilter, WFlags<RegExpFlag>());
 
 }
 
@@ -82,7 +82,7 @@ void ResultsFilterProxyModel::setUserFilter(bool filter, std::string userFilter)
 void ResultsFilterProxyModel::setSearchTerm(bool search, std::string searchTerm)
 {
     mSearchTerm = search;
-    mSearchTermRegExp.setPattern(searchTerm);
+    mSearchTermRegExp.setPattern(searchTerm, WFlags<RegExpFlag>());
 }
 
 ///
@@ -91,7 +91,7 @@ void ResultsFilterProxyModel::setSearchTerm(bool search, std::string searchTerm)
 void ResultsFilterProxyModel::setProjectFilter(bool filter, std::string projectFilter)
 {
     mProjectFilter = filter;
-    mProjectFilterRegExp.setPattern(projectFilter);
+    mProjectFilterRegExp.setPattern(projectFilter, WFlags<RegExpFlag>());
 }
 
 
