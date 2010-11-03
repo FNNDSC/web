@@ -135,6 +135,9 @@ protected:
     /// Mask Upper Threshold label
     WLabel *mUpperThreshold2Label;
 
+    /// Angle Threshold
+    WLineEdit *mAngleThresholdLineEdit;
+
     /// Upload Gradient file check box
     WCheckBox *mGradientFileCheckBox;
 

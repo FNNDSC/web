@@ -174,6 +174,8 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     mReconAlgorithmComboBox = new WComboBox();
     mReconAlgorithmComboBox->addItem("FACT");
     mReconAlgorithmComboBox->addItem("2nd Order Runga-Kutta");
+    mReconAlgorithmComboBox->addItem("Interpolated Streamline");
+    mReconAlgorithmComboBox->addItem("Tensorline");
     comboBoxLayout->addWidget(new WLabel("Reconstruction Algorithm:"), 0, 0, Wt::AlignRight | Wt::AlignMiddle);
     comboBoxLayout->addWidget(mReconAlgorithmComboBox, 0, 1, Wt::AlignLeft | Wt::AlignMiddle);
 
@@ -185,12 +187,25 @@ PipelineOptionsTract::PipelineOptionsTract(WContainerWidget *parent) :
     comboBoxLayout->addWidget(mImageModelComboBox, 1, 1, Wt::AlignLeft | Wt::AlignMiddle);
     comboBoxLayout->setColumnStretch(1, 1);
 
+    // Angle Threshold
+    WIntValidator *angleValidator = new WIntValidator();
+    angleValidator->setRange(1, 90);
+
+    WGridLayout *angleLayout = new WGridLayout();
+    mAngleThresholdLineEdit = new WLineEdit("35");
+    mAngleThresholdLineEdit->setValidator(angleValidator);
+    angleLayout->addWidget(new WLabel("Angle Threshold:"), 0, 0,  Wt::AlignRight | Wt::AlignMiddle);
+    angleLayout->addWidget(mAngleThresholdLineEdit, 0, 1,  Wt::AlignLeft | Wt::AlignMiddle);
+
+
 
     // Processing group box layout
     processingBoxLayout->addWidget(mEddyCurrentCheckBox);
     processingBoxLayout->addSpacing(WLength(20.0, WLength::Pixel));
     processingBoxLayout->addLayout(vboxThreshold1Layout);
     processingBoxLayout->addLayout(vboxThreshold2Layout);
+    processingBoxLayout->addLayout(angleLayout);
+    processingBoxLayout->addSpacing(WLength(20.0, WLength::Pixel));
     processingBoxLayout->addLayout(comboBoxLayout);
     processingBox->setLayout(processingBoxLayout, AlignTop);
 
@@ -311,6 +326,8 @@ void PipelineOptionsTract::resetAll()
     mGradientInvertX->setChecked(false);
     mGradientInvertY->setChecked(false);
     mGradientInvertZ->setChecked(false);
+
+    mAngleThresholdLineEdit->setText("35");
 }
 
 ///
@@ -359,6 +376,15 @@ bool PipelineOptionsTract::validate() const
             mMessageBox->show();
             return false;
         }
+    }
+
+    if (!mAngleThresholdLineEdit->validate())
+    {
+        mMessageBox->setWindowTitle("Invalid Input");
+        mMessageBox->setText("Angle threshold must be in the range [1, 90].  Please correct it.");
+        mMessageBox->setButtons(Wt::Ok);
+        mMessageBox->show();
+        return false;
     }
 
     if (mB0VolumesCheckBox->isChecked())
@@ -424,6 +450,14 @@ std::string PipelineOptionsTract::getCommandLineString() const
     {
         args += " -A rk2";
     }
+    else if (mReconAlgorithmComboBox->currentIndex() == 2)
+    {
+        args += " -A sl";
+    }
+    else if (mReconAlgorithmComboBox->currentIndex() == 3)
+    {
+        args += " -A tl";
+    }
 
     // Non-default image model (-I <imageModel>)
     if (mImageModelComboBox->currentIndex() == 1)
@@ -441,6 +475,8 @@ std::string PipelineOptionsTract::getCommandLineString() const
         args += " --m2-lower-threshold " + mLowerThreshold2LineEdit->text().toUTF8();
         args += " --m2-upper-threshold " + mUpperThreshold2LineEdit->text().toUTF8();
     }
+
+    args += " --angle-threshold " + mAngleThresholdLineEdit->text().toUTF8();
 
     if (mGradientFileCheckBox->isChecked())
     {
