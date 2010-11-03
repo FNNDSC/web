@@ -64,6 +64,9 @@
           <Option tag="--m2-upper-threshold" desc="Mask 2 Upper Threshold" notgiven="" >
             <OptionArg tag="*" desc="*" />
           </Option>
+          <Option tag="--angle-threshold" desc="Angle Threshold" notgiven="" >
+            <OptionArg tag="*" desc="*" />
+          </Option>
           <Option tag="-B" desc="B0 Volumes" notgiven="" >
             <OptionArg tag="*" desc="*" />
           </Option>
@@ -221,6 +224,9 @@
             <OptionArg tag="*" desc="*" />
           </Option>
           <Option tag="--m2-upper-threshold" desc="Mask 2 Upper Threshold" notgiven="" >
+            <OptionArg tag="*" desc="*" />
+          </Option>
+          <Option tag="--angle-threshold" desc="Angle Threshold" notgiven="" >
             <OptionArg tag="*" desc="*" />
           </Option>
           <Option tag="-B" desc="B0 Volumes" notgiven="" >
