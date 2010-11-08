@@ -262,6 +262,8 @@ void ClusterLoadChart::updateChart()
                 {
                     mApp->log("warn") << "Could not cast value from file " <<  getConfigOptionsPtrTS(mApp)->GetCPUUsageFile() <<
                                                             " : " << token;
+                    // Sleep for 1 second
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
                     continue;
                 }
 
