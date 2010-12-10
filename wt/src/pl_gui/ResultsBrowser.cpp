@@ -241,12 +241,19 @@ void ResultsBrowser::addFilesFromTree(WStandardItem *item, const std::string& ba
             if( !boost::regex_match( fileName, what, regEx ) )
                 continue;
 
-            if (is_directory(dirIter->path()) && node.mDirectory)
+            if (is_directory(dirIter->path()) && (node.mDirectory || node.mRecurse))
             {
-                // Now do this for all the children of this directory
-                for(int row = 0; row < item->rowCount(); row++)
+                if (node.mDirectory)
                 {
-                    addFilesFromTree(item->child(row), dirIter->path().string(), depth + 1, index);
+                    // Now do this for all the children of this directory
+                    for(int row = 0; row < item->rowCount(); row++)
+                    {
+                        addFilesFromTree(item->child(row), dirIter->path().string(), depth + 1, index);
+                    }
+                }
+                else if (node.mRecurse)
+                {
+                    addFilesFromTree(item, dirIter->path().string(), depth + 1, index);
                 }
             }
             else if(!is_directory(dirIter->path()) && !node.mDirectory)

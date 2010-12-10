@@ -163,35 +163,9 @@
 				<FilePattern dir="true" name="SAG">
 					<FilePattern dir="false" name=".*\.png" recurse="false" />
 				</FilePattern>
-			</FilePattern>
-			<FilePattern dir="true" name="3-register">
-                <FilePattern dir="false" name=".*" recurse="false" />
-            </FilePattern>
-            <FilePattern dir="true" name="4-freesurfer">
-                <FilePattern dir="true" name="label">
-                    <FilePattern dir="false" name=".*" recurse="false" />
-                </FilePattern>
-                <FilePattern dir="true" name="log">
-                    <FilePattern dir="false" name=".*" recurse="false" />
-                </FilePattern>
-                <FilePattern dir="true" name="mri">
-                    <FilePattern dir="false" name=".*" recurse="false" />
-                    <FilePattern dir="true" name="transforms">
-                        <FilePattern dir="false" name=".*" recurse="false" />
-                    </FilePattern>
-                    <FilePattern dir="true" name="orig">
-                        <FilePattern dir="false" name=".*" recurse="false" />
-                    </FilePattern>
-                </FilePattern>
-                <FilePattern dir="true" name="scripts">
-                    <FilePattern dir="false" name=".*" recurse="false" />
-                </FilePattern>
-                <FilePattern dir="true" name="stats">
-                    <FilePattern dir="false" name=".*" recurse="false" />
-                </FilePattern>
-                <FilePattern dir="true" name="surf">
-                    <FilePattern dir="false" name=".*" recurse="false" />
-                </FilePattern>
+			</FilePattern>			
+            <FilePattern dir="true" name="3-cmt">
+            	<FilePattern dir="false" name=".*" recurse="true" />
             </FilePattern>
 		</FilePatterns>
 		<Options>
