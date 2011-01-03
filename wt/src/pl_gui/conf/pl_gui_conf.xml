@@ -5,6 +5,12 @@
 	<PreviewPattern pattern=".*\.trk" files=".*\.png"/>
 	<PreviewPattern pattern=".*\.hdr" files=".*\.jpg"/>
 	<PreviewPattern pattern=".*\.img" files=".*\.jpg"/>
+	<ViewerPattern pattern=".*\.trk" url="http://durban.tch.harvard.edu/webgl/trk_viewer/trk_viewer.html?"/>
+	<ViewerPattern pattern=".*\.smoothwm" url="http://durban.tch.harvard.edu/webgl/mris_viewer/mris_viewer.html?"/>
+	<ViewerPattern pattern=".*\.pial" url="http://durban.tch.harvard.edu/webgl/mris_viewer/mris_viewer.html?"/>
+	<ViewerPattern pattern=".*\.orig" url="http://durban.tch.harvard.edu/webgl/mris_viewer/mris_viewer.html?"/>
+	<ViewerPattern pattern=".*\.inflated" url="http://durban.tch.harvard.edu/webgl/mris_viewer/mris_viewer.html?"/>
+	<ViewerPattern pattern=".*\.white" url="http://durban.tch.harvard.edu/webgl/mris_viewer/mris_viewer.html?"/>	
 	<Pipeline name="tract_meta.bash" tag="tract" desc="Tractography">
 		<Inputs>
 			<Input name="Diffusion" />

@@ -92,8 +92,14 @@ private:
     /// Download button
     WPushButton *mDownloadButton;
 
+    /// Viewer button
+    WPushButton *mViewerButton;
+
     /// Download anchor
     WAnchor *mDownloadAnchor;
+
+    /// Viewer anchor
+    WAnchor *mViewerAnchor;
 
     /// Stacked widget to hold image/text preview
     WStackedWidget *mPreviewStack;

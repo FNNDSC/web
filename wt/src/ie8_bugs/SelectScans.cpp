@@ -148,6 +148,10 @@ const std::string SelectScans::getCurrentPipelineAsString() const
     {
         return std::string("fetal");
     }
+    else if (getCurrentPipeline() == Enums::PIPELINE_TYPE_CONNECTOME)
+    {
+        return std::string("connectome");
+    }
     else
     {
         return std::string("dcmsend");

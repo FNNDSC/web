@@ -415,6 +415,12 @@ void ScanBrowser::pipelineOverrideClicked()
     group->addButton(dcmSendButton, Enums::PIPELINE_TYPE_DCMSEND + 1);
     new WBreak(mPipelineDialog->contents());
 
+    WRadioButton *connectomeButton = new WRadioButton("Connectome",
+                mPipelineDialog->contents());
+                group->addButton(connectomeButton, Enums::PIPELINE_TYPE_CONNECTOME + 1);
+                new WBreak(mPipelineDialog->contents());
+
+
     WRadioButton *unknownButton = new WRadioButton("Unknown",
             mPipelineDialog->contents());
     group->addButton(unknownButton, Enums::PIPELINE_UNKNOWN + 1);
@@ -495,6 +501,9 @@ void ScanBrowser::setCurrentPipeline(Enums::PipelineType pipelineType)
         break;
     case Enums::PIPELINE_TYPE_DCMSEND:
         mPipelineModeLabel->setText("Send to Remote PACS");
+        break;
+    case Enums::PIPELINE_TYPE_CONNECTOME:
+        mPipelineModeLabel->setText("Connectome");
         break;
     }
 }

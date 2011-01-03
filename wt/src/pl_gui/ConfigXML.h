@@ -57,6 +57,18 @@ public:
 
     } PreviewPatternNode;
 
+    /// Viewer pattern node
+    typedef struct
+    {
+        /// Expression for matching files
+        std::string mExpression;
+
+        /// URL for viewer
+        std::string mViewerURL;
+
+    } ViewerPatternNode;
+
+
     /// Input node
     typedef struct
     {
@@ -135,6 +147,11 @@ public:
     const std::list<PreviewPatternNode>& getPreviewPatterns() const;
 
     ///
+    /// Get the list of viewer patterns which specify URLs for a
+    /// a viewer for a given file type.
+    ///
+    const std::list<ViewerPatternNode>& getViewerPatterns() const;
+
 
 protected:
 
@@ -204,6 +221,12 @@ protected:
     bool parsePreviewPatternNode(mxml_node_t *previewPatternNode, const std::string& configPath);
 
     ///
+    ///  Parse <ViewerPattern> node
+    ///
+    bool parseViewerPatternNode(mxml_node_t *viewerPatternNode, const std::string& configPath);
+
+
+    ///
     ///  Parse <FilePattern> node
     ///
     bool parseFilePatternNode(WStandardItem *item, mxml_node_t *filePatternNode,
@@ -252,6 +275,9 @@ protected:
 
     /// List of preview patterns
     std::list<PreviewPatternNode> mPreviewPatterns;
+
+    /// List of viewer patterns
+    std::list<ViewerPatternNode> mViewerPatterns;
 };
 
 #endif // CONFIGXML_H

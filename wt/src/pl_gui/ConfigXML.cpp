@@ -173,6 +173,15 @@ const std::list<ConfigXML::PreviewPatternNode>& ConfigXML::getPreviewPatterns() 
 }
 
 ///
+/// Get the list of viewer patterns which specify URLs for a
+/// a viewer for a given file type.
+///
+const std::list<ConfigXML::ViewerPatternNode>& ConfigXML::getViewerPatterns() const
+{
+    return mViewerPatterns;
+}
+
+///
 //  Translate arguments to script using pipeline options specification given in main
 //  configuration XML file
 //
@@ -297,6 +306,20 @@ bool ConfigXML::parseXMLTree(mxml_node_t *tree, const std::string& configPath)
         result = result && parsePreviewPatternNode(previewPatternNode, configPath);
     }
 
+    // Iterate over <ViewerPattern> nodes
+    mxml_node_t *viewerPatternNode;
+    for (viewerPatternNode = mxmlFindElement(resultsNode, resultsNode,
+                                                  "ViewerPattern",
+                                                  NULL, NULL,
+                                                  MXML_DESCEND);
+        viewerPatternNode != NULL;
+        viewerPatternNode = mxmlFindElement(viewerPatternNode, resultsNode,
+                                                 "ViewerPattern",
+                                                 NULL, NULL,
+                                                 MXML_NO_DESCEND))
+    {
+        result = result && parseViewerPatternNode(viewerPatternNode, configPath);
+    }
 
     mxml_node_t *pipelineNode;
 
@@ -425,6 +448,27 @@ bool ConfigXML::parsePreviewPatternNode(mxml_node_t *previewPatternNode, const s
     newNode.mPreviewExpression = mxmlElementGetAttr(previewPatternNode, "files");
 
     mPreviewPatterns.push_back(newNode);
+
+    return true;
+}
+
+
+///
+//  Parse <ViewerPattern> node
+//
+bool ConfigXML::parseViewerPatternNode(mxml_node_t *viewerPatternNode, const std::string& configPath)
+{
+    if (viewerPatternNode == NULL)
+    {
+        return false;
+    }
+
+    ViewerPatternNode newNode;
+
+    newNode.mExpression = mxmlElementGetAttr(viewerPatternNode, "pattern");
+    newNode.mViewerURL = mxmlElementGetAttr(viewerPatternNode, "url");
+
+    mViewerPatterns.push_back(newNode);
 
     return true;
 }

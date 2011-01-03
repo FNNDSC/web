@@ -86,6 +86,11 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
     mDownloadAnchor->setTarget(TargetThisWindow);
     mDownloadButton = new WPushButton("Download", mDownloadAnchor);
 
+    mViewerAnchor = new WAnchor("http://durban.tch.harvard.edu/webgl-test/index.html");
+    mViewerAnchor->setTarget(TargetNewWindow);
+    mViewerButton = new WPushButton("Preview", mViewerAnchor);
+
+
     WGridLayout *layout = new WGridLayout();
 
     // Create the patient info box
@@ -101,6 +106,7 @@ FilePreviewBox::FilePreviewBox(WContainerWidget *parent) :
     WHBoxLayout *hbox = new WHBoxLayout();
     hbox->addStretch(10);
     hbox->addWidget(mDownloadAnchor);
+    hbox->addWidget(mViewerAnchor);
     hbox->addStretch(10);
 
     layout->addLayout(fileInfoLayout, 0, 0);
@@ -247,6 +253,30 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
             {
                 mPreviewStack->hide();
             }
+
+            bool viewerFound = false;
+
+            const std::list<ConfigXML::ViewerPatternNode> &viewerPatternList = getConfigXMLPtr()->getViewerPatterns();
+            std::list<ConfigXML::ViewerPatternNode>::const_iterator viewerIter = viewerPatternList.begin();
+
+            while (viewerIter != viewerPatternList.end() && !viewerFound)
+            {
+                if (fileMatchesExpression(filePathStr, (*viewerIter).mExpression))
+                {
+
+                    mViewerAnchor->setRef((*viewerIter).mViewerURL + filePathStr);
+                    mViewerAnchor->show();
+                    viewerFound = true;
+                    break;
+                }
+
+                viewerIter++;
+            }
+
+            if (!viewerFound)
+            {
+                mViewerAnchor->hide();
+            }
         }
     }
     catch (...)
@@ -285,3 +315,4 @@ bool FilePreviewBox::fileMatchesExpression(const std::string& filePathStr, const
 }
 
 
+;
