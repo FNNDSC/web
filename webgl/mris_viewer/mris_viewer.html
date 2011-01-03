@@ -1,0 +1,500 @@
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+    </style>
+
+<title>MRIS Viewer</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="../common/sylvester.js"></script>
+<script type="text/javascript" src="../common/glUtils.js"></script>
+<script type="text/javascript" src="../common/binaryParseUtils.js"></script>
+<script type="text/javascript" src="../common/mrisLoader.js"></script>
+
+<script id="shader-fs" type="x-shader/x-fragment">
+  #ifdef GL_ES
+  precision highp float;
+  #endif
+
+  varying vec4 vPosition;
+  varying vec3 vColor;
+  varying vec3 vNormal;
+  void main(void) {
+    vec3 normal = normalize(vNormal);
+    vec3 lightVec = vec3(0.0, 0.0, 1.0);
+    vec3 specLightDir = vec3(-10.0, 4.0, -20.0);
+    specLightDir = normalize(specLightDir);
+
+    vec3 eyeDirection = normalize(-vPosition.xyz);
+    vec3 reflectionDirection = reflect(-specLightDir, normal);
+    float specular = pow(max(dot(reflectionDirection, eyeDirection), 0.0), 16.0);
+
+    float diffuse = 0.8 * max(dot(normal, lightVec), 0.0);
+    float ambient = 0.2;
+    gl_FragColor = vec4(
+        vColor * ambient +
+        vColor * diffuse +
+        vec3(0.6, 0.6, 0.8) * specular, 1.0);
+  }
+</script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+  attribute vec3 aVertexPosition;
+  attribute vec3 aNormal;
+
+  uniform mat4 uMVMatrix;
+  uniform mat4 uPMatrix;
+  uniform mat4 uNMatrix;
+  uniform vec3 center;
+  uniform vec3 scale;
+
+  varying vec3 vColor;
+  varying vec3 vNormal;
+  varying vec4 vPosition;
+  void main(void) {
+
+    vec3 pos = aVertexPosition.xyz - center;
+    pos *= scale.x;
+    vColor = vec3(0.5, 0.5, 0.5);//aColor;
+    
+    vNormal = vec3(uNMatrix * vec4(aNormal, 1.0));
+
+    vPosition = uMVMatrix * vec4(pos, 1.0);
+    gl_Position = uPMatrix * vPosition;
+  }
+</script>
+
+
+<script type="text/javascript">
+
+  var gl;
+  function initGL(canvas) {
+    try {
+      gl = canvas.getContext("experimental-webgl");
+      gl.viewportWidth = canvas.width;
+      gl.viewportHeight = canvas.height;
+    } catch(e) {
+    }
+    if (!gl) {
+      alert("Could not initialise WebGL, sorry :-(");
+    }
+  }
+
+
+  function getShader(gl, id) {
+    var shaderScript = document.getElementById(id);
+    if (!shaderScript) {
+      return null;
+    }
+
+    var str = "";
+    var k = shaderScript.firstChild;
+    while (k) {
+      if (k.nodeType == 3) {
+        str += k.textContent;
+      }
+      k = k.nextSibling;
+    }
+
+    var shader;
+    if (shaderScript.type == "x-shader/x-fragment") {
+      shader = gl.createShader(gl.FRAGMENT_SHADER);
+    } else if (shaderScript.type == "x-shader/x-vertex") {
+      shader = gl.createShader(gl.VERTEX_SHADER);
+    } else {
+      return null;
+    }
+
+    gl.shaderSource(shader, str);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      alert(gl.getShaderInfoLog(shader));
+      return null;
+    }
+
+    return shader;
+  }
+
+
+  var shaderProgram;
+  function initShaders() {
+    var fragmentShader = getShader(gl, "shader-fs");
+    var vertexShader = getShader(gl, "shader-vs");
+
+    shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+      alert("Could not initialise shaders");
+    }
+
+    gl.useProgram(shaderProgram);
+
+    shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+    gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+    shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aNormal");
+    gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
+
+
+    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+    shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
+    shaderProgram.scaleUniform = gl.getUniformLocation(shaderProgram, "scale");
+    shaderProgram.centerUniform = gl.getUniformLocation(shaderProgram, "center");
+  }
+
+  var mvMatrix;
+  var mvMatrixStack = [];
+
+  function mvPushMatrix(m) {
+    if (m) {
+      mvMatrixStack.push(m.dup());
+      mvMatrix = m.dup();
+    } else {
+      mvMatrixStack.push(mvMatrix.dup());
+    }
+  }
+
+  function mvPopMatrix() {
+    if (mvMatrixStack.length == 0) {
+      throw "Invalid popMatrix!";
+    }
+    mvMatrix = mvMatrixStack.pop();
+    return mvMatrix;
+  }
+
+
+  function loadIdentity() {
+    mvMatrix = Matrix.I(4);
+  }
+
+
+  function multMatrix(m) {
+    mvMatrix = mvMatrix.x(m);
+  }
+
+
+  function mvTranslate(v) {
+    var m = Matrix.Translation($V([v[0], v[1], v[2]])).ensure4x4();
+    multMatrix(m);
+  }
+
+  function createRotationMatrix(angle, v) {
+    var arad = angle * Math.PI / 180.0;
+    return Matrix.Rotation(arad, $V([v[0], v[1], v[2]])).ensure4x4();
+  }
+
+  function mvRotate(ang, v) {
+    var arad = ang * Math.PI / 180.0;
+    var m = Matrix.Rotation(arad, $V([v[0], v[1], v[2]])).ensure4x4();
+    multMatrix(m);
+  }
+
+
+  var pMatrix;
+  function perspective(fovy, aspect, znear, zfar) {
+    pMatrix = makePerspective(fovy, aspect, znear, zfar);
+  }
+
+
+  function setMatrixUniforms() {
+    gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, new Float32Array(pMatrix.flatten()));
+    gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, new Float32Array(mvMatrix.flatten()));
+
+    var normalMatrix = mvMatrix.inverse();
+    normalMatrix = normalMatrix.transpose();
+    gl.uniformMatrix4fv(shaderProgram.nMatrixUniform, false, new Float32Array(normalMatrix.flatten()));
+  }
+
+
+  var xRot = 0;
+  var xSpeed = 0;
+
+  var yRot = 0;
+  var ySpeed = 0;
+
+  var z = -2.0;
+
+  var filter = 0;
+
+
+  var currentlyPressedKeys = Object();
+
+  function handleKeyDown(event) {
+    currentlyPressedKeys[event.keyCode] = true;
+
+    if (String.fromCharCode(event.keyCode) == "F") {
+      filter += 1;
+      if (filter == 3) {
+        filter = 0;
+      }
+    }
+  }
+
+
+  function handleKeyUp(event) {
+    currentlyPressedKeys[event.keyCode] = false;
+  }
+
+
+  function handleKeys() {
+    if (currentlyPressedKeys[33]) {
+      // Page Up
+      z -= 0.05;
+    }
+    if (currentlyPressedKeys[34]) {
+      // Page Down
+      z += 0.05;
+    }
+    if (currentlyPressedKeys[37]) {
+      // Left cursor key
+      ySpeed -= 1;
+    }
+    if (currentlyPressedKeys[39]) {
+      // Right cursor key
+      ySpeed += 1;
+    }
+    if (currentlyPressedKeys[38]) {
+      // Up cursor key
+      xSpeed -= 1;
+    }
+    if (currentlyPressedKeys[40]) {
+      // Down cursor key
+      xSpeed += 1;
+    }
+  }
+
+
+  var mouseDown = false;
+  var lastMouseX = null;
+  var lastMouseY = null;
+
+  var brainRotationMatrix = Matrix.I(4);
+
+  function handleMouseDown(event) {
+    mouseDown = true;
+    lastMouseX = event.clientX;
+    lastMouseY = event.clientY;
+  }
+
+
+  function handleMouseUp(event) {
+    mouseDown = false;
+  }
+
+
+  function handleMouseMove(event) {
+    if (!mouseDown) {
+      return;
+    }
+    var newX = event.clientX;
+    var newY = event.clientY;
+
+    var deltaX = newX - lastMouseX
+    var newRotationMatrix = createRotationMatrix(deltaX / 10, [0, 1, 0]);
+
+    var deltaY = newY - lastMouseY;
+    newRotationMatrix = newRotationMatrix.x(createRotationMatrix(deltaY / 10, [1, 0, 0]));
+
+    brainRotationMatrix = newRotationMatrix.x(brainRotationMatrix);
+
+    lastMouseX = newX
+    lastMouseY = newY;
+  }
+
+  function handleMouseWheel(e) {
+    // From SpiderGL
+    var delta = 0;
+    if (!e) /* For IE. */ {
+            e = window.event;
+    }
+    if (e.wheelDelta) /* IE/Opera. */ {
+            delta = e.wheelDelta / 120;
+            /* In Opera 9, delta differs in sign as compared to IE.
+             */
+            if (window.opera) {
+                    delta = -delta;
+            }
+    }
+    else if (e.detail) /** Mozilla case. */ {
+            /** In Mozilla, sign of delta is different than in IE.
+             * Also, delta is multiple of 3.
+             */
+            delta = -e.detail / 3;
+    }
+    /* If delta is nonzero, handle it.
+     * Basically, delta is now positive if wheel was scrolled up,
+     * and negative, if wheel was scrolled down.
+     */
+    if (delta) {
+        z += (delta / 2);
+    }
+  }
+
+
+  var triangleVertexPositionBuffer;
+  var triangleVertexNormalBuffer;
+  var triangleVertexColorBuffer;
+  var triangleVertexIndexBuffer;
+  var mrisScale;
+  var mrisCenter;
+  function handleLoadedMRIS(mrisFile) {
+
+    console.log('Creating VBOs.');
+    triangleVertexPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+
+    gl.bufferData(gl.ARRAY_BUFFER, mrisFile.vertexPositionBuffer, gl.STATIC_DRAW);
+    triangleVertexPositionBuffer.itemSize = 3;
+    triangleVertexPositionBuffer.numItems = mrisFile.vertexPositionBuffer.length / 3;
+
+
+    triangleVertexNormalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexNormalBuffer);
+
+    gl.bufferData(gl.ARRAY_BUFFER, mrisFile.vertexNormalBuffer, gl.STATIC_DRAW);
+    triangleVertexNormalBuffer.itemSize = 3;
+    triangleVertexNormalBuffer.numItems = mrisFile.vertexNormalBuffer.length / 3;
+
+/*
+    triangleVertexIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleVertexIndexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, trackFile.vertexIndices, gl.STREAM_DRAW);
+    triangleVertexIndexBuffer.itemSize = 1;
+    triangleVertexIndexBuffer.numItems = trackFile.vertexIndices.length;
+*/
+    mrisScale = mrisFile.scaleVect;
+    mrisCenter = mrisFile.centerVect;
+    console.log('Scale: ' + mrisScale[0] + ' ' + mrisScale[1] +  ' ' +  mrisScale[2]);
+    console.log('Center: ' + mrisCenter[0] + ' ' + mrisCenter[1] +  ' ' +  mrisCenter[2]);
+    console.log('VBOs created.');
+
+  }
+
+  function loadMRIS() {
+      mrisURL = location.search.substring(1)
+      console.log('URL: ' + mrisURL);
+      mrisLoader = new MRISLoader();
+      mrisLoader.load(mrisURL, handleLoadedMRIS);
+  }
+
+  var rPyramid = 0;
+
+  function drawScene() {
+
+    var canvas = document.getElementById("webgl-canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl.viewportWidth = canvas.width;
+    gl.viewportHeight = canvas.height;
+
+    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    if (triangleVertexPositionBuffer == null) {
+        return;
+    }
+
+    perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+    loadIdentity();
+
+    mvTranslate([0.0, 0.0, z]);
+
+    mvPushMatrix();
+    //mvRotate(xRot, [1, 0, 0])
+    //mvRotate(yRot, [0, 1, 0])
+    multMatrix(brainRotationMatrix);
+    mvRotate(-90.0, [1, 0, 0]);
+    
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexNormalBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, triangleVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    
+    setMatrixUniforms();
+    gl.uniform3fv(shaderProgram.scaleUniform, mrisScale);
+    gl.uniform3fv(shaderProgram.centerUniform, mrisCenter);
+
+    //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleVertexIndexBuffer);
+    //gl.drawElements(gl.LINES, triangleVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
+    
+    mvPopMatrix();
+
+  }
+
+  var lastTime = 0;
+  function animate() {
+    var timeNow = new Date().getTime();
+    if (lastTime != 0) {
+      var elapsed = timeNow - lastTime;
+
+      xRot += (xSpeed * elapsed) / 1000.0;
+      yRot += (ySpeed * elapsed) / 1000.0;
+    }
+    lastTime = timeNow;
+  }
+
+  function tick() {
+    handleKeys();
+    drawScene();
+    animate();
+
+  }
+
+
+  function webGLStart() {
+    var canvas = document.getElementById("webgl-canvas");
+    initGL(canvas);
+    initShaders();
+    loadMRIS();
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+    gl.clearDepth(1.0);
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+
+    document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
+    canvas.onmousedown = handleMouseDown;
+    document.onmouseup = handleMouseUp;
+    document.onmousemove = handleMouseMove;
+    document.onmousewheel = handleMouseWheel;
+
+    setInterval(tick, 15);
+  }
+
+
+
+</script>
+
+
+</head>
+
+
+<body onload="webGLStart();">
+
+<center>
+  <canvas id="webgl-canvas" style="border: none;" width="100%" height="100%" margin="0px"></canvas>
+</center>
+  
+</body>
+
+</html>
