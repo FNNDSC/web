@@ -45,7 +45,7 @@ MRISLoader.prototype =
 {
     // Load a MRIS file, provide a callback that handles loading
     // the data to WebGL
-    load: function(mrisURL, callback)
+    load: function(mrisURL, callback, object)
     {
         var self = this;
         var xhr = new XMLHttpRequest();
@@ -56,7 +56,7 @@ MRISLoader.prototype =
             {
                 if ( xhr.status == 200 || xhr.status == 0 )
                 {
-                    MRISLoader.prototype.loadMRISFile( xhr.responseText, callback );
+                    MRISLoader.prototype.loadMRISFile( xhr.responseText, callback, object );
                 }
                 else
                 {
@@ -71,7 +71,7 @@ MRISLoader.prototype =
     },
 
     // Internal function, initiates loading and processing the MRIS file
-    loadMRISFile: function(data, callback)
+    loadMRISFile: function(data, callback, object)
     {
         var mrisFile = new MRISFile();
         var currentOffset = 0;
@@ -107,6 +107,8 @@ MRISLoader.prototype =
             mrisFile.vertexPositions[v * 3 + 0] = parseFloat32EndianSwapped( data, currentOffset );
             mrisFile.vertexNormals[v * 3 + 0] = 0.0;
             currentOffset += 4;
+            // Invert the y coordinate to put it into proper frame of reference, see:
+            //  http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
             mrisFile.vertexPositions[v * 3 + 1] = parseFloat32EndianSwapped( data, currentOffset );
             mrisFile.vertexNormals[v * 3 + 1] = 0.0;
             currentOffset += 4;
@@ -178,7 +180,7 @@ MRISLoader.prototype =
 
         this.preprocessForRendering(mrisFile);
         
-        callback(mrisFile);
+        callback(mrisFile, object);
     },
 
 

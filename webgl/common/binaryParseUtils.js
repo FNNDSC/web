@@ -74,6 +74,17 @@ function parseUInt32EndianSwapped( data, offset ) {
     return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
 }
 
+
+function parseUInt24EndianSwapped( data, offset ) {
+
+    var b0 = parseUChar8( data, offset ),
+        b1 = parseUChar8( data, offset + 1 ),
+        b2 = parseUChar8( data, offset + 2 );
+
+
+    return ((b0 << 16) + (b1 << 8) + (b2)) & 0x00FFFFFF;
+}
+
 function parseUInt16( data, offset ) {
 
     var b0 = parseUChar8( data, offset ),

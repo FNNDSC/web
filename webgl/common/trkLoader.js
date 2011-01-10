@@ -20,7 +20,7 @@ TrackPoint = function(x, y, z, scalars)
 
 //  Represents a single individual track, with an array
 //  of TrackPoints and optional properties
-Track = function(numPoints, points, properties)
+Track = function(numPoints, points, properties, length)
 {
     // Number of points in this track
     this.numPoints = numPoints;
@@ -30,6 +30,9 @@ Track = function(numPoints, points, properties)
 
     // Optional properties array
     this.properties = properties;
+
+    // Length of track
+    this.length = length;
 }
 
 //  Represents the entire TrackFile, contains all of the
@@ -64,7 +67,7 @@ TrkLoader.prototype =
 {
     // Load a 'trk' file, provide a callback that handles loading
     // the data to WebGL
-    load: function(trkURL, callback)
+    load: function(trkURL, callback, object)
     {
         var self = this;
         var xhr = new XMLHttpRequest();
@@ -75,7 +78,7 @@ TrkLoader.prototype =
             {
                 if ( xhr.status == 200 || xhr.status == 0 )
                 {
-                    TrkLoader.prototype.loadTrkFile( xhr.responseText, callback );
+                    TrkLoader.prototype.loadTrkFile( xhr.responseText, callback, object );
                 }
                 else
                 {
@@ -90,7 +93,7 @@ TrkLoader.prototype =
     },
 
     // Internal function, initiates loading and processing the 'trk' file
-    loadTrkFile: function(data, callback)
+    loadTrkFile: function(data, callback, object)
     {
         var trackFile = new TrackFile();
 
@@ -104,7 +107,7 @@ TrkLoader.prototype =
         // Generate all of the data needed for rendering
         this.preprocessForRendering(trackFile);
 
-        callback(trackFile);
+        callback(trackFile, object);
     },
 
     // Load the 'trk' file header
@@ -171,6 +174,12 @@ TrkLoader.prototype =
                     offset += (header.n_scalars * 4);
                 }
 
+                // Put the coordinates out of voxel space and into
+                // mm frame
+                x = x / trackFile.trkHeader.voxel_size[0];
+                y = y / trackFile.trkHeader.voxel_size[1];
+                z = z / trackFile.trkHeader.voxel_size[2];
+                
                 pointArray[j] = new TrackPoint(x, y, z, scalars);
             }
 
@@ -180,7 +189,16 @@ TrkLoader.prototype =
                 properties = parseFloat32Array(data, offset, header.n_properties);
                 offset += (header.n_properties * 4);
             }
-            tracks[i] = new Track(numPoints, pointArray, properties)
+
+            var length = 0.0;
+            for ( j = 0; j < numPoints - 1; j++)
+            {
+                length += Math.sqrt(Math.pow(pointArray[j+1].position[0] - pointArray[j].position[0], 2) +
+                                    Math.pow(pointArray[j+1].position[1] - pointArray[j].position[1], 2) +
+                                    Math.pow(pointArray[j+1].position[2] - pointArray[j].position[2], 2));
+            }
+
+            tracks[i] = new Track(numPoints, pointArray, properties, length)
         }
 
         trackFile.numVertices = (totalSegments * 2);
@@ -196,7 +214,7 @@ TrkLoader.prototype =
         var vertIdx = 0;
         var elemIdx = 0;
 
-        trackFile.vertexPositionBuffer = new Float32Array(trackFile.numVertices * 3);
+        trackFile.vertexPositionBuffer = new Float32Array(trackFile.numVertices * 4);
         trackFile.vertexColorBuffer = new Float32Array(trackFile.numVertices * 3);
         console.log('Allocated memory.');
 
@@ -242,9 +260,10 @@ TrkLoader.prototype =
                 // points
                 for (var seg = 0; seg < 2; seg++)
                 {
-                    trackFile.vertexPositionBuffer[3 * vertIdx + 0] = trackFile.trkTracks[i].points[p+seg].position[0];
-                    trackFile.vertexPositionBuffer[3 * vertIdx + 1] = trackFile.trkTracks[i].points[p+seg].position[1];
-                    trackFile.vertexPositionBuffer[3 * vertIdx + 2] = trackFile.trkTracks[i].points[p+seg].position[2];
+                    trackFile.vertexPositionBuffer[4 * vertIdx + 0] = trackFile.trkTracks[i].points[p+seg].position[0];
+                    trackFile.vertexPositionBuffer[4 * vertIdx + 1] = trackFile.trkTracks[i].points[p+seg].position[1];
+                    trackFile.vertexPositionBuffer[4 * vertIdx + 2] = trackFile.trkTracks[i].points[p+seg].position[2];
+                    trackFile.vertexPositionBuffer[4 * vertIdx + 3] = trackFile.trkTracks[i].length;
                     trackFile.vertexColorBuffer[3 * vertIdx + 0] = diffVector[0];
                     trackFile.vertexColorBuffer[3 * vertIdx + 1] = diffVector[1];
                     trackFile.vertexColorBuffer[3 * vertIdx + 2] = diffVector[2];

@@ -1,25 +1,42 @@
 <html>
 
 <head>
-    <style>
-        body {
-            margin: 0;
-        }
+<style type="text/css">
+			.box25 {
+				float: left;
+				width: 25%;
+                                height:100%;
+                	}
+                        .box75 {
+                                float: left;
+                                width: 75%;
+                                height:100%;
+                        }
+			
+			.container {
+				clear: both;
+			}
 
-        #canvas {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-        }
-    </style>
-
+                        canvas {
+                            margin: 0px;
+                            border: 0px;
+                            width: 100%;
+                            height:100%;
+                        }
+}
+		</style>
 <title>MRIS Viewer</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<link type="text/css" href="../jquery/css/ui-darkness/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
+<script type="text/javascript" src="../jquery/js/jquery-1.4.4.min.js"></script>
+<script type="text/javascript" src="../jquery/js/jquery-ui-1.8.7.custom.min.js"></script>
 
 <script type="text/javascript" src="../common/sylvester.js"></script>
 <script type="text/javascript" src="../common/glUtils.js"></script>
 <script type="text/javascript" src="../common/binaryParseUtils.js"></script>
 <script type="text/javascript" src="../common/mrisLoader.js"></script>
+<script type="text/javascript" src="../common/crvLoader.js"></script>
 
 <script id="shader-fs" type="x-shader/x-fragment">
   #ifdef GL_ES
@@ -51,21 +68,35 @@
 <script id="shader-vs" type="x-shader/x-vertex">
   attribute vec3 aVertexPosition;
   attribute vec3 aNormal;
+  attribute float aCurvature;
 
   uniform mat4 uMVMatrix;
   uniform mat4 uPMatrix;
   uniform mat4 uNMatrix;
   uniform vec3 center;
   uniform vec3 scale;
+  uniform float uCurvMax;
+  uniform float uCurvMin;
+  uniform int uDrawCurvature;
 
   varying vec3 vColor;
   varying vec3 vNormal;
-  varying vec4 vPosition;
+  varying vec4 vPosition;  
   void main(void) {
 
     vec3 pos = aVertexPosition.xyz - center;
     pos *= scale.x;
-    vColor = vec3(0.5, 0.5, 0.5);//aColor;
+
+    if (uDrawCurvature != 0 )
+    {
+        float curvValue = (aCurvature - uCurvMin) / (uCurvMax - uCurvMin);
+        curvValue = clamp(curvValue, 0.0, 1.0);
+        vColor = curvValue * vec3(1.0, 0.0, 0.0) + (1.0 - curvValue) * vec3(0.0, 1.0, 0.0);
+    }
+    else
+    {
+        vColor = vec3(0.5, 0.5, 0.5);
+    }
     
     vNormal = vec3(uNMatrix * vec4(aNormal, 1.0));
 
@@ -77,6 +108,7 @@
 
 <script type="text/javascript">
 
+       
   var gl;
   function initGL(canvas) {
     try {
@@ -149,12 +181,16 @@
     shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aNormal");
     gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
 
-
+    shaderProgram.vertexCurvatureAttribute = gl.getAttribLocation(shaderProgram, "aCurvature");
+    
     shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
     shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
     shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
     shaderProgram.scaleUniform = gl.getUniformLocation(shaderProgram, "scale");
     shaderProgram.centerUniform = gl.getUniformLocation(shaderProgram, "center");
+    shaderProgram.curvMinUniform = gl.getUniformLocation(shaderProgram, "uCurvMin");
+    shaderProgram.curvMaxUniform = gl.getUniformLocation(shaderProgram, "uCurvMax");
+    shaderProgram.drawCurvatureUniform = gl.getUniformLocation(shaderProgram, "uDrawCurvature");
   }
 
   var mvMatrix;
@@ -348,12 +384,19 @@
 
   var triangleVertexPositionBuffer;
   var triangleVertexNormalBuffer;
-  var triangleVertexColorBuffer;
+  var triangleVertexCurvatureBuffer;
   var triangleVertexIndexBuffer;
+  var curMRISFile;
   var mrisScale;
   var mrisCenter;
+  var curvMin;
+  var curCurvMin = new Float32Array(1);
+  var curvMax;
+  var curCurvMax = new Float32Array(1);
+  var drawCurvature = 0;
   function handleLoadedMRIS(mrisFile) {
 
+    curMRISFile = mrisFile;
     console.log('Creating VBOs.');
     triangleVertexPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
@@ -385,11 +428,31 @@
 
   }
 
-  function loadMRIS() {
+  function handleLoadedCRV(crvFile) {
+
+    curvMin = crvFile.minCurv;
+    curvMax = crvFile.maxCurv;
+
+    curCurvMin[0] = curvMin[1];
+    curCurvMax[0] = curvMax[1];
+
+    $( "#amount" ).val( curCurvMin[0].toFixed(2) + " - " + curCurvMax[0].toFixed(2) );
+    drawCurvature = 1;
+
+    triangleVertexCurvatureBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexCurvatureBuffer);
+
+    gl.bufferData(gl.ARRAY_BUFFER, crvFile.vertexCurvatureBuffer, gl.STATIC_DRAW);
+    triangleVertexCurvatureBuffer.itemSize = 1;
+    triangleVertexCurvatureBuffer.numItems = crvFile.vertexCurvatureBuffer.length;
+  }
+
+
+  function loadMRIS(surfaceFile) {
       mrisURL = location.search.substring(1)
-      console.log('URL: ' + mrisURL);
+      console.log('URL: ' + mrisURL + '/' + surfaceFile);
       mrisLoader = new MRISLoader();
-      mrisLoader.load(mrisURL, handleLoadedMRIS);
+      mrisLoader.load(mrisURL + '/' + surfaceFile, handleLoadedMRIS);
   }
 
   var rPyramid = 0;
@@ -397,8 +460,8 @@
   function drawScene() {
 
     var canvas = document.getElementById("webgl-canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = canvas.clientWidth;//window.innerWidth;
+    canvas.height = canvas.clientHeight;//window.innerHeight;
     gl.viewportWidth = canvas.width;
     gl.viewportHeight = canvas.height;
 
@@ -429,6 +492,23 @@
     setMatrixUniforms();
     gl.uniform3fv(shaderProgram.scaleUniform, mrisScale);
     gl.uniform3fv(shaderProgram.centerUniform, mrisCenter);
+    gl.uniform1i(shaderProgram.drawCurvatureUniform, drawCurvature);
+
+    
+    if ( drawCurvature )
+    {
+        gl.uniform1fv(shaderProgram.curvMinUniform, curCurvMin);
+        gl.uniform1fv(shaderProgram.curvMaxUniform, curCurvMax);
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexCurvatureBuffer);
+        gl.vertexAttribPointer(shaderProgram.vertexCurvatureAttribute, triangleVertexCurvatureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(shaderProgram.vertexCurvatureAttribute);
+    }
+    else
+    {
+        gl.disableVertexAttribArray(shaderProgram.vertexCurvatureAttribute);
+    }
+
+
 
     //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleVertexIndexBuffer);
     //gl.drawElements(gl.LINES, triangleVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -458,13 +538,18 @@
   }
 
 
+var gHemisphere = 'lh';
+var gSurface = 'smoothwm'
+var gCurvature = undefined;
+
   function webGLStart() {
     var canvas = document.getElementById("webgl-canvas");
     initGL(canvas);
     initShaders();
-    loadMRIS();
+    loadMRIS( gHemisphere + '.' + gSurface );
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
     gl.clearDepth(1.0);
 
@@ -482,6 +567,77 @@
   }
 
 
+function surfaceChanged()
+{
+    gSurface = $('#surface_select :selected').text();
+    
+    loadMRIS( gHemisphere + '.' + gSurface );
+}
+
+function toggleHemispheres()
+{
+    gHemisphere = $('#hemisphere_select input:radio:checked').val();
+    
+    loadMRIS( gHemisphere + '.' + gSurface );    
+}
+
+function curvatureChanged()
+{
+    gCurvature = $('#curvature_select :selected').text();
+
+    if (gCurvature == 'None')
+    {
+        $( "#amount" ).val( ' ' );
+        drawCurvature = false;
+    }
+    else
+    {
+        var crvFile = gHemisphere + '.' + gSurface + '.' + gCurvature + '.crv';
+        var crvURL = location.search.substring(1)
+        console.log('URL: ' + crvURL + '/' + crvFile);
+        crvLoader = new CRVLoader();
+        crvLoader.load(crvURL + '/' + crvFile, curMRISFile, handleLoadedCRV);
+
+    }
+
+}
+
+function handleCurvatureSlider(event, ui)
+{
+    var minSlider = 0;
+    var maxSlider = 1000;
+
+    var curSliderMin = (ui.values[0] - minSlider) / (maxSlider - minSlider);
+    var curSliderMax = (ui.values[1] - minSlider) / (maxSlider - minSlider);
+
+    curCurvMin[0] = (1.0 - curSliderMin) * curvMin[1] + curSliderMin * curvMax[1];
+    curCurvMax[0] = (1.0 - curSliderMax) * curvMin[1] + curSliderMax * curvMax[1];
+
+    $( "#amount" ).val( curCurvMin[0].toFixed(2) + " - " + curCurvMax[0].toFixed(2) );
+}
+
+$(function() {
+		$( "#controls" ).accordion({
+			fillSpace: true,
+                        autoHeight: false
+		});
+                $( "#viewer" ).accordion({
+			fillSpace: true,
+                        autoHeight: false
+		});
+
+                $( "#slider-range" ).slider({
+			range: true,
+			min: 0,
+			max: 1000,
+			values: [ 0, 1000 ],
+			slide: handleCurvatureSlider
+		});
+        //        $( "slider-range" ).slider("option", "disabled", true);
+	//	$( "#amount" ).val( $( "#slider-range" ).slider( "values", 0 ) +
+	//		" - " + $( "#slider-range" ).slider( "values", 1 ) );
+
+	});
 
 </script>
 
@@ -491,10 +647,60 @@
 
 <body onload="webGLStart();">
 
-<center>
-  <canvas id="webgl-canvas" style="border: none;" width="100%" height="100%" margin="0px"></canvas>
-</center>
-  
+    <div class="container">
+        <div class="box25">
+                <div id="controls" align>
+                    <h5><a href="#">Viewer Options</a></h5>
+                    <div>
+                        <form>
+                            Surface:
+                                <SELECT id="surface_select" onchange="surfaceChanged()">
+                                    <option value="smoothwm">smoothwm</option>
+                                    <option value="pial">pial</option>
+                                    <option value="orig">orig</option>
+                                    <option value="inflated">inflated</option>
+                                    <option value="white">white</option>
+                                </SELECT>
+                            <BR/>
+                        </form>
+                        <form id="hemisphere_select">
+                            Display:
+                            <BR/>
+                            <input type="radio" name="hemisphere" checked="checked" onclick="toggleHemispheres()" value="lh" />Left Hemisphere
+                            <BR/>
+                            <input type="radio" name="hemisphere" onclick="toggleHemispheres()" value="rh" />Right Hemisphere
+                        </form>
+                        <form>
+                            Curvature:
+                                <SELECT id="curvature_select" onchange="curvatureChanged()">
+                                    <option value="None">None</option>
+                                    <option value="BE">BE</option>
+                                    <option value="C">C</option>
+                                    <option value="FI">FI</option>
+                                    <option value="H">H</option>
+                                    <option value="K">K</option>
+                                    <option value="K1">K1</option>
+                                    <option value="K2">K2</option>
+                                    <option value="S">S</option>
+                                </SELECT>
+                                <BR/>
+                        </form>
+                        <label for="amount">Curvature display range:</label>
+                        <input type="text" id="amount" readonly="readonly" style="border:0; color:#f6931f; font-weight:bold;" />
+                        <div id="slider-range"></div>
+                    </div>
+                </div>
+        </div>
+        <div class="box75">
+
+                <div id="viewer">
+                    <h5><a href="#">Surface Viewer</a></h5>
+                    <div>
+                        <canvas id="webgl-canvas" ></canvas>
+                    </div>
+                </div>
+        </div>
+    </div>                 
 </body>
 
 </html>
