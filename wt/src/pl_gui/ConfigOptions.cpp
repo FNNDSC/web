@@ -217,6 +217,12 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
 
         configFile.close();
     }
+    catch(boost::program_options::error& e)
+    {
+        WApplication::instance()->log("error") << "Error parsing config file: " << configPath;
+        WApplication::instance()->log("error") << e.what();
+        return false;
+    }
     catch(...)
     {
         WApplication::instance()->log("error") << "Error parsing config file: " << configPath;

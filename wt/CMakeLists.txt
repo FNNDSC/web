@@ -397,3 +397,4 @@ CONFIGURE_FILE(
   ${WT_BINARY_DIR}/wt_config.xml
 )
 
+SET(DEPLOYROOT /var/www/localhost/htdocs/ CACHE PATH "Path to deploy examples into)")
