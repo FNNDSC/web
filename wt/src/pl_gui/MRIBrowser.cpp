@@ -500,6 +500,7 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
                                       Wt::WSuggestionPopup::generateReplacerJS(searchOptions),
                                       searchContainer);
 
+    mPopup->setGlobalPopup(true);
     mPopup->forEdit(mSearchLineEdit);
     mPopup->setModel(mSortFilterProxyModel);
     mPopup->setModelColumn(0);
