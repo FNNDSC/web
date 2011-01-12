@@ -24,6 +24,13 @@
 class ConfigOptions
 {
 public:
+
+    typedef enum
+    {
+        AUTHENTICATION_NIS,
+        AUTHENTICATION_HTPASSWD
+    } AuthenticationStyle;
+
     ///
     /// Constructor
     ///
@@ -61,6 +68,8 @@ public:
     const std::string& GetAdminGroup()          const { return mAdminGroup; }
     const std::string& GetAnonCertificate()     const { return mAnonCertificate; }
     const std::string& GetJobIDPrefix()         const { return mJobIDPrefix; }
+    const std::string& GetHtpasswdFile()        const { return mHtpasswdFile; }
+    AuthenticationStyle GetAuthenticationStyle() const { return mAuthenticationStyle; }
 
 private:
 
@@ -123,6 +132,12 @@ private:
 
     /// Job ID Prefix
     std::string mJobIDPrefix;
+
+    /// Authentication style
+    AuthenticationStyle mAuthenticationStyle;
+
+    /// htpasswd File (if authentication=htpasswd)
+    std::string mHtpasswdFile;
 };
 
 #endif // CONFIGOPTIONS_H

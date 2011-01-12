@@ -59,6 +59,8 @@ ConfigOptions::ConfigOptions() :
         ("adminGroup",      value<string>(), "Admin group")
         ("anonCertificate", value<string>(), "Anonymizing certificate")
         ("jobIDPrefix",     value<string>(), "Job ID Prefix")
+        ("authentication",  value<string>(), "Authentication Style (must be 'nis' or 'htpasswd')")
+        ("htpasswdFile",    value<string>(), "htpasswd file (if authentication=htpasswd)")
         ;
 }
 
@@ -195,6 +197,31 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mJobIDPrefix = vm["jobIDPrefix"].as<string>();
         }
 
+
+        mAuthenticationStyle == AUTHENTICATION_NIS; // Default: NIS
+        if (vm.count("authentication"))
+        {
+            std::string authenticationStyle = vm["authentication"].as<string>();
+
+            if (authenticationStyle == "nis")
+            {
+                mAuthenticationStyle = AUTHENTICATION_NIS;
+            }
+            else if (authenticationStyle == "htpasswd")
+            {
+                mAuthenticationStyle = AUTHENTICATION_HTPASSWD;
+            }
+            else
+            {
+                 WApplication::instance()->log("error") << "Unknown authentication type: " << authenticationStyle;
+            }
+        }
+
+        if (vm.count("htpasswdFile"))
+        {
+            mHtpasswdFile = vm["htpasswdFile"].as<string>();
+        }
+
         WApplication::instance()->log("info") << "[DICOM Dir:] " << mDicomDir;
         WApplication::instance()->log("info") << "[Output Dir:] " << mOutDir;
         WApplication::instance()->log("info") << "[Analysis Dir:] " << mAnalysisDir;
@@ -211,10 +238,12 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[Remote MatLAB:] " << mRemoteMatLab;
         WApplication::instance()->log("info") << "[MRID Filter File:] " << mMRIDFilterFile;
         WApplication::instance()->log("info") << "[Permissions File:] " << mPermissionsFile;
-        WApplication::instance()->log("info") << "[Admin Group:]" << mAdminGroup;
-        WApplication::instance()->log("info") << "[Anonymizing Certificate:]" << mAnonCertificate;
-        WApplication::instance()->log("info") << "[Job ID Prefix:]" << mJobIDPrefix;
-
+        WApplication::instance()->log("info") << "[Admin Group:] " << mAdminGroup;
+        WApplication::instance()->log("info") << "[Anonymizing Certificate:] " << mAnonCertificate;
+        WApplication::instance()->log("info") << "[Job ID Prefix:] " << mJobIDPrefix;
+        WApplication::instance()->log("info") << "[Authentication:] " <<
+            ((mAuthenticationStyle == AUTHENTICATION_NIS) ? std::string("nis") : std::string("htpasswd"));
+        WApplication::instance()->log("info") << "[htpasswd File:] " << mHtpasswdFile;
         configFile.close();
     }
     catch(boost::program_options::error& e)

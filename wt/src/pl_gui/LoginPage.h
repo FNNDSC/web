@@ -48,7 +48,7 @@ public:
     void resetAll();
 
     ///
-    ///	Handle login button clicked [slot]
+    ///	Handle login button clicked
     ///
     void login();
 
@@ -84,7 +84,6 @@ private:
     /// MD5 password encryption using openssl
     ///
     char *md5crypt(const char *passwd, const char *magic, const char *salt);
-
 
     /// Signal for when user is logged on
     Wt::Signal<std::string, std::string> mUserLoggedIn;

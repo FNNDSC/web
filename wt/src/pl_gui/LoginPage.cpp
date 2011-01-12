@@ -12,6 +12,7 @@
 //
 #include "LoginPage.h"
 #include "ConfigOptions.h"
+#include "PipelineApp.h"
 #include <Wt/WApplication>
 #include <Wt/WLogger>
 #include <Wt/WContainerWidget>
@@ -67,7 +68,7 @@ LoginPage::LoginPage(WContainerWidget *parent) :
     mLogoutRequested(false)
 {
     setStyleClass("maindiv");
-	
+
     WLabel* loginText = new WLabel("Enter username and password:");
 
     mUserNameLineEdit = new WLineEdit("");
@@ -183,24 +184,37 @@ void LoginPage::resetAll()
 //
 void LoginPage::login()
 {
-    // If already logged in, don't need to do it again
-    if (mLoggedIn == true)
-    {
-        return;
-    }
-
     bool loggedIn = false;
     const char *userName = mUserNameLineEdit->text().toUTF8().c_str();
     const char *passwd = mPasswordLineEdit->text().toUTF8().c_str();
     const char *magic = "1";
     char salt[9];
 
-    // Determine the password salt by using ypmatch to get
-    // the password, this gives us the MD5 encoded password which we
-    // will compare against the entered password
+    // If already logged in, don't need to do it again
+    if (mLoggedIn == true)
+    {
+        return;
+    }
+
     std::string cmdToExecute;
-    cmdToExecute = "ypmatch " + mUserNameLineEdit->text().toUTF8() + " passwd";
-    cmdToExecute += "| awk -F \":\" '{ print $2 }'";
+
+    // NIS - use ypmatch
+    if (getConfigOptionsPtr()->GetAuthenticationStyle() == ConfigOptions::AUTHENTICATION_NIS)
+    {
+        // Determine the password salt by using ypmatch to get
+        // the password, this gives us the MD5 encoded password which we
+        // will compare against the entered password
+        cmdToExecute = "ypmatch " + mUserNameLineEdit->text().toUTF8() + " passwd";
+        cmdToExecute += "| awk -F \":\" '{ print $2 }'";
+    }
+    // htpasswd - use htpasswd file specified in configuration options
+    else
+    {
+        // Grep the htpasswd file for the entry, this is formatted as :
+        //  <username>:KencodedPassword>
+        cmdToExecute = "grep -w " +  mUserNameLineEdit->text().toUTF8() + "  " + getConfigOptionsPtr()->GetHtpasswdFile();
+        cmdToExecute += "| awk -F \":\" '{ print $2 }'";
+    }
 
     context ctx;
     ctx.add(capture_stream(stdout_fileno));
@@ -253,7 +267,7 @@ void LoginPage::login()
         mFailureLabel->show();
         return;
     }
- 
+
     // If the passwords match, the user can login.
     if (!strcmp(enteredEncodedPassword, encodedPassword.c_str()))
     {
