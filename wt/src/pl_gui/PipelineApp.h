@@ -14,8 +14,13 @@
 #ifndef PIPELINEAPP_H
 #define PIPELINEAPP_H
 
-#include "WQApplication"
+// #define USE_QT // This seems to be broken in Wt 3.1.7a so I am dropping it for now
 
+#ifdef USE_QT
+  #include "WQApplication"
+#else
+  #include <Wt/WApplication>
+#endif
 
 namespace Wt
 {
@@ -37,7 +42,12 @@ class LoginPage;
 /// \class PipelineApp
 /// \brief Main application class.
 ///
-class PipelineApp : public WQApplication
+class PipelineApp : 
+#ifdef USE_QT
+	public WQApplication
+#else
+	public WApplication
+#endif
 {
 public:
     ///

@@ -11,6 +11,8 @@
 //
 #include "MRIInfoBox.h"
 #include "ConfigOptions.h"
+#include <Wt/WApplication>
+#include <Wt/WLogger>
 #include <Wt/WContainerWidget>
 #include <Wt/WTabWidget>
 #include <Wt/WGridLayout>

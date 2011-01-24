@@ -17,10 +17,15 @@
 #include <Wt/WStandardItemModel>
 #include <Wt/WSortFilterProxyModel>
 #include <mxml.h>
-#include "QtFileSystemWatcherThread.h"
 
 #include <string>
 #include <list>
+
+// #define ENABLE_FILE_WATCHER 1 // this is broken in Wt 3.1.7a and git and I am for now dropping Qt support
+                                 // and disabling this functionality.  Will bring it back if it ever gets stable.
+#ifdef ENABLE_FILE_WATCHER
+#include "QtFileSystemWatcherThread.h"
+#endif
 
 class MRIFilterProxyModel;
 class PermissionsXML;
@@ -38,7 +43,10 @@ using namespace Wt;
 /// \class MRIBrowser
 /// \brief Provides a browser for all of the MRIDs
 ///
-class MRIBrowser : public WContainerWidget, public QtFileSystemWatcherListener
+class MRIBrowser : public WContainerWidget
+#ifdef ENABLE_FILE_WATCHER
+, public QtFileSystemWatcherListener
+#endif
 {
 public:
     // Types of data stored per MRID
@@ -265,8 +273,10 @@ private:
     /// Search Line edit
     WLineEdit *mSearchLineEdit;
 
+#ifdef ENABLE_FILE_WATCHER
     /// Qt file system watcher thread for notification of updates to dcm_MRID.xml
     QtFileSystemWatcherThread *mQtFileSystemWatcherThread;
+#endif
 
     /// Current Filter file
     std::string mFilterFilePath;

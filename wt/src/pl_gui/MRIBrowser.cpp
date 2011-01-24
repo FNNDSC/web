@@ -523,7 +523,9 @@ MRIBrowser::MRIBrowser(WContainerWidget *parent) :
     mSearchButton->clicked().connect(SLOT(this, MRIBrowser::searchClicked));
 
     // File system watcher
+#ifdef ENABLE_FILE_WATCHER
     mQtFileSystemWatcherThread = new QtFileSystemWatcherThread(this, WApplication::instance());
+#endif
 
     resetAll();
 }
@@ -565,8 +567,10 @@ void MRIBrowser::resetAll()
 //
 void MRIBrowser::createQt()
 {
+#ifdef ENABLE_FILE_WATCHER
     mQtFileSystemWatcherThread->createQt();
     mQtFileSystemWatcherThread->addPath(getConfigOptionsPtr()->GetDicomDir() + + "/dcm_MRID.xml");
+#endif
 }
 
 ///
@@ -574,7 +578,9 @@ void MRIBrowser::createQt()
 //
 void MRIBrowser::destroyQt()
 {
+#ifdef ENABLE_FILE_WATCHER
     mQtFileSystemWatcherThread->destroyQt();
+#endif
 }
 
 
@@ -583,7 +589,9 @@ void MRIBrowser::destroyQt()
 //
 void MRIBrowser::finalize()
 {
+#ifdef ENABLE_FILE_WATCHER
     mQtFileSystemWatcherThread->finalize();
+#endif
 }
 
 ///

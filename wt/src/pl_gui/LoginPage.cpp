@@ -271,15 +271,18 @@ void LoginPage::login()
     // If the passwords match, the user can login.
     if (!strcmp(enteredEncodedPassword, encodedPassword.c_str()))
     {
-        // Attempt to also get the E-mail address
-        cmdToExecute = "ypmatch " + mUserNameLineEdit->text().toUTF8() + " aliases";
-        c = launch_shell(cmdToExecute, ctx);
-        s = c.wait();
-
         // Get the returned E-mail address
-        stream<boost::processes::pipe_end> is(c.get_stdout());
         std::string email;
-        is >> email;
+        if (getConfigOptionsPtr()->GetAuthenticationStyle() == ConfigOptions::AUTHENTICATION_NIS)
+	{
+            // Attempt to also get the E-mail address
+            cmdToExecute = "ypmatch " + mUserNameLineEdit->text().toUTF8() + " aliases";
+            c = launch_shell(cmdToExecute, ctx);
+            s = c.wait();
+
+            stream<boost::processes::pipe_end> is(c.get_stdout());
+            is >> email;
+        }
 
         mUserLoggedIn.emit(mUserNameLineEdit->text().toUTF8(), email);
 

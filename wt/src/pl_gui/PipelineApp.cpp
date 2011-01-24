@@ -131,7 +131,11 @@ const std::string getCurrentUserEmail()
 //  Constructor
 //
 PipelineApp::PipelineApp(const WEnvironment &env) :
+#ifdef USE_QT
     WQApplication(env, true)
+#else
+    WApplication(env)
+#endif
 {
     /*
      * Note: do not create any Qt objects from here. Initialize your
