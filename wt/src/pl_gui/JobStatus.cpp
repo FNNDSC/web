@@ -190,6 +190,7 @@ void JobStatus::killButtonClicked()
     std::string cmdToExecute;
     cmdToExecute = "cluster_kill.bash -J " + getConfigOptionsPtr()->GetJobIDPrefix() + mJobID;
     cmdToExecute += " -C "+ getConfigOptionsPtr()->GetClusterType();
+    cmdToExecute += " -c " + mClusterShFile;
     if (getConfigOptionsPtr()->GetClusterHeadNode() != "")
     {
         cmdToExecute += " -r " + getConfigOptionsPtr()->GetClusterHeadNode();
@@ -230,6 +231,7 @@ void JobStatus::updateStatus()
                 std::string cmdToExecute;
                 cmdToExecute = "cluster_status.bash -J " + getConfigOptionsPtrTS(mApp)->GetJobIDPrefix() + mJobID;
                 cmdToExecute += " -C "+ getConfigOptionsPtrTS(mApp)->GetClusterType();
+                cmdToExecute += " -c "+ mClusterShFile;
                 if (getConfigOptionsPtrTS(mApp)->GetClusterHeadNode() != "")
                 {
                     cmdToExecute += " -r " + getConfigOptionsPtrTS(mApp)->GetClusterHeadNode();
