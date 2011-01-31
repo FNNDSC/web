@@ -66,7 +66,6 @@ Tractography = function()
         "uniform mat4 uNMatrix;\n" +
         "uniform float uMinTrackLength;\n" +
         "uniform vec3 center;\n" +
-        "uniform vec3 scale;\n" +
 
         "varying vec3 vColor;\n" +
         "varying vec3 vNormal;\n" +
@@ -75,10 +74,8 @@ Tractography = function()
 
         "   vec3 pos = aVertexPosition.xyz;\n" +
         "   float length = aVertexPosition.w;\n" +
-        "   // Don't render short tracks\n" +
         "   if (length < uMinTrackLength)\n" +
         "       pos = vec3(0.0);\n" +
-        "   pos *= scale.x;\n" +
         "   vColor = aColor;\n" +
 
         "   vec3 normal = normalize(pos - center);\n" +
@@ -127,10 +124,8 @@ Tractography.prototype =
     },
 
     // Draw the brain tracks using WebGL
-    drawTracks: function(pMatrix, mvMatrix, scale)
+    drawTracks: function(pMatrix, mvMatrix)
     {
-        var curScale = new Float32Array(3);
-        curScale[0] = curScale[1] = curScale[2] = scale;
 
         gl.useProgram(this.shaderProgram);
 
@@ -154,7 +149,6 @@ Tractography.prototype =
         gl.uniformMatrix4fv(this.shaderProgram.nMatrixUniform, false, new Float32Array(normalMatrix.flatten()));
 
 
-        gl.uniform3fv(this.shaderProgram.scaleUniform, curScale );//this.trackScale);
         gl.uniform3fv(this.shaderProgram.centerUniform, this.trackCenter);
         gl.uniform1fv(this.shaderProgram.minTrackLengthUniform, this.minTrackLength);
 
@@ -193,7 +187,6 @@ Tractography.prototype =
         this.shaderProgram.mvMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
         this.shaderProgram.nMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uNMatrix");
         this.shaderProgram.minTrackLengthUniform = gl.getUniformLocation(this.shaderProgram, "uMinTrackLength");
-        this.shaderProgram.scaleUniform = gl.getUniformLocation(this.shaderProgram, "scale");
         this.shaderProgram.centerUniform = gl.getUniformLocation(this.shaderProgram, "center");
     },
 

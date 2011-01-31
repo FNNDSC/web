@@ -182,7 +182,7 @@ function compileShader(shaderSrc, type)
 
     var shader;
     shader = gl.createShader(type);
-
+    
     gl.shaderSource(shader, shaderSrc);
     gl.compileShader(shader);
 

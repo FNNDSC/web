@@ -1,114 +1,32 @@
 <html>
 
 <head>
-<style type="text/css">
-			.box25 {
-				float: left;
-				width: 25%;
-                                height:100%;
-                	}
-                        .box75 {
-                                float: left;
-                                width: 75%;
-                                height:100%;
-                        }
-			
-			.container {
-				clear: both;
-			}
+    <style>
+        body {
+            margin: 0;
+        }
 
-                        canvas {
-                            margin: 0px;
-                            border: 0px;
-                            width: 100%;
-                            height:100%;
-                        }
-}
-		</style>
+        #canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+    </style>
+
 <title>MRIS Viewer</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-
-<link type="text/css" href="../jquery/css/ui-darkness/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
-<script type="text/javascript" src="../jquery/js/jquery-1.4.4.min.js"></script>
-<script type="text/javascript" src="../jquery/js/jquery-ui-1.8.7.custom.min.js"></script>
 
 <script type="text/javascript" src="../common/sylvester.js"></script>
 <script type="text/javascript" src="../common/glUtils.js"></script>
 <script type="text/javascript" src="../common/binaryParseUtils.js"></script>
 <script type="text/javascript" src="../common/mrisLoader.js"></script>
 <script type="text/javascript" src="../common/crvLoader.js"></script>
+<script type="text/javascript" src="../common/brainSurface.js"></script>
 
-<script id="shader-fs" type="x-shader/x-fragment">
-  #ifdef GL_ES
-  precision highp float;
-  #endif
-
-  varying vec4 vPosition;
-  varying vec3 vColor;
-  varying vec3 vNormal;
-  void main(void) {
-    vec3 normal = normalize(vNormal);
-    vec3 lightVec = vec3(0.0, 0.0, 1.0);
-    vec3 specLightDir = vec3(-10.0, 4.0, -20.0);
-    specLightDir = normalize(specLightDir);
-
-    vec3 eyeDirection = normalize(-vPosition.xyz);
-    vec3 reflectionDirection = reflect(-specLightDir, normal);
-    float specular = pow(max(dot(reflectionDirection, eyeDirection), 0.0), 16.0);
-
-    float diffuse = 0.8 * max(dot(normal, lightVec), 0.0);
-    float ambient = 0.2;
-    gl_FragColor = vec4(
-        vColor * ambient +
-        vColor * diffuse +
-        vec3(0.6, 0.6, 0.8) * specular, 1.0);
-  }
-</script>
-
-<script id="shader-vs" type="x-shader/x-vertex">
-  attribute vec3 aVertexPosition;
-  attribute vec3 aNormal;
-  attribute float aCurvature;
-
-  uniform mat4 uMVMatrix;
-  uniform mat4 uPMatrix;
-  uniform mat4 uNMatrix;
-  uniform vec3 center;
-  uniform vec3 scale;
-  uniform float uCurvMax;
-  uniform float uCurvMin;
-  uniform int uDrawCurvature;
-
-  varying vec3 vColor;
-  varying vec3 vNormal;
-  varying vec4 vPosition;  
-  void main(void) {
-
-    vec3 pos = aVertexPosition.xyz - center;
-    pos *= scale.x;
-
-    if (uDrawCurvature != 0 )
-    {
-        float curvValue = (aCurvature - uCurvMin) / (uCurvMax - uCurvMin);
-        curvValue = clamp(curvValue, 0.0, 1.0);
-        vColor = curvValue * vec3(1.0, 0.0, 0.0) + (1.0 - curvValue) * vec3(0.0, 1.0, 0.0);
-    }
-    else
-    {
-        vColor = vec3(0.5, 0.5, 0.5);
-    }
-    
-    vNormal = vec3(uNMatrix * vec4(aNormal, 1.0));
-
-    vPosition = uMVMatrix * vec4(pos, 1.0);
-    gl_Position = uPMatrix * vPosition;
-  }
-</script>
 
 
 <script type="text/javascript">
 
-       
   var gl;
   function initGL(canvas) {
     try {
@@ -122,76 +40,6 @@
     }
   }
 
-
-  function getShader(gl, id) {
-    var shaderScript = document.getElementById(id);
-    if (!shaderScript) {
-      return null;
-    }
-
-    var str = "";
-    var k = shaderScript.firstChild;
-    while (k) {
-      if (k.nodeType == 3) {
-        str += k.textContent;
-      }
-      k = k.nextSibling;
-    }
-
-    var shader;
-    if (shaderScript.type == "x-shader/x-fragment") {
-      shader = gl.createShader(gl.FRAGMENT_SHADER);
-    } else if (shaderScript.type == "x-shader/x-vertex") {
-      shader = gl.createShader(gl.VERTEX_SHADER);
-    } else {
-      return null;
-    }
-
-    gl.shaderSource(shader, str);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      alert(gl.getShaderInfoLog(shader));
-      return null;
-    }
-
-    return shader;
-  }
-
-
-  var shaderProgram;
-  function initShaders() {
-    var fragmentShader = getShader(gl, "shader-fs");
-    var vertexShader = getShader(gl, "shader-vs");
-
-    shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
-
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      alert("Could not initialise shaders");
-    }
-
-    gl.useProgram(shaderProgram);
-
-    shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-    gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-    shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aNormal");
-    gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
-
-    shaderProgram.vertexCurvatureAttribute = gl.getAttribLocation(shaderProgram, "aCurvature");
-    
-    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
-    shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
-    shaderProgram.scaleUniform = gl.getUniformLocation(shaderProgram, "scale");
-    shaderProgram.centerUniform = gl.getUniformLocation(shaderProgram, "center");
-    shaderProgram.curvMinUniform = gl.getUniformLocation(shaderProgram, "uCurvMin");
-    shaderProgram.curvMaxUniform = gl.getUniformLocation(shaderProgram, "uCurvMax");
-    shaderProgram.drawCurvatureUniform = gl.getUniformLocation(shaderProgram, "uDrawCurvature");
-  }
 
   var mvMatrix;
   var mvMatrixStack = [];
@@ -240,6 +88,31 @@
     multMatrix(m);
   }
 
+  function matScale(m, sx, sy, sz)
+  {
+    m.elements[0][0] *= sx;
+    m.elements[0][1] *= sx;
+    m.elements[0][2] *= sx;
+    m.elements[0][3] *= sx;
+
+    m.elements[1][0] *= sy;
+    m.elements[1][1] *= sy;
+    m.elements[1][2] *= sy;
+    m.elements[1][3] *= sy;
+
+    m.elements[2][0] *= sz;
+    m.elements[2][1] *= sz;
+    m.elements[2][2] *= sz;
+    m.elements[2][3] *= sz;
+
+  }
+  function mvScale(sx, sy, sz)
+  {
+    matScale(mvMatrix, sx, sy, sz);
+
+  }
+
+
 
   var pMatrix;
   function perspective(fovy, aspect, znear, zfar) {
@@ -263,7 +136,7 @@
   var yRot = 0;
   var ySpeed = 0;
 
-  var z = -2.0;
+  var z = -4.0;
 
   var filter = 0;
 
@@ -382,138 +255,50 @@
   }
 
 
-  var triangleVertexPositionBuffer;
-  var triangleVertexNormalBuffer;
-  var triangleVertexCurvatureBuffer;
-  var triangleVertexIndexBuffer;
-  var curMRISFile;
-  var mrisScale;
-  var mrisCenter;
-  var curvMin;
-  var curCurvMin = new Float32Array(1);
-  var curvMax;
-  var curCurvMax = new Float32Array(1);
-  var drawCurvature = 0;
-  function handleLoadedMRIS(mrisFile) {
 
-    curMRISFile = mrisFile;
-    console.log('Creating VBOs.');
-    triangleVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+  var gBrainSurface = new BrainSurface();
 
-    gl.bufferData(gl.ARRAY_BUFFER, mrisFile.vertexPositionBuffer, gl.STATIC_DRAW);
-    triangleVertexPositionBuffer.itemSize = 3;
-    triangleVertexPositionBuffer.numItems = mrisFile.vertexPositionBuffer.length / 3;
-
-
-    triangleVertexNormalBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexNormalBuffer);
-
-    gl.bufferData(gl.ARRAY_BUFFER, mrisFile.vertexNormalBuffer, gl.STATIC_DRAW);
-    triangleVertexNormalBuffer.itemSize = 3;
-    triangleVertexNormalBuffer.numItems = mrisFile.vertexNormalBuffer.length / 3;
-
-/*
-    triangleVertexIndexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleVertexIndexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, trackFile.vertexIndices, gl.STREAM_DRAW);
-    triangleVertexIndexBuffer.itemSize = 1;
-    triangleVertexIndexBuffer.numItems = trackFile.vertexIndices.length;
-*/
-    mrisScale = mrisFile.scaleVect;
-    mrisCenter = mrisFile.centerVect;
-    console.log('Scale: ' + mrisScale[0] + ' ' + mrisScale[1] +  ' ' +  mrisScale[2]);
-    console.log('Center: ' + mrisCenter[0] + ' ' + mrisCenter[1] +  ' ' +  mrisCenter[2]);
-    console.log('VBOs created.');
-
-  }
-
-  function handleLoadedCRV(crvFile) {
-
-    curvMin = crvFile.minCurv;
-    curvMax = crvFile.maxCurv;
-
-    curCurvMin[0] = curvMin[1];
-    curCurvMax[0] = curvMax[1];
-
-    $( "#amount" ).val( curCurvMin[0].toFixed(2) + " - " + curCurvMax[0].toFixed(2) );
-    drawCurvature = 1;
-
-    triangleVertexCurvatureBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexCurvatureBuffer);
-
-    gl.bufferData(gl.ARRAY_BUFFER, crvFile.vertexCurvatureBuffer, gl.STATIC_DRAW);
-    triangleVertexCurvatureBuffer.itemSize = 1;
-    triangleVertexCurvatureBuffer.numItems = crvFile.vertexCurvatureBuffer.length;
-  }
-
-
-  function loadMRIS(surfaceFile) {
+  function loadMRIS() {
       mrisURL = location.search.substring(1)
-      console.log('URL: ' + mrisURL + '/' + surfaceFile);
-      mrisLoader = new MRISLoader();
-      mrisLoader.load(mrisURL + '/' + surfaceFile, handleLoadedMRIS);
+      console.log('URL: ' + mrisURL);
+      gBrainSurface.loadSurface(mrisURL, handleLoadedSurface);
   }
 
-  var rPyramid = 0;
+  function handleLoadedSurface(brainSurface)
+  {
+
+    if (brainSurface.vertexPositionBuffer != null)
+    {
+        brainSurface.setOpacity(1.0);
+    }
+  }
 
   function drawScene() {
 
     var canvas = document.getElementById("webgl-canvas");
-    canvas.width = canvas.clientWidth;//window.innerWidth;
-    canvas.height = canvas.clientHeight;//window.innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     gl.viewportWidth = canvas.width;
     gl.viewportHeight = canvas.height;
 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (triangleVertexPositionBuffer == null) {
+    if (gBrainSurface.vertexPositionBuffer == null) {
         return;
     }
 
     perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
     loadIdentity();
-
-    mvTranslate([0.0, 0.0, z]);
+    var scale = gBrainSurface.curScale[0];
+    mvScale(scale, scale, scale);
+    mvTranslate([0.0, 0.0, z / scale]);
 
     mvPushMatrix();
-    //mvRotate(xRot, [1, 0, 0])
-    //mvRotate(yRot, [0, 1, 0])
     multMatrix(brainRotationMatrix);
     mvRotate(-90.0, [1, 0, 0]);
-    
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexNormalBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, triangleVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-    
-    setMatrixUniforms();
-    gl.uniform3fv(shaderProgram.scaleUniform, mrisScale);
-    gl.uniform3fv(shaderProgram.centerUniform, mrisCenter);
-    gl.uniform1i(shaderProgram.drawCurvatureUniform, drawCurvature);
-
-    
-    if ( drawCurvature )
-    {
-        gl.uniform1fv(shaderProgram.curvMinUniform, curCurvMin);
-        gl.uniform1fv(shaderProgram.curvMaxUniform, curCurvMax);
-        gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexCurvatureBuffer);
-        gl.vertexAttribPointer(shaderProgram.vertexCurvatureAttribute, triangleVertexCurvatureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(shaderProgram.vertexCurvatureAttribute);
-    }
-    else
-    {
-        gl.disableVertexAttribArray(shaderProgram.vertexCurvatureAttribute);
-    }
-
-
-
-    //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleVertexIndexBuffer);
-    //gl.drawElements(gl.LINES, triangleVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
-    
+    gBrainSurface.drawSurface(pMatrix, mvMatrix);
     mvPopMatrix();
 
   }
@@ -538,18 +323,12 @@
   }
 
 
-var gHemisphere = 'lh';
-var gSurface = 'smoothwm'
-var gCurvature = undefined;
-
   function webGLStart() {
     var canvas = document.getElementById("webgl-canvas");
     initGL(canvas);
-    initShaders();
-    loadMRIS( gHemisphere + '.' + gSurface );
+    loadMRIS();
 
-
-    gl.clearColor(0.0, 0.0, 0.0, 0.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     gl.clearDepth(1.0);
 
@@ -567,77 +346,6 @@ var gCurvature = undefined;
   }
 
 
-function surfaceChanged()
-{
-    gSurface = $('#surface_select :selected').text();
-    
-    loadMRIS( gHemisphere + '.' + gSurface );
-}
-
-function toggleHemispheres()
-{
-    gHemisphere = $('#hemisphere_select input:radio:checked').val();
-    
-    loadMRIS( gHemisphere + '.' + gSurface );    
-}
-
-function curvatureChanged()
-{
-    gCurvature = $('#curvature_select :selected').text();
-
-    if (gCurvature == 'None')
-    {
-        $( "#amount" ).val( ' ' );
-        drawCurvature = false;
-    }
-    else
-    {
-        var crvFile = gHemisphere + '.' + gSurface + '.' + gCurvature + '.crv';
-        var crvURL = location.search.substring(1)
-        console.log('URL: ' + crvURL + '/' + crvFile);
-        crvLoader = new CRVLoader();
-        crvLoader.load(crvURL + '/' + crvFile, curMRISFile, handleLoadedCRV);
-
-    }
-
-}
-
-function handleCurvatureSlider(event, ui)
-{
-    var minSlider = 0;
-    var maxSlider = 1000;
-
-    var curSliderMin = (ui.values[0] - minSlider) / (maxSlider - minSlider);
-    var curSliderMax = (ui.values[1] - minSlider) / (maxSlider - minSlider);
-
-    curCurvMin[0] = (1.0 - curSliderMin) * curvMin[1] + curSliderMin * curvMax[1];
-    curCurvMax[0] = (1.0 - curSliderMax) * curvMin[1] + curSliderMax * curvMax[1];
-
-    $( "#amount" ).val( curCurvMin[0].toFixed(2) + " - " + curCurvMax[0].toFixed(2) );
-}
-
-$(function() {
-		$( "#controls" ).accordion({
-			fillSpace: true,
-                        autoHeight: false
-		});
-                $( "#viewer" ).accordion({
-			fillSpace: true,
-                        autoHeight: false
-		});
-
-                $( "#slider-range" ).slider({
-			range: true,
-			min: 0,
-			max: 1000,
-			values: [ 0, 1000 ],
-			slide: handleCurvatureSlider
-		});
-        //        $( "slider-range" ).slider("option", "disabled", true);
-	//	$( "#amount" ).val( $( "#slider-range" ).slider( "values", 0 ) +
-	//		" - " + $( "#slider-range" ).slider( "values", 1 ) );
-
-	});
 
 </script>
 
@@ -647,60 +355,10 @@ $(function() {
 
 <body onload="webGLStart();">
 
-    <div class="container">
-        <div class="box25">
-                <div id="controls" align>
-                    <h5><a href="#">Viewer Options</a></h5>
-                    <div>
-                        <form>
-                            Surface:
-                                <SELECT id="surface_select" onchange="surfaceChanged()">
-                                    <option value="smoothwm">smoothwm</option>
-                                    <option value="pial">pial</option>
-                                    <option value="orig">orig</option>
-                                    <option value="inflated">inflated</option>
-                                    <option value="white">white</option>
-                                </SELECT>
-                            <BR/>
-                        </form>
-                        <form id="hemisphere_select">
-                            Display:
-                            <BR/>
-                            <input type="radio" name="hemisphere" checked="checked" onclick="toggleHemispheres()" value="lh" />Left Hemisphere
-                            <BR/>
-                            <input type="radio" name="hemisphere" onclick="toggleHemispheres()" value="rh" />Right Hemisphere
-                        </form>
-                        <form>
-                            Curvature:
-                                <SELECT id="curvature_select" onchange="curvatureChanged()">
-                                    <option value="None">None</option>
-                                    <option value="BE">BE</option>
-                                    <option value="C">C</option>
-                                    <option value="FI">FI</option>
-                                    <option value="H">H</option>
-                                    <option value="K">K</option>
-                                    <option value="K1">K1</option>
-                                    <option value="K2">K2</option>
-                                    <option value="S">S</option>
-                                </SELECT>
-                                <BR/>
-                        </form>
-                        <label for="amount">Curvature display range:</label>
-                        <input type="text" id="amount" readonly="readonly" style="border:0; color:#f6931f; font-weight:bold;" />
-                        <div id="slider-range"></div>
-                    </div>
-                </div>
-        </div>
-        <div class="box75">
+<center>
+  <canvas id="webgl-canvas" style="border: none;" width="100%" height="100%" margin="0px"></canvas>
+</center>
 
-                <div id="viewer">
-                    <h5><a href="#">Surface Viewer</a></h5>
-                    <div>
-                        <canvas id="webgl-canvas" ></canvas>
-                    </div>
-                </div>
-        </div>
-    </div>                 
 </body>
 
 </html>

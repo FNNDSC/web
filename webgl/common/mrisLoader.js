@@ -11,6 +11,58 @@
 //      Children's Hospital Boston
 //
 
+VolumeGeometry = function ()
+{
+    /*
+    this.valid = 0;
+    this.width = 0;
+    this.height = 0;
+    this.depth = 0;
+    this.xsize = 0;
+    this.ysize = 0;
+    this.zsize = 0;
+    this.x_r = 0.0;
+    this.x_a = 0.0;
+    this.x_s = 0.0;
+    this.y_r = 0.0;
+    this.y_a = 0.0;
+    this.y_s = 0.0;
+    this.z_r = 0.0;
+    this.z_a = 0.0;
+    this.z_s = 0.0;
+    this.c_r = 0.0;
+    this.c_a = 0.0;
+    this.c_s = 0.0;
+    */
+   //@TEMP - should read this from file, for demoing' hardcoded for the particular
+   //        surface I am using.
+    //extent  : (256, 256, 256)
+    // voxel   : ( 1.0000,  1.0000,  1.0000)
+    // x_(ras) : (-1.0000,  0.0000,  0.0000)
+    // y_(ras) : ( 0.0000,  0.0000, -1.0000)
+    // z_(ras) : ( 0.0000,  1.0000,  0.0000)
+    // c_(ras) : (-2.7213, 18.9737,  7.0585)
+    this.valid = 1;
+    this.width = 256;
+    this.height = 256;
+    this.depth = 256;
+    this.xsize = 1.0;
+    this.ysize = 1.0;
+    this.zsize = 1.0;
+    this.x_r = -1.0;
+    this.x_a = 0.0;
+    this.x_s = 0.0;
+    this.y_r = 0.0;
+    this.y_a = 0.0;
+    this.y_s = -1.0;
+    this.z_r = 0.0;
+    this.z_a = 1.0;
+    this.z_s = 0.0;
+    this.c_r = 0.6794;
+    this.c_a = 13.3063;
+    this.c_s = 16.1304;
+   //@TEMP
+}
 
 //  Represents the entire TrackFile, contains all of the
 //  Tracks along with the data pre-processed for rendering
@@ -32,6 +84,9 @@ MRISFile = function()
 
     // Scale of the object
     this.scaleVect = new Float32Array(3);
+
+    // Volume geometry
+    this.vg = new VolumeGeometry();
 
 
 }
@@ -107,8 +162,6 @@ MRISLoader.prototype =
             mrisFile.vertexPositions[v * 3 + 0] = parseFloat32EndianSwapped( data, currentOffset );
             mrisFile.vertexNormals[v * 3 + 0] = 0.0;
             currentOffset += 4;
-            // Invert the y coordinate to put it into proper frame of reference, see:
-            //  http://www.grahamwideman.com/gw/brain/fs/coords/fscoords.htm
             mrisFile.vertexPositions[v * 3 + 1] = parseFloat32EndianSwapped( data, currentOffset );
             mrisFile.vertexNormals[v * 3 + 1] = 0.0;
             currentOffset += 4;
@@ -229,4 +282,121 @@ MRISLoader.prototype =
             mrisFile.scaleVect[idx] = 1.0 / (max[idx] - min[idx]);
         }
     }
+}
+
+
+// Transformation utility functions
+function MRIxfmCRS2XYZ(mri)
+{
+    var m = Matrix.I(4);
+
+    /* direction cosine between columns scaled by
+     distance between colums */
+    m.elements[0][0] = mri.x_r * mri.xsize;
+    m.elements[1][0] = mri.x_a * mri.xsize;
+    m.elements[2][0] = mri.x_s * mri.xsize;
+
+    /* direction cosine between rows scaled by
+     distance between rows */
+    m.elements[0][1] = mri.y_r * mri.ysize;
+    m.elements[1][1] = mri.y_a * mri.ysize;
+    m.elements[2][1] = mri.y_s * mri.ysize;
+
+    /* direction cosine between slices scaled by
+     distance between slices */
+    m.elements[0][2] = mri.z_r * mri.zsize;
+    m.elements[1][2] = mri.z_a * mri.zsize;
+    m.elements[2][2] = mri.z_s * mri.zsize;
+
+    /* Preset the offsets to 0 */
+    m.elements[0][3] = 0.0;
+    m.elements[1][3] = 0.0;
+    m.elements[2][3] = 0.0;
+
+    /* Last row of matrix */
+    m.elements[3][0] = 0.0;
+    m.elements[3][1] = 0.0;
+    m.elements[3][2] = 0.0;
+    m.elements[3][3] = 1.0;
+
+    /* At this point, m = Mdc * D */
+    /* Col, Row, Slice at the Center of the Volume */
+    var Pcrs = $V([0.0, 0.0, 0.0, 0.0]);
+    Pcrs.elements[0] = mri.width / 2.0;
+    Pcrs.elements[1] = mri.height / 2.0;
+    Pcrs.elements[2] = mri.depth / 2.0;
+    Pcrs.elements[3] = 1.0;
+
+    /* XYZ offset the first Col, Row, and Slice from Center */
+    /* PxyzOffset = Mdc*D*PcrsCenter */
+    var PxyzOffset = m.multiply(Pcrs);
+
+    /* XYZ at the Center of the Volume is mri.c_r, c_a, c_s  */
+
+    /* The location of the center of the voxel at CRS = (0,0,0)*/
+    m.elements[0][3] = mri.c_r - PxyzOffset.elements[0];
+    m.elements[1][3] = mri.c_a - PxyzOffset.elements[1];
+    m.elements[2][3] = mri.c_s - PxyzOffset.elements[2];
+
+    return(m);
+}
+
+function MRIxfmCRS2XYZtkreg(mri)
+{
+    var tmp = new VolumeGeometry();
+
+    tmp.width = mri.width;
+    tmp.height = mri.height;
+    tmp.depth = mri.depth;
+
+    /* Set tkregister defaults */
+    /* column         row           slice          center      */
+    tmp.x_r = -1;
+    tmp.y_r =  0;
+    tmp.z_r =  0;
+    tmp.c_r = 0.0;
+    tmp.x_a =  0;
+    tmp.y_a =  0;
+    tmp.z_a =  1;
+    tmp.c_a = 0.0;
+    tmp.x_s =  0;
+    tmp.y_s = -1;
+    tmp.z_s =  0;
+    tmp.c_s = 0.0;
+
+    /* Copy the voxel resolutions */
+    tmp.xsize = mri.xsize;
+    tmp.ysize = mri.ysize;
+    tmp.zsize = mri.zsize;
+
+    var K = MRIxfmCRS2XYZ(tmp);
+
+    return(K);
+}
+
+function surfaceRASFromRAS(mri)
+{
+  var sRASFromRAS;
+  var Vox2TkRAS;
+  var Vox2RAS;
+
+  Vox2RAS = MRIxfmCRS2XYZ(mri); // scanner vox2ras
+  Vox2TkRAS = MRIxfmCRS2XYZtkreg(mri); // tkreg vox2ras
+  // sRASFromRAS = Vox2TkRAS * inv(Vox2RAS)
+  sRASFromRAS = Vox2RAS.inverse();
+  sRASFromRAS =  Vox2TkRAS.multiply(sRASFromRAS);//MatrixMultiply(Vox2TkRAS,sRASFromRAS,sRASFromRAS);
+  return(sRASFromRAS);
+}
+
+function RASFromSurfaceRAS(mri)
+{
+  var RASFromsRAS;
+  var Vox2TkRAS;
+  var Vox2RAS;
+
+  Vox2RAS = MRIxfmCRS2XYZ(mri); // scanner vox2ras
+  Vox2TkRAS = MRIxfmCRS2XYZtkreg(mri); // tkreg vox2ras
+  RASFromsRAS = Vox2TkRAS.inverse();
+  RASFromsRAS = Vox2RAS.multiply(RASFromsRAS);
+  return(RASFromsRAS);
 }

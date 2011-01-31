@@ -65,7 +65,7 @@ BrainSurface = function()
         "   gl_FragColor = vec4(\n" +
         "                   vColor * ambient +\n" +
         "                   vColor * diffuse +\n" +
-        "                   vec3(0.6, 0.6, 0.8) * specular, uOpacity);\n" +
+        "                   vec3(1.0, 1.0, 1.0) * specular, uOpacity);\n" +
         "}\n";
 
     this.vertShaderSrc =
@@ -77,7 +77,6 @@ BrainSurface = function()
         "uniform mat4 uPMatrix;\n" +
         "uniform mat4 uNMatrix;\n" +
         "uniform vec3 center;\n" +
-        "uniform vec3 scale;\n" +
         "uniform float uCurvMax;\n" +
         "uniform float uCurvMin;\n" +
         "uniform int uDrawCurvature;\n" +
@@ -88,7 +87,6 @@ BrainSurface = function()
         "void main(void) {\n" +
 
         "  vec3 pos = aVertexPosition.xyz;" +
-        "  pos *= scale.x;\n" +
 
         "  if (uDrawCurvature != 0 )\n" +
         "  {\n" +
@@ -181,11 +179,8 @@ BrainSurface.prototype =
     },
 
     // Draw the brain surface using WebGL
-    drawSurface: function(pMatrix, mvMatrix, scale)
+    drawSurface: function(pMatrix, mvMatrix)
     {
-        var curScale = new Float32Array(3);
-        curScale[0] = curScale[1] = curScale[2] = scale;
-
         gl.useProgram(this.shaderProgram);
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
@@ -206,7 +201,6 @@ BrainSurface.prototype =
         normalMatrix = normalMatrix.transpose();
         gl.uniformMatrix4fv(this.shaderProgram.nMatrixUniform, false, new Float32Array(normalMatrix.flatten()));
         
-        gl.uniform3fv(this.shaderProgram.scaleUniform, curScale);
         gl.uniform3fv(this.shaderProgram.centerUniform, this.mrisFile.centerVect);
         gl.uniform1i(this.shaderProgram.drawCurvatureUniform, this.drawCurvature);
         gl.uniform1fv(this.shaderProgram.opacityUniform, this.opacity);
@@ -260,7 +254,6 @@ BrainSurface.prototype =
         this.shaderProgram.pMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uPMatrix");
         this.shaderProgram.mvMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
         this.shaderProgram.nMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uNMatrix");
-        this.shaderProgram.scaleUniform = gl.getUniformLocation(this.shaderProgram, "scale");
         this.shaderProgram.centerUniform = gl.getUniformLocation(this.shaderProgram, "center");
         this.shaderProgram.curvMinUniform = gl.getUniformLocation(this.shaderProgram, "uCurvMin");
         this.shaderProgram.curvMaxUniform = gl.getUniformLocation(this.shaderProgram, "uCurvMax");

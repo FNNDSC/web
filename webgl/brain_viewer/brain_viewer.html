@@ -25,10 +25,10 @@
                         }
 }
 		</style>
-<title>MRIS Viewer</title>
+<title>Brain Surface and Tractography Viewer</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
-<link type="text/css" href="../jquery/css/ui-darkness/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
+<link type="text/css" href="../jquery/css/vader/jquery-ui-1.8.7.custom.css" rel="stylesheet" />
 <script type="text/javascript" src="../jquery/js/jquery-1.4.4.min.js"></script>
 <script type="text/javascript" src="../jquery/js/jquery-ui-1.8.7.custom.min.js"></script>
 
@@ -61,25 +61,6 @@
 
   
   var mvMatrix;
-  var mvMatrixStack = [];
-
-  function mvPushMatrix(m) {
-    if (m) {
-      mvMatrixStack.push(m.dup());
-      mvMatrix = m.dup();
-    } else {
-      mvMatrixStack.push(mvMatrix.dup());
-    }
-  }
-
-  function mvPopMatrix() {
-    if (mvMatrixStack.length == 0) {
-      throw "Invalid popMatrix!";
-    }
-    mvMatrix = mvMatrixStack.pop();
-    return mvMatrix;
-  }
-
 
   function loadIdentity() {
     mvMatrix = Matrix.I(4);
@@ -107,23 +88,29 @@
     multMatrix(m);
   }
 
-function mvScale(sx, sy, sz)
-{
-    mvMatrix.elements[0][0] *= sx;
-    mvMatrix.elements[0][1] *= sx;
-    mvMatrix.elements[0][2] *= sx;
-    mvMatrix.elements[0][3] *= sx;
+  function matScale(m, sx, sy, sz)
+  {
+    m.elements[0][0] *= sx;
+    m.elements[0][1] *= sx;
+    m.elements[0][2] *= sx;
+    m.elements[0][3] *= sx;
 
-    mvMatrix.elements[1][0] *= sy;
-    mvMatrix.elements[1][1] *= sy;
-    mvMatrix.elements[1][2] *= sy;
-    mvMatrix.elements[1][3] *= sy;
+    m.elements[1][0] *= sy;
+    m.elements[1][1] *= sy;
+    m.elements[1][2] *= sy;
+    m.elements[1][3] *= sy;
 
-    mvMatrix.elements[2][0] *= sz;
-    mvMatrix.elements[2][1] *= sz;
-    mvMatrix.elements[2][2] *= sz;
-    mvMatrix.elements[2][3] *= sz;
-}
+    m.elements[2][0] *= sz;
+    m.elements[2][1] *= sz;
+    m.elements[2][2] *= sz;
+    m.elements[2][3] *= sz;
+
+  }
+  function mvScale(sx, sy, sz)
+  {
+    matScale(mvMatrix, sx, sy, sz);
+    
+  }
 
   var pMatrix;
   function perspective(fovy, aspect, znear, zfar) {
@@ -154,23 +141,7 @@ function mvScale(sx, sy, sz)
     if (currentlyPressedKeys[34]) {
       // Page Down
       z += 0.05;
-    }
-    if (currentlyPressedKeys[37]) {
-      // Left cursor key
-      ySpeed -= 1;
-    }
-    if (currentlyPressedKeys[39]) {
-      // Right cursor key
-      ySpeed += 1;
-    }
-    if (currentlyPressedKeys[38]) {
-      // Up cursor key
-      xSpeed -= 1;
-    }
-    if (currentlyPressedKeys[40]) {
-      // Down cursor key
-      xSpeed += 1;
-    }
+    }    
   }
 
 
@@ -242,10 +213,14 @@ function mvScale(sx, sy, sz)
 
   var gBrainSurfaces = new Array(2);
   var gTracks = new Tractography();
-  
+  //@TEMP - for demo purposes, hardcode the url
+  //var gBaseURL = location.search.substring(1);
+  var gBaseURL = '/demo_data/surf';
+  //@TEMP
+
   function loadMRIS(surface, surfaceFile, callback)
   {
-      mrisURL = location.search.substring(1)
+      mrisURL = gBaseURL;
       console.log('URL: ' + mrisURL + '/' + surfaceFile);
       surface.loadSurface(mrisURL + '/' + surfaceFile, callback);
   }
@@ -256,7 +231,7 @@ function mvScale(sx, sy, sz)
 
     var canvas = document.getElementById("webgl-canvas");
     canvas.width = canvas.clientWidth;//window.innerWidth;
-    canvas.height = canvas.clientHeight;//window.innerHeight;
+    canvas.height =canvas.clientHeight;//window.innerHeight;
     gl.viewportWidth = canvas.width;
     gl.viewportHeight = canvas.height;
 
@@ -265,88 +240,67 @@ function mvScale(sx, sy, sz)
 
     
     perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
-    loadIdentity();
- 
-
-
+    
     var scale = 0.01513;
 
+    ////////////////////////////////////////////////////////////////////////
+    //  Draw Tractography
+    ////////////////////////////////////////////////////////////////////////
+    loadIdentity();
     mvScale(scale, scale, scale);
     mvTranslate([0.0, 0.0, z / scale]);
-
-    mvPushMatrix();
     multMatrix(brainRotationMatrix);
-    mvRotate(-90.0, [1, 0, 0]);
-    mvRotate(180.0, [0, 0, 1]);
-
-
-       //@TEMP
-    //var vox_to_ras = gTracks.trkFile.trkHeader.vox_to_ras;
-    var vox_to_ras = $M([[-1.7180329561233521, 0.047996673732995987, 0.016228966414928436, 105.16133117675781], [-0.047932315617799759, -1.7180588245391846, 0.011287901550531387, 125.35425567626953], [0.012920046225190163, 0.0084614064544439316, 2.1999111175537109, -39.09844970703125], [0.0, 0.0, 0.0, 1.0]]);
-
-    multMatrix(vox_to_ras);
-    //@TEMP
-
     
-    // Get a common scale and curvature for both hemispheres
-    /*
-    var scale = gBrainSurfaces[0].curScale[0];
-    if (gBrainSurfaces[1].curScale[0] > scale)
-        scale = gBrainSurfaces[1].curScale[0];
-        */
+    // I described the way these matrices are created here:
+    //  http://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferTrackVisTransforms
+    // For demo purposes, these are hard-coded here, whereas in an actual
+    // version of it these will be loaded via XHTTPRequest.
+
+    // mri_info dti_b0.nii --vox2ras-tkr
+    var CRSd2XYZtkreg = $M([[-2.00000,   0.00000,   0.00000,  110.00000],
+                            [0.00000,    0.00000,    2.00000,  -79.00000],
+                            [0.00000,   -2.00000,    0.00000,  110.00000],
+                            [0.00000,    0.00000,    0.00000,    1.00000]]);
+
+    // bbregister --s <subject> --mov dti_b0.nii --init-fsl --reg bbregister.dat --bold --tol1d 1e-3
+    var bbregmatrix = $M([[9.994560e-01, -2.959258e-02, -1.456270e-02, -2.266882e+00],
+                          [1.266916e-02, -6.318483e-02, 9.979210e-01, -2.148178e+01],
+                          [3.045095e-02, 9.975628e-01, 6.277557e-02, 4.659803e-01],
+                          [0, 0, 0, 1]]);
+
+    multMatrix(CRSd2XYZtkreg);
+
 
     if (gShowTracks && gTracks.vertexPositionBuffer != null)
     {
-        gTracks.drawTracks(pMatrix, mvMatrix, 1.0);
+        gTracks.drawTracks(pMatrix, mvMatrix);
     }
-    mvPopMatrix();
-    mvPushMatrix();
-    loadIdentity();
-    //@TEMP
-/*    var regMatrix = Matrix.I(4);
-
-    regMatrix.setElements([[0.99973,  -0.0227872,  -0.00207516,  15.4285],
-                                  [0.0228081,  0.999683,  0.0106906,  -25.0657],
-                                  [0.00183089,  -0.0107352,  0.999941,  -77.8571],
-                                  [0,  0,  0,  1]]);
-    multMatrix(regMatrix);
-    mvTranslate([-15.4285 * scale, 25.0657 * scale, 77.8571 * scale]);
-*/
-    mvScale(scale, scale, scale);
-    //mvTranslate([15.4285 / scale, -25.0657 / scale, -77.8571 / scale])
-    mvTranslate([0.0, 0.0, z / scale]);
-
-    //mvTranslate([-15.4285 * scale, 25.0257 * scale, 77.8571 * scale]);
-    //mvTranslate([-15.4285 / scale, 25.0657 / scale, 77.8571 / scale]);
-        
-
-    multMatrix(brainRotationMatrix);
 
     
-    mvRotate(-90.0, [1, 0, 0]);
-    // Do not rotate about z because the coordinates need to be y-inverted
-    // from the track
-    //mvRotate(180.0, [0, 0, 1]);
+    ////////////////////////////////////////////////////////////////////////
+    //  Draw Brain Surfaces
+    ////////////////////////////////////////////////////////////////////////
+    loadIdentity();
+    mvScale(scale, scale, scale);
+    mvTranslate([0.0, 0.0, z / scale]);
+    multMatrix(brainRotationMatrix);
+    multMatrix(bbregmatrix);
 
-
-    gl.frontFace( gl.CCW );
+    gl.frontFace( gl.CW );
     gl.enable( gl.CULL_FACE );
     gl.enable( gl.BLEND );
     gl.blendFunc ( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA );
 
     if (gHemisphere[0] && gBrainSurfaces[0].vertexPositionBuffer != null)
     {
-        gBrainSurfaces[0].drawSurface(pMatrix, mvMatrix, 1.0);
+        gBrainSurfaces[0].drawSurface(pMatrix, mvMatrix);
     }
     if (gHemisphere[1] && gBrainSurfaces[1].vertexPositionBuffer != null)
     {
-        gBrainSurfaces[1].drawSurface(pMatrix, mvMatrix, 1.0);
+        gBrainSurfaces[1].drawSurface(pMatrix, mvMatrix);
     }
 
-    gl.disable( gl.BLEND);
-        
-    mvPopMatrix();
-
+    gl.disable( gl.BLEND);        
   }
 
   var lastTime = 0;
@@ -371,11 +325,11 @@ function mvScale(sx, sy, sz)
   }
 
 
-var gHemisphere = [ 1, 1 ];
+var gHemisphere = [ true, true ];
 var gHemisphereNames = [ 'lh', 'rh' ];
 var gSurface = 'smoothwm'
 var gCurvature = undefined;
-var gShowTracks = false;
+var gShowTracks = true;
 
   function webGLStart() {
     var canvas = document.getElementById("webgl-canvas");
@@ -386,8 +340,7 @@ var gShowTracks = false;
     gBrainSurfaces[1] = new BrainSurface();    
     loadMRIS( gBrainSurfaces[0], gHemisphereNames[0] + '.' + gSurface, handleLoadedSurface );
     loadMRIS( gBrainSurfaces[1], gHemisphereNames[1] + '.' + gSurface, handleLoadedSurface);
-    gTracks.loadTracks("/chb/osx1927/1/users/dicom/postproc/projects/ginsburg/demo/2034610-20090608_013Y-20100510-1273520211347135943-demo/tract_meta-stage-2-dcm2trk.bash/final-trackvis/2034610-20090608_013Y-20100510-1273520211347135943-demo.trk");
-
+    gTracks.loadTracks("/demo_data/streamline.trk");
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
     gl.clearDepth(1.0);
@@ -408,16 +361,16 @@ var gShowTracks = false;
 
 function surfaceChanged()
 {
-    gSurface = $('#surface_select :selected').text();
+    gSurface = $('#surface_select :selected').val();
 
-    loadMRIS( gBrainSurfaces[0], gHemisphereNames[0] + '.' + gSurface );
-    loadMRIS( gBrainSurfaces[1], gHemisphereNames[1] + '.' + gSurface );
+    loadMRIS( gBrainSurfaces[0], gHemisphereNames[0] + '.' + gSurface, handleLoadedSurface );
+    loadMRIS( gBrainSurfaces[1], gHemisphereNames[1] + '.' + gSurface, handleLoadedSurface );
 }
 
 function toggleHemispheres()
 {
-    gHemisphere[0] = $('#lh_hemisphere:checked').val();
-    gHemisphere[1] = $('#rh_hemisphere:checked').val();
+    gHemisphere[1] = ($('#lh_hemisphere:checked').val() != undefined) ? true : false;
+    gHemisphere[0] = ($('#rh_hemisphere:checked').val() != undefined) ? true : false;
 }
 
 function toggleTracks()
@@ -440,7 +393,7 @@ function curvatureChanged()
         for (var hemi = 0; hemi < 2; hemi++)
         {
             var crvFile = gHemisphereNames[hemi] + '.' + gSurface + '.' + gCurvature + '.crv';
-            var crvURL = location.search.substring(1)
+            var crvURL = gBaseURL;
             console.log('URL: ' + crvURL + '/' + crvFile);
             gBrainSurfaces[hemi].loadCurvature(crvURL + '/' + crvFile, handleLoadedCurvature);
         }        
@@ -455,6 +408,13 @@ function handleLoadedSurface(brainSurface)
         gBrainSurfaces[1].vertexPositionBuffer != null)
     {
         curvatureChanged();
+        var value = $( "#slider-opacity" ).slider( "option", "value" );
+        var minSlider = 0;
+        var maxSlider = 100;
+        var opacity = (value - minSlider) / (maxSlider - minSlider)
+
+        gBrainSurfaces[0].setOpacity(opacity);
+        gBrainSurfaces[1].setOpacity(opacity);
     }
 }
 
@@ -542,7 +502,7 @@ $(function() {
 			range: true,
 			min: 0,
 			max: 1000,
-			values: [ 530, 665 ],
+			values: [ 420, 576 ],
 			slide: handleCurvatureSlider
 		});
                 $( "#slider-opacity" ).slider({
@@ -567,11 +527,11 @@ $(function() {
 </head>
 
 
-<body onload="webGLStart();">
+<body onload="webGLStart();" style="font-size:80%;">
 
     <div class="container">
         <div class="box25">
-                <div id="controls" align>
+                <div id="controls" >
                     <h5><a href="#">Viewer Options</a></h5>
                     <div>
                         <form>
@@ -592,7 +552,7 @@ $(function() {
                             <BR/>
                             <input type="checkbox" id="rh_hemisphere" checked="checked" onclick="toggleHemispheres()" value="rh" />Right Hemisphere
                             <BR/>
-                            <input type="checkbox" id="tractography" onclick="toggleTracks()"/>Tractography
+                            <input type="checkbox" id="tractography" checked="checked" onclick="toggleTracks()"/>Tractography
 
                         </form>
                         <form>
@@ -612,14 +572,51 @@ $(function() {
                         </form>
                         Curvature display range:
                         <div id="slider-range"></div>
-                        Track Length:
+                        Minimum Track Length:
                             <div id="slider-tracklength"></div>
                     </div>
+                    <h5><a href="#">Info</a></h5>
+                    <div>
+                        <P>
+                            Surfaces generated with <A HREF="http://surfer.nmr.mgh.harvard.edu/" target="_blank">FreeSurfer</A>: 
+                        </P>
+                        <P>
+                            Dale, A.M., Fischl, B., Sereno, M.I., 1999. Cortical surface-based analysis. I. Segmentation and surface reconstruction. Neuroimage 9, 179-194.
+                        </P>
+                        <P>
+                            Tractography generated with <A HREF="http://www.trackvis.org/dtk/" target="_blank">Diffusion Toolkit</A>: 
+                        </P>
+                        <P>
+                            Wang R., Benner T., Sorensen A. G., and Wedeen V.J.. Diffusion Toolkit: A Software Package for Diffusion Imaging Data Processing and Tractography. ISMRM abstract Proc. Intl. Soc. Mag. Reson. Med. 15 (2007) 3720
+                        </P>
+                        <P>
+                            Curvature generation described in:
+                        </P>
+                        <p>
+                            Pienaar R., Fischl B., Caviness V., Makris N., Grant P.E. <a HREF="http://cigl.spl.harvard.edu/publications/item/view/1769" target="_blank"><i> Methodology for Analyzing Curvature in the developing
+                                brain from preterm to Adult.</i></a> Int J Imaging Syst Technol. 2008 Jun 1;18(1):42-68. PMID: 19936261. PMCID: PMC2779548.
+                        </p>
+                        <P>
+                            WebGL viewer developed by:
+                            <BR/>
+                            <BR/>
+                            <A HREF="mailto:daniel.ginsburg@childrens.harvard.edu">Dan Ginsburg</A>
+                            <BR/><A HREF="mailto:rudolph.pienaar@childrens.harvard.edu">Rudolph Pienaar</A>
+                            <BR/>
+                            at Children's Hospital Boston<BR/>
+                            <I>Fetal-Neonatal Neuroimaging and Development Science Center</I> 
+                            <BR/>
+                            2011
+                            <BR/>
+                        </P>
+
+                        
+                    </div>                    
                 </div>
         </div>
         <div class="box75">
                 <div id="viewer">
-                    <h5><a href="#">Surface Viewer</a></h5>
+                    <h5><a href="#">Brain Surface and Tractography Viewer</a></h5>
                     <div>
                         <div id="loading"></div>
                 
