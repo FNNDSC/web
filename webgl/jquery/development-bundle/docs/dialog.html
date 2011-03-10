@@ -20,6 +20,9 @@
         <h3>Dependencies</h3>
         <ul>
 <li>UI Core</li>
+<li>UI Position</li>
+<li>UI Widget</li>
+<li>UI Mouse (Optional; only needed if using UI Draggable or UI Resizable)</li>
 <li>UI Draggable (Optional)</li>
 <li>UI Resizable (Optional)</li>
 </ul>
@@ -1004,6 +1007,45 @@ $( ".selector" ).dialog( "option", "zIndex", 3999 );</code></pre>
     <h2 class="top-header">Events</h2>
     <ul class="events-list">
       
+<li class="event" id="event-create">
+  <div class="event-header">
+    <h3 class="event-name"><a href="#event-create">create</a></h3>
+    <dl>
+      <dt class="event-type-label">Type:</dt>
+        <dd class="event-type">dialogcreate</dd>
+    </dl>
+  </div>
+  <div class="event-description">
+    <p>This event is triggered when dialog is created.</p>
+  </div>
+  <div class="event-examples">
+    <h4>Code examples</h4>
+    <dl class="event-examples-list">
+    
+<dt>
+  Supply a callback function to handle the <code>create</code> event as an init option.
+</dt>
+<dd>
+<pre><code>$( &quot;.selector&quot; ).dialog({
+   create: function(event, ui) { ... }
+});</code></pre>
+</dd>
+
+    
+<dt>
+  Bind to the <code>create</code> event by type: <code>dialogcreate</code>.
+</dt>
+<dd>
+<pre><code>$( &quot;.selector&quot; ).bind( &quot;dialogcreate&quot;, function(event, ui) {
+  ...
+});</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
 <li class="event" id="event-beforeClose">
   <div class="event-header">
     <h3 class="event-name"><a href="#event-beforeClose">beforeClose</a></h3>
@@ -1647,10 +1689,10 @@ $( ".selector" ).dialog( "option", "zIndex", 3999 );</code></pre>
 </div>
 
 </p><!-- 
-Pre-expand include size: 65074 bytes
-Post-expand include size: 110285 bytes
-Template argument size: 61376 bytes
+Pre-expand include size: 66595 bytes
+Post-expand include size: 113099 bytes
+Template argument size: 62032 bytes
 Maximum: 2097152 bytes
 -->
 
-<!-- Saved in parser cache with key jqdocs_docs:pcache:idhash:3775-1!1!0!!en!2 and timestamp 20101208014738 -->
+<!-- Saved in parser cache with key jqdocs_docs:pcache:idhash:3775-1!1!0!!en!2 and timestamp 20110222063039 -->

@@ -2037,6 +2037,45 @@ $( ".selector" ).datepicker( "option", "yearSuffix", 'CE' );</code></pre>
     <h2 class="top-header">Events</h2>
     <ul class="events-list">
       
+<li class="event" id="event-create">
+  <div class="event-header">
+    <h3 class="event-name"><a href="#event-create">create</a></h3>
+    <dl>
+      <dt class="event-type-label">Type:</dt>
+        <dd class="event-type">datepickercreate</dd>
+    </dl>
+  </div>
+  <div class="event-description">
+    <p>This event is triggered when datepicker is created.</p>
+  </div>
+  <div class="event-examples">
+    <h4>Code examples</h4>
+    <dl class="event-examples-list">
+    
+<dt>
+  Supply a callback function to handle the <code>create</code> event as an init option.
+</dt>
+<dd>
+<pre><code>$( &quot;.selector&quot; ).datepicker({
+   create: function(event, ui) { ... }
+});</code></pre>
+</dd>
+
+    
+<dt>
+  Bind to the <code>create</code> event by type: <code>datepickercreate</code>.
+</dt>
+<dd>
+<pre><code>$( &quot;.selector&quot; ).bind( &quot;datepickercreate&quot;, function(event, ui) {
+  ...
+});</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
 <li class="event" id="event-beforeShow">
   <div class="event-header">
     <h3 class="event-name"><a href="#event-beforeShow">beforeShow</a></h3>
@@ -2522,10 +2561,10 @@ $( ".selector" ).datepicker( "option", "yearSuffix", 'CE' );</code></pre>
 </div>
 
 </p><!-- 
-Pre-expand include size: 97121 bytes
-Post-expand include size: 190790 bytes
-Template argument size: 119786 bytes
+Pre-expand include size: 98642 bytes
+Post-expand include size: 193487 bytes
+Template argument size: 120361 bytes
 Maximum: 2097152 bytes
 -->
 
-<!-- Saved in parser cache with key jqdocs_docs:pcache:idhash:3774-1!1!0!!en!2 and timestamp 20101208184043 -->
+<!-- Saved in parser cache with key jqdocs_docs:pcache:idhash:3774-1!1!0!!en!2 and timestamp 20110222063018 -->
