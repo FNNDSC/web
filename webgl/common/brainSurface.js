@@ -80,6 +80,7 @@ BrainSurface = function()
         "uniform float uCurvMax;\n" +
         "uniform float uCurvMin;\n" +
         "uniform int uDrawCurvature;\n" +
+        "uniform int uThreshold;\n" +
 
         "varying vec3 vColor;\n" +
         "varying vec3 vNormal;\n" +
@@ -91,8 +92,17 @@ BrainSurface = function()
         "  if (uDrawCurvature != 0 )\n" +
         "  {\n" +
         "      float curvValue = (aCurvature - uCurvMin) / (uCurvMax - uCurvMin);\n" +
-        "      curvValue = clamp(curvValue, 0.0, 1.0);\n" +
-        "      vColor = curvValue * vec3(1.0, 0.0, 0.0) + (1.0 - curvValue) * vec3(0.0, 1.0, 0.0);\n" +
+        "      if (uThreshold != 0)\n" +
+        "      {\n" +           
+        "           if (curvValue <= 0.0 || curvValue >= 1.0)\n" +
+        "               vColor = vec3(0.5, 0.5, 0.5);\n" +
+        "           else\n" +
+        "               vColor = curvValue * vec3(1.0, 0.0, 0.0) + (1.0 - curvValue) * vec3(0.0, 1.0, 0.0);\n" +
+        "      }\n" +
+        "      else\n" +
+        "      {\n" +
+        "               vColor = curvValue * vec3(1.0, 0.0, 0.0) + (1.0 - curvValue) * vec3(0.0, 1.0, 0.0);\n" +
+        "      }\n" +
         "  }\n" +
         "  else\n" +
         "  {\n" +
@@ -179,7 +189,7 @@ BrainSurface.prototype =
     },
 
     // Draw the brain surface using WebGL
-    drawSurface: function(pMatrix, mvMatrix)
+    drawSurface: function(pMatrix, mvMatrix, threshold)
     {
         gl.useProgram(this.shaderProgram);
         
@@ -204,6 +214,7 @@ BrainSurface.prototype =
         gl.uniform3fv(this.shaderProgram.centerUniform, this.mrisFile.centerVect);
         gl.uniform1i(this.shaderProgram.drawCurvatureUniform, this.drawCurvature);
         gl.uniform1fv(this.shaderProgram.opacityUniform, this.opacity);
+        gl.uniform1i(this.shaderProgram.thresholdUniform, threshold);
 
         if ( this.drawCurvature )
         {
@@ -259,6 +270,7 @@ BrainSurface.prototype =
         this.shaderProgram.curvMaxUniform = gl.getUniformLocation(this.shaderProgram, "uCurvMax");
         this.shaderProgram.drawCurvatureUniform = gl.getUniformLocation(this.shaderProgram, "uDrawCurvature");
         this.shaderProgram.opacityUniform = gl.getUniformLocation(this.shaderProgram, "uOpacity");
+        this.shaderProgram.thresholdUniform = gl.getUniformLocation(this.shaderProgram, "uThreshold");
     },
 
     setOpacity: function(opacity)

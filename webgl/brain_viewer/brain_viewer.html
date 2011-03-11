@@ -2,6 +2,14 @@
 
 <head>
 <style type="text/css">
+                        html, body {
+			        height: 100%;
+			        background-color: #121212;
+			}
+                        body {
+			        margin: 0px;
+			        border: 0px;
+                        }
 			.box25 {
 				float: left;
 				width: 25%;
@@ -40,9 +48,30 @@
 <script type="text/javascript" src="../common/trkLoader.js"></script>
 <script type="text/javascript" src="../common/brainSurface.js"></script>
 <script type="text/javascript" src="../common/tractography.js"></script>
+<script type="text/javascript" src="../common/scalarBar.js"></script>
+<script type="text/javascript" src="../common/textLayer.js"></script>
+<script type="text/javascript" src="../common/histogram.js"></script>
+
+
 
 <script type="text/javascript">
 
+    /**
+     * Provides requestAnimationFrame in a cross browser
+     * way.
+     */
+  if (!window.requestAnimationFrame) {
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+             window.webkitRequestAnimationFrame ||
+             window.mozRequestAnimationFrame ||
+             window.oRequestAnimationFrame ||
+             window.msRequestAnimationFrame ||
+             function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
+               window.setTimeout(callback, 1000/60);
+             };
+    })();
+  }
        
   var gl;
   function initGL(canvas)
@@ -213,9 +242,13 @@
 
   var gBrainSurfaces = new Array(2);
   var gTracks = new Tractography();
+  var gScalarBar = null;
+  var gTextLayer = null;
+  var gHistogram = null;
   //@TEMP - for demo purposes, hardcode the url
   //var gBaseURL = location.search.substring(1);
-  var gBaseURL = '/demo_data/surf';
+  var gBaseURL = 'http://www.nmr.mgh.harvard.edu/~rudolph/demo_data/surf';
+  //var gBaseURL = 'http://localhost:8000/demo_data/surf';
   //@TEMP
 
   function loadMRIS(surface, surfaceFile, callback)
@@ -240,7 +273,7 @@
 
     
     perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
-    
+
     var scale = 0.01513;
 
     ////////////////////////////////////////////////////////////////////////
@@ -249,7 +282,21 @@
     loadIdentity();
     mvScale(scale, scale, scale);
     mvTranslate([0.0, 0.0, z / scale]);
+        
     multMatrix(brainRotationMatrix);
+
+    // This is need to switch from left-handed to right-handed coordinate
+    // frame for the tracks
+    var origMatrix = mvMatrix.dup();
+    mvMatrix.elements[0][1] = origMatrix.elements[0][2];
+    mvMatrix.elements[1][1] = origMatrix.elements[1][2];
+    mvMatrix.elements[2][1] = origMatrix.elements[2][2];
+
+    mvMatrix.elements[0][2] = origMatrix.elements[0][1];
+    mvMatrix.elements[1][2] = origMatrix.elements[1][1];
+    mvMatrix.elements[2][2] = origMatrix.elements[2][1];
+
+
     
     // I described the way these matrices are created here:
     //  http://surfer.nmr.mgh.harvard.edu/fswiki/FreeSurferTrackVisTransforms
@@ -284,23 +331,64 @@
     mvScale(scale, scale, scale);
     mvTranslate([0.0, 0.0, z / scale]);
     multMatrix(brainRotationMatrix);
+
+    // This is need to switch from left-handed to right-handed coordinate
+    // frame for the tracks
+    var origMatrix = mvMatrix.dup();
+    mvMatrix.elements[0][1] = origMatrix.elements[0][2];
+    mvMatrix.elements[1][1] = origMatrix.elements[1][2];
+    mvMatrix.elements[2][1] = origMatrix.elements[2][2];
+
+    mvMatrix.elements[0][2] = origMatrix.elements[0][1];
+    mvMatrix.elements[1][2] = origMatrix.elements[1][1];
+    mvMatrix.elements[2][2] = origMatrix.elements[2][1];
+    
     multMatrix(bbregmatrix);
 
-    gl.frontFace( gl.CW );
+    gl.frontFace( gl.CCW );
     gl.enable( gl.CULL_FACE );
     gl.enable( gl.BLEND );
     gl.blendFunc ( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA );
 
+    
+
     if (gHemisphere[0] && gBrainSurfaces[0].vertexPositionBuffer != null)
     {
-        gBrainSurfaces[0].drawSurface(pMatrix, mvMatrix);
+        gBrainSurfaces[0].drawSurface(pMatrix, mvMatrix, gThreshold);
     }
     if (gHemisphere[1] && gBrainSurfaces[1].vertexPositionBuffer != null)
     {
-        gBrainSurfaces[1].drawSurface(pMatrix, mvMatrix);
+        gBrainSurfaces[1].drawSurface(pMatrix, mvMatrix, gThreshold);
     }
 
-    gl.disable( gl.BLEND);        
+    // Draw 2D widgets
+    if (gBrainSurfaces[0].vertexCurvatureBuffer != null &&
+        gBrainSurfaces[1].vertexCurvatureBuffer != null &&
+        gBrainSurfaces[0].drawCurvature == 1 &&
+        gBrainSurfaces[1].drawCurvature == 1)
+    {
+        pMatrix = makeOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+        loadIdentity();
+        //mvTranslate([0.75, 0.6, -7.0]);
+        mvScale(0.03, 0.16, 1.0);
+        gScalarBar.draw(pMatrix, mvMatrix);
+
+        if (gShowHistogram)
+        {
+            loadIdentity();
+            mvTranslate([0.75, 0.0, 0.0]);
+            mvScale(0.12, 0.14, 1.0);
+            gHistogram.draw(pMatrix, mvMatrix, gBrainSurfaces[0].curCurvMin[0],
+                            gBrainSurfaces[0].curCurvMax[0]);
+        }
+
+        // Draw text
+        gTextLayer.startRendering('text');
+        gTextLayer.drawText(0.065, 0.99, gBrainSurfaces[0].curCurvMin[0].toFixed(2) );
+        gTextLayer.drawText(0.065, 0.85, gBrainSurfaces[0].curCurvMax[0].toFixed(2) );
+        gTextLayer.endRendering();
+    }
+    
   }
 
   var lastTime = 0;
@@ -315,6 +403,8 @@
   }
 
   function tick() {
+    var canvas = document.getElementById("webgl-canvas");
+    window.requestAnimationFrame(tick, canvas);
     
     handleKeys();
     drawScene();
@@ -324,15 +414,21 @@
 
   }
 
-
 var gHemisphere = [ true, true ];
 var gHemisphereNames = [ 'lh', 'rh' ];
 var gSurface = 'smoothwm'
 var gCurvature = undefined;
 var gShowTracks = true;
+var gThreshold = 0;
+var gShowHistogram = false;
+var gCurMinCurv = 0.0;
+var gCurMaxCurv = 0.0;
 
   function webGLStart() {
     var canvas = document.getElementById("webgl-canvas");
+    if (canvas == null)
+        return;
+
     initGL(canvas);
 
     $("#loading").empty().html('Loading, please wait...');
@@ -340,7 +436,16 @@ var gShowTracks = true;
     gBrainSurfaces[1] = new BrainSurface();    
     loadMRIS( gBrainSurfaces[0], gHemisphereNames[0] + '.' + gSurface, handleLoadedSurface );
     loadMRIS( gBrainSurfaces[1], gHemisphereNames[1] + '.' + gSurface, handleLoadedSurface);
-    gTracks.loadTracks("/demo_data/streamline.trk");
+    gTracks.loadTracks("http://www.nmr.mgh.harvard.edu/~rudolph/demo_data/streamline.trk");
+    //gTracks.loadTracks("http://localhost:8000/demo_data/streamline.trk");
+
+    gScalarBar = new ScalarBar();
+    gScalarBar.setColorRange([0.0, 1.0, 0.0, 1.0], [1.0, 0.0, 0.0, 1.0]);
+
+    gHistogram = new Histogram();
+    
+    gTextLayer = new TextLayer();
+
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
     gl.clearDepth(1.0);
@@ -355,7 +460,7 @@ var gShowTracks = true;
     document.onmousemove = handleMouseMove;
     document.onmousewheel = handleMouseWheel;
 
-    setInterval(tick, 15);
+    tick();
   }
 
 
@@ -369,8 +474,8 @@ function surfaceChanged()
 
 function toggleHemispheres()
 {
-    gHemisphere[1] = ($('#lh_hemisphere:checked').val() != undefined) ? true : false;
-    gHemisphere[0] = ($('#rh_hemisphere:checked').val() != undefined) ? true : false;
+    gHemisphere[0] = ($('#lh_hemisphere:checked').val() != undefined) ? true : false;
+    gHemisphere[1] = ($('#rh_hemisphere:checked').val() != undefined) ? true : false;
 }
 
 function toggleTracks()
@@ -378,27 +483,56 @@ function toggleTracks()
     gShowTracks = $('#tractography:checked').val();
 }
 
+function toggleThreshold()
+{
+    if ($('#threshold:checked').val() == "on")
+        gThreshold = 1;
+    else
+        gThreshold = 0;
+}
+
 function curvatureChanged()
 {
-    gCurvature = $('#curvature_select :selected').text();
+    gCurvature = $('#curvature_select :selected').val();
 
     if (gCurvature == 'None')
     {
         $( "#amount" ).val( ' ' );
         gBrainSurfaces[0].drawCurvature = 0;
         gBrainSurfaces[1].drawCurvature = 0;
+        gShowHistogram = false;
     }
     else
     {
         for (var hemi = 0; hemi < 2; hemi++)
         {
-            var crvFile = gHemisphereNames[hemi] + '.' + gSurface + '.' + gCurvature + '.crv';
+            var crvFile;
+            if (gCurvature == 'thickness')
+            {
+                crvFile = gHemisphereNames[hemi] + '.' + gCurvature;                
+            }
+            else
+            {
+                crvFile = gHemisphereNames[hemi] + '.' + gSurface + '.' + gCurvature + '.crv'                
+            }			  
             var crvURL = gBaseURL;
             console.log('URL: ' + crvURL + '/' + crvFile);
             gBrainSurfaces[hemi].loadCurvature(crvURL + '/' + crvFile, handleLoadedCurvature);
         }        
     }
 
+}
+
+function minHistChanged()
+{
+    gCurMinCurv = parseFloat($("#min_hist").val());
+    updateCurvature(true);
+}
+
+function maxHistChanged()
+{
+    gCurMaxCurv = parseFloat($("#max_hist").val());
+    updateCurvature(true);
 }
 
 function handleLoadedSurface(brainSurface)
@@ -418,31 +552,61 @@ function handleLoadedSurface(brainSurface)
     }
 }
 
+function updateCurvature(regenerateHistogram)
+{
+    var values = $( "#slider-range" ).slider( "option", "values" );
+    var minSlider = 0;
+    var maxSlider = 1000;
+
+    var curSliderMin = (values[0] - minSlider) / (maxSlider - minSlider);
+    var curSliderMax = (values[1] - minSlider) / (maxSlider - minSlider);
+ 
+    if (gBrainSurfaces[0].vertexCurvatureBuffer != null &&
+        gBrainSurfaces[1].vertexCurvatureBuffer != null)
+    {
+        for (var hemi = 0; hemi < 2; hemi++)
+        {
+            gBrainSurfaces[hemi].curCurvMin[0] = (1.0 - curSliderMin) * gCurMinCurv + curSliderMin * gCurMaxCurv;
+            gBrainSurfaces[hemi].curCurvMax[0] = (1.0 - curSliderMax) * gCurMinCurv + curSliderMax * gCurMaxCurv;
+        }
+
+        $( "#min_hist").val( gCurMinCurv.toFixed(2) );
+        $( "#max_hist").val( gCurMaxCurv.toFixed(2) );
+
+        if (regenerateHistogram == true)
+        {
+            var length1 = gBrainSurfaces[0].crvFile.vertexCurvatureBuffer.length;
+            var length2 = gBrainSurfaces[1].crvFile.vertexCurvatureBuffer.length;
+            var totalLength = length1 + length2;
+            var curvatureBuffer = new Float32Array(totalLength);
+            for (var i = 0; i < length1; i++)
+            {
+                curvatureBuffer[i] = gBrainSurfaces[0].crvFile.vertexCurvatureBuffer[i];
+            }
+            for (var i = 0; i < length2; i++)
+            {
+                curvatureBuffer[i + length1] = gBrainSurfaces[1].crvFile.vertexCurvatureBuffer[i];
+            }
+            gHistogram.computeHistogram(curvatureBuffer, totalLength, 100, gCurMinCurv, gCurMaxCurv);
+            gShowHistogram = true;
+        }
+    }
+}
+
 function handleLoadedCurvature(brainSurface)
 {
     if (gBrainSurfaces[0].vertexCurvatureBuffer != null &&
         gBrainSurfaces[1].vertexCurvatureBuffer != null)
-    {
-        var values = $( "#slider-range" ).slider( "option", "values" );
-        var minSlider = 0;
-        var maxSlider = 1000;
-
-        var curSliderMin = (values[0] - minSlider) / (maxSlider - minSlider);
-        var curSliderMax = (values[1] - minSlider) / (maxSlider - minSlider);
-
+    {        
         // Get the min/max from both hemispheres
-        var minCurv = gBrainSurfaces[0].crvFile.minCurv[1];
-        var maxCurv = gBrainSurfaces[0].crvFile.maxCurv[1];
-        if (gBrainSurfaces[1].crvFile.minCurv[1] < minCurv)
-            minCurv = gBrainSurfaces[1].crvFile.minCurv[1];
-        if (gBrainSurfaces[1].crvFile.maxCurv[1] < maxCurv)
-            maxCurv = gBrainSurfaces[1].crvFile.maxCurv[1];
+        gCurMinCurv = gBrainSurfaces[0].crvFile.minCurv[1];
+        gCurMaxCurv = gBrainSurfaces[0].crvFile.maxCurv[1];
+        if (gBrainSurfaces[1].crvFile.minCurv[1] < gCurMinCurv)
+            gCurMinCurv = gBrainSurfaces[1].crvFile.minCurv[1];
+        if (gBrainSurfaces[1].crvFile.maxCurv[1] < gCurMaxCurv)
+            gCurMaxCurv = gBrainSurfaces[1].crvFile.maxCurv[1];
 
-        for (var hemi = 0; hemi < 2; hemi++)
-        {
-            gBrainSurfaces[hemi].curCurvMin[0] = (1.0 - curSliderMin) * minCurv + curSliderMin * maxCurv;
-            gBrainSurfaces[hemi].curCurvMax[0] = (1.0 - curSliderMax) * minCurv + curSliderMax * maxCurv;
-        }
+        updateCurvature(true);
     }
 }
 
@@ -473,18 +637,10 @@ function handleCurvatureSlider(event, ui)
     var curSliderMin = (ui.values[0] - minSlider) / (maxSlider - minSlider);
     var curSliderMax = (ui.values[1] - minSlider) / (maxSlider - minSlider);
 
-    // Get the min/max from both hemispheres
-    var minCurv = gBrainSurfaces[0].crvFile.minCurv[1];
-    var maxCurv = gBrainSurfaces[0].crvFile.maxCurv[1];
-    if (gBrainSurfaces[1].crvFile.minCurv[1] < minCurv)
-        minCurv = gBrainSurfaces[1].crvFile.minCurv[1];
-    if (gBrainSurfaces[1].crvFile.maxCurv[1] < maxCurv)
-        maxCurv = gBrainSurfaces[1].crvFile.maxCurv[1];
-
     for (var hemi = 0; hemi < 2; hemi++)
     {
-        gBrainSurfaces[hemi].curCurvMin[0] = (1.0 - curSliderMin) * minCurv + curSliderMin * maxCurv;
-        gBrainSurfaces[hemi].curCurvMax[0] = (1.0 - curSliderMax) * minCurv + curSliderMax * maxCurv;
+        gBrainSurfaces[hemi].curCurvMin[0] = (1.0 - curSliderMin) * gCurMinCurv + curSliderMin * gCurMaxCurv;
+        gBrainSurfaces[hemi].curCurvMax[0] = (1.0 - curSliderMax) * gCurMinCurv + curSliderMax * gCurMaxCurv;
     }
 }
 
@@ -518,8 +674,16 @@ $(function() {
 			max: 100,
 			value: 15,
 			slide: handleTrackLengthSlider
-		});                
+		});
+
 	});
+
+			     
+        // Make sure the accordions get resized properly to 100%.
+        $(window).resize(function(){
+            $("#controls").accordion("resize");
+            $("#viewer").accordion("resize");
+        });
 
 </script>
 
@@ -556,24 +720,113 @@ $(function() {
 
                         </form>
                         <form>
-                            Curvature:
+                            Surface Overlay:
                                 <SELECT id="curvature_select" onchange="curvatureChanged()">
                                     <option value="None">None</option>
+                                    <option value="K1">k&#x2081;</option>
+                                    <option value="K2">k&#x2082;</option>
+                                    <option value="K">K</option>
+                                    <option selected value="H">H</option>
                                     <option value="BE">BE</option>
                                     <option value="C">C</option>
-                                    <option value="FI">FI</option>
-                                    <option selected value="H">H</option>
-                                    <option value="K">K</option>
-                                    <option value="K1">K1</option>
-                                    <option value="K2">K2</option>
                                     <option value="S">S</option>
+                                    <option value="FI">FI</option>
+				    <option value="thickness">Thickness</option>
                                 </SELECT>
-                                <BR/>
+                                <input type="checkbox" id="threshold" onclick="toggleThreshold()" />Threshold
+                                <BR/>                                
                         </form>
-                        Curvature display range:
+                        <BR>
+                        Surface Overlay Display Range:
                         <div id="slider-range"></div>
+                        Histogram Min: <input type="text" id="min_hist" size="6" onchange="minHistChanged()"/>
+                        Max: <input type="text" id="max_hist" size="6" onchange="maxHistChanged()"/>
+                        <BR/>
+                        <BR/>
                         Minimum Track Length:
                             <div id="slider-tracklength"></div>
+
+                                <p>
+                                The <strong>pial</strong> surface is the "outer" cortical surface and
+                                represents the boundary between gray matter and cerebrospinal fluid. Typically,
+                                it is the surface that comes to mind when visually thinking of a brain. The
+                                gray matter is usually only a few millimeters thick and plays a key role in
+                                higher functioning and consciousness.
+                                </p>
+
+                                <p>
+                                The <strong>white matter</strong> surface marks the boundary between the
+                                outer gray tissue and the inner white tissue. The white matter (is more accurately
+                                pinkish white to the naked eye but appears white when preserved with
+                                formaldehyde) consists of organized bundles of fibers. Each fiber is
+                                wrapped in a sheath of lipid (fat) myelin that allows for faster
+                                conduction of nerve signals vis-a-vis unsheathed gray matter. The
+                                organized fiber tracks in the white matter connect various cortical
+                                regions to each other. To stretch an analogy, if the gray matter of the brain is
+                                thought of as CPU cores, the white matter represents the wiring
+                                connecting the cores together. In this experiment, the "wiring"
+                                can be seen by dialing down the surface opacity. Tracks that
+                                tend to run inferior/superior are blue; lateral/medial are red; and
+                                anterior/posterior are green.
+                                </p>
+
+                                <p><strong>Surface overlay functions</strong> are calculated at each point
+                                on a surface, and colored according to value. Adjust the "Surface Overlay Display
+                                Range" slider to enhance the color contrast. Any surface embedded in
+                                3D space, has, at each point, curvatures in all directions along
+                                the surface from that point. The minimum and maximum curvatures
+                                are known as the <strong>principal curvatures</strong>: the maximal
+                                curvature is called <em>k</em>&#x2081; and the minimal curvature
+                                is called <em>k</em>&#x2082;
+                                </p>
+
+                                <p>
+                                We have the following surface overlays (which are calculated at each
+                                vertex point on a surface mesh):
+                                <ul>
+                                <li>
+                                <em>k</em>&#x2081;: Maximum principal curvature --  tends to highlight the folds
+                                of the brain along their main axes.
+                                </li>
+                                <li>
+                                <em>k</em>&#x2082;: Minimal principal curvature --  tends to tag small undulations
+                                along brain folds.
+                                </li>
+                                <li>
+                                <em>K</em> = <em>k</em>&#x2081<em>k</em>&#x2082;: Gaussian curvature -- a property intrinsic to a
+                                surface; highlights whether folds are "simple" cylinder or "sheared" spherical.
+                                </li>
+                                <li>
+                                <em>H</em> = &frac12;(<em>k</em>&#x2081; + <em>k</em>&#x2082;): Mean curvature -- an
+                                extrinsic surface property; provides the average curvature at a point.
+                                </li>
+                                <li>
+                                <em>BE</em> = <em>k</em>&#x2081;&sup2; + <em>k</em>&#x2082;&sup2;: Bending Energy -- related to
+                                the energy required to bend a flat sheet into shape at a point.
+                                </li>
+                                <li>
+                                <em>C</em> = &radic;(&frac12;(<em>k</em>&#x2081;&sup2; + <em>k</em>&#x2082;&sup2;)): Curvedness --
+                                tends to "soften" the BE map.
+                                </li>
+                                <li>
+                                <em>S</em> = (<em>k</em>&#x2081; - <em>k</em>&#x2082;)&sup2;: Sharpness -- highlights the "sharpest" 
+                                parts on gyral peaks and within sulcal troughs.
+                                </li>
+                                <li>
+                                <em>FI</em> = |<em>k</em>&#x2081;|
+                                (|<em>k</em>&#x2081;| - |<em>k</em>&#x2082;|): Folding Index
+                                </li>
+                                <li>
+                                <em>thickness</em> = The "thickness" of the cortex (i.e. the distance between the gray and
+                                white surfaces) at each surface point.
+                                </li>
+
+                                </ul>
+
+
+                                </p>
+
+
                     </div>
                     <h5><a href="#">Info</a></h5>
                     <div>
@@ -621,6 +874,7 @@ $(function() {
                         <div id="loading"></div>
                 
                         <canvas id="webgl-canvas" ></canvas>
+                        <canvas id="text" style="display:none" width="512" height="512"></canvas>
                     </div>
                 </div>
         </div>
