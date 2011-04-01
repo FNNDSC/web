@@ -31,7 +31,12 @@
                             width: 100%;
                             height:100%;
                         }
-}
+
+                        .centered_text {
+                            font-size: 10px;
+                            text-align: center;                            
+                        }
+
 		</style>
 <title>Brain Surface and Tractography Viewer</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
@@ -497,7 +502,10 @@ function curvatureChanged()
 
     if (gCurvature == 'None')
     {
-        $( "#amount" ).val( ' ' );
+        $( "#min_hist").val( '' );
+        $( "#max_hist").val( '' );
+        $( "#curv_stats_lh" ).val( '' );
+        $( "#curv_stats_rh" ).val( '' );
         gBrainSurfaces[0].drawCurvature = 0;
         gBrainSurfaces[1].drawCurvature = 0;
         gShowHistogram = false;
@@ -570,8 +578,29 @@ function updateCurvature(regenerateHistogram)
             gBrainSurfaces[hemi].curCurvMax[0] = (1.0 - curSliderMax) * gCurMinCurv + curSliderMax * gCurMaxCurv;
         }
 
-        $( "#min_hist").val( gCurMinCurv.toFixed(2) );
-        $( "#max_hist").val( gCurMaxCurv.toFixed(2) );
+        if (gCurvature != 'None')
+        {
+            $( "#min_hist").val( gCurMinCurv.toFixed(2) );
+            $( "#max_hist").val( gCurMaxCurv.toFixed(2) );
+
+            $( "#curv_stats_lh").text('Left Hemi Range: (' + gBrainSurfaces[0].crvFile.minCurv[0].toFixed(2) +
+                                        ', ' + gBrainSurfaces[0].crvFile.maxCurv[0].toFixed(2) +
+                                        ') Mean: ' + gBrainSurfaces[0].crvFile.mean.toFixed(2) +
+                                        ' Std Dev: ' + gBrainSurfaces[0].crvFile.stdDev.toFixed(2));
+                                    
+            $( "#curv_stats_rh").text('Right Hemi Range: (' + gBrainSurfaces[1].crvFile.minCurv[0].toFixed(2) +
+                                       ', ' + gBrainSurfaces[1].crvFile.maxCurv[0].toFixed(2) +
+                                        ') Mean: ' + gBrainSurfaces[1].crvFile.mean.toFixed(2) +
+                                        ' Std Dev: ' + gBrainSurfaces[1].crvFile.stdDev.toFixed(2));
+        }
+        else
+        {
+            $( "#min_hist").val( '' );
+            $( "#max_hist").val( '' );
+            $( "#curv_stats_lh").text( '' );
+            $( "#curv_stats_rh").text( '' );
+        }
+
 
         if (regenerateHistogram == true)
         {
@@ -741,6 +770,12 @@ $(function() {
                         <div id="slider-range"></div>
                         Histogram Min: <input type="text" id="min_hist" size="6" onchange="minHistChanged()"/>
                         Max: <input type="text" id="max_hist" size="6" onchange="maxHistChanged()"/>
+                        <BR/>
+                        <div class="centered_text">
+                            <label id="curv_stats_lh" for="max_hist"></label>
+                            <BR/>
+                            <label id="curv_stats_rh" for="max_hist"></label>
+                        </div>
                         <BR/>
                         <BR/>
                         Minimum Track Length:

@@ -25,6 +25,8 @@ CRVFile = function()
     this.negMean = 0.0;
     this.posStdDev = 0.0;
     this.negStdDev = 0.0;
+    this.mean = 0.0;
+    this.stdDev = 0.0;
 
     this.vertexCurvatures = null;
     this.vertexCurvatureBuffer = null;
@@ -95,6 +97,8 @@ CRVLoader.prototype =
         var numNegValues = 0;
         var negSum = 0.0;
         var posSum = 0.0;
+        var sum = 0.0;
+        var numValues = 0;
         crvFile.vertexCurvatures = new Float32Array( crvFile.numVertices );
         for( var k = 0; k < crvFile.numVertices; k++ )
         {
@@ -114,6 +118,9 @@ CRVLoader.prototype =
                 numNegValues++;
                 negSum += curv;
             }
+
+            sum += curv;
+            numValues++;
 
             if ( curv > crvFile.maxCurv[0] )
                 crvFile.maxCurv[0] = curv;
@@ -142,8 +149,19 @@ CRVLoader.prototype =
             crvFile.negMean = negSum / numNegValues;
         }
 
+        if (numValues == 0)
+        {
+            crvFile.mean = 0;
+        }
+        else
+        {
+            crvFile.mean = sum / numValues;
+        }
+
+
         posSum = 0.0;
         negSum = 0.0;
+        sum = 0.0;
         for (var i = 0; i < crvFile.numVertices; i++)
         {
             var curv = crvFile.vertexCurvatures[i];
@@ -158,6 +176,9 @@ CRVLoader.prototype =
                 diffSq = Math.pow((curv - crvFile.negMean), 2);
                 negSum += diffSq;
             }
+
+            diffSq = Math.pow((curv - crvFile.mean), 2);
+            sum += diffSq;
         }
 
         if (numPosValues > 1)
@@ -177,6 +198,16 @@ CRVLoader.prototype =
         {
             crvFile.negStdDev = 0;
         }
+
+        if (numValues > 1)
+        {
+            crvFile.stdDev = Math.sqrt(sum / (numValues - 1));
+        }
+        else
+        {
+            crvFile.stdDev = 0;
+        }
+
         
 
         // Store also 2.5 standard deviations from each mean.  This is
