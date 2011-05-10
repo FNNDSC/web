@@ -84,9 +84,9 @@ VolumeGeometry = function ()
     this.z_r = 0.0;
     this.z_a = 1.0;
     this.z_s = 0.0;
-    this.c_r = 0.6794;
-    this.c_a = 13.3063;
-    this.c_s = 16.1304;
+    this.c_r = -6.2794;
+    this.c_a = -13.4996;
+    this.c_s = 4.4444;;
    //@TEMP
 }
 

@@ -279,8 +279,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   var gHistogram = null;
   //@TEMP - for demo purposes, hardcode the url
   //var gBaseURL = location.search.substring(1);
-  var gBaseURL = 'http://www.nmr.mgh.harvard.edu/~rudolph/demo_data/surf';
-  //var gBaseURL = 'http://localhost:8000/demo_data/surf';
+//  var gBaseURL = 'http://www.nmr.mgh.harvard.edu/~rudolph/demo_data/surf';
+  var gBaseURL = 'http://localhost:8000/demo_data_pvl/surf';
   //@TEMP
 
   function loadMRIS(surface, surfaceFile, callback)
@@ -337,15 +337,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     // mri_info dti_b0.nii --vox2ras-tkr
     var CRSd2XYZtkreg = $M([[-2.00000,   0.00000,   0.00000,  110.00000],
-                            [0.00000,    0.00000,    2.00000,  -79.00000],
+                            [0.00000,    0.00000,    2.00000,  -71.00000],
                             [0.00000,   -2.00000,    0.00000,  110.00000],
                             [0.00000,    0.00000,    0.00000,    1.00000]]);
 
     // bbregister --s <subject> --mov dti_b0.nii --init-fsl --reg bbregister.dat --bold --tol1d 1e-3
-    var bbregmatrix = $M([[9.994560e-01, -2.959258e-02, -1.456270e-02, -2.266882e+00],
-                          [1.266916e-02, -6.318483e-02, 9.979210e-01, -2.148178e+01],
-                          [3.045095e-02, 9.975628e-01, 6.277557e-02, 4.659803e-01],
+    var bbregmatrix = $M([[9.992089867591858e-01, 2.652833424508572e-02, 2.959738858044147e-02, -1.404523849487305e+00], 
+                          [-2.943054959177971e-02, -6.642243359237909e-03, 9.995449185371399e-01, -9.628264427185059e+00],
+                          [-2.671264298260212e-02, 9.996254444122314e-01, 5.856084171682596e-03, -2.631434440612793e+00],
                           [0, 0, 0, 1]]);
+
 
     multMatrix(CRSd2XYZtkreg);
 
@@ -468,8 +469,8 @@ var gCurMaxCurv = 0.0;
     gBrainSurfaces[1] = new BrainSurface();    
     loadMRIS( gBrainSurfaces[0], gHemisphereNames[0] + '.' + gSurface, handleLoadedSurface );
     loadMRIS( gBrainSurfaces[1], gHemisphereNames[1] + '.' + gSurface, handleLoadedSurface);
-    gTracks.loadTracks("http://www.nmr.mgh.harvard.edu/~rudolph/demo_data/streamline.trk");
-    //gTracks.loadTracks("http://localhost:8000/demo_data/streamline.trk");
+    //gTracks.loadTracks("http://www.nmr.mgh.harvard.edu/~rudolph/demo_data/streamline.trk");
+    gTracks.loadTracks("http://localhost:8000/demo_data_pvl/streamline.trk");
 
     gScalarBar = new ScalarBar();
     gScalarBar.setColorRange([0.0, 1.0, 0.0, 1.0], [1.0, 0.0, 0.0, 1.0]);
@@ -714,7 +715,7 @@ $(function() {
 			range: true,
 			min: 0,
 			max: 1000,
-			values: [ 420, 576 ],
+			values: [ 590, 778 ],
 			slide: handleCurvatureSlider
 		});
                 $( "#slider-opacity" ).slider({
@@ -728,7 +729,7 @@ $(function() {
                         range: false,
 			min: 0,
 			max: 100,
-			value: 15,
+			value: 0,
 			slide: handleTrackLengthSlider
 		});
 

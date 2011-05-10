@@ -146,7 +146,7 @@ Tractography.prototype =
 
         self.trackScale = trkFile.scaleVect;
         self.trackCenter = trkFile.centerVect;
-        self.minTrackLength[0] = 15.0; // a reasonable default
+        self.minTrackLength[0] = 0.0; 
     },
 
     // Draw the brain tracks using WebGL
