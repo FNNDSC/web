@@ -82,7 +82,7 @@ PipelineOptionsConnectome::~PipelineOptionsConnectome()
 void PipelineOptionsConnectome::resetAll()
 {
     PipelineOptionsTract::resetAll();
-    mTalairachCheckBox->setChecked(false);
+    mTalairachCheckBox->setChecked(true);
 }
 
 ///

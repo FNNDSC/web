@@ -85,7 +85,7 @@ void PipelineOptionsFS::resetAll()
        mStageBoxes[i]->setChecked(true);
     }
 
-    mTalairachCheckBox->setChecked(false);
+    mTalairachCheckBox->setChecked(true);
 }
 
 ///
