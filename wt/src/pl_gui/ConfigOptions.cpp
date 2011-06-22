@@ -36,7 +36,7 @@ using namespace boost::program_options;
 //
 ConfigOptions::ConfigOptions() :
     // Default options
-    mDicomDir("/chb/osx1927/1/users/dicom/files/")
+    mDicomDir("/chb/users/dicom/files/")
 {
     mOptionDesc = new options_description("Allowable options");
     mOptionDesc->add_options()
