@@ -136,11 +136,11 @@ void MonitorResultsTab::jobSelectedChanged(std::string jobSelectedFile, std::str
 {
     path logBaseDir = path(jobSelectedFile).branch_path();
     std::string scanDir = logBaseDir.branch_path().string();
-    string scriptFileName = path(jobSelectedFile).leaf();
+    string scriptFileName = path(jobSelectedFile).leaf().string();
 
     mResultsBrowser->setPipelineName(scriptFileName);
 
-    std::string logDirName = logBaseDir.leaf();
+    std::string logDirName = logBaseDir.leaf().string();
 
     if (mMRIBrowser != NULL)
     {

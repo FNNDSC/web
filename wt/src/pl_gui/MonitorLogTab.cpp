@@ -174,7 +174,7 @@ void MonitorLogTab::jobSelectedChanged(std::string jobSelectedFile, std::string 
     path logBaseDir = path(jobSelectedFile).branch_path();
     std::string scanDir = logBaseDir.branch_path().string();
 
-    std::string logDirName = logBaseDir.leaf();
+    std::string logDirName = logBaseDir.leaf().string();
     mLogFileBrowser->setLogBaseDir(logBaseDir.string());
 
     if (mMRIBrowser != NULL)

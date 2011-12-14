@@ -386,7 +386,7 @@ void PipelineApp::projectChosen(std::string projectPath)
     // seems to have fixed itself
     mResultsPage->resetAll();
 
-    mCurrentProjectLabel->setText(WString("Current Project: [{1}]").arg(path(projectPath).stem()));
+    mCurrentProjectLabel->setText(WString("Current Project: [{1}]").arg(path(projectPath).stem().string()));
 
     // Not really a path, don't try to load it
     if (projectPath.find("/") == std::string::npos)

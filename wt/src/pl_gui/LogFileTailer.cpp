@@ -71,7 +71,7 @@ LogFileTailer::LogFileTailer(const std::string& logFileName,
 {
     WVBoxLayout *layout = new WVBoxLayout();
 
-    mLogFileGroupBox = new WGroupBox(path(logFileName).leaf());
+    mLogFileGroupBox = new WGroupBox(path(logFileName).leaf().string());
 
     mLogFileTextArea = new WTextArea("");
 
@@ -157,7 +157,7 @@ void LogFileTailer::finalize()
 void LogFileTailer::setLogFile(const std::string& logFileName)
 {
     mLogFileName = logFileName;
-    mLogFileGroupBox->setTitle(path(mLogFileName).leaf());
+    mLogFileGroupBox->setTitle(path(mLogFileName).leaf().string());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

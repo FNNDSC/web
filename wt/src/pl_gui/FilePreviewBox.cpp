@@ -159,10 +159,10 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
         path filePath = path(filePathStr);
         path fileDir = filePath.branch_path();
 
-        mFileName->setText(filePath.leaf());
+        mFileName->setText(filePath.leaf().string());
         mFileDir->setText(fileDir.string());
         mDownloadFileResource->setFileName(filePathStr);
-        mDownloadFileResource->suggestFileName(filePath.leaf());
+        mDownloadFileResource->suggestFileName(filePath.leaf().string());
 
         mFileSize->setText(WString("{1} Bytes").arg((int)file_size(filePath)));
 
@@ -170,7 +170,7 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
         {
             if (mImageResource == NULL)
             {
-                mImageResource = new WFileResource("image/" + filePath.extension(), filePathStr);
+                mImageResource = new WFileResource("image/" + filePath.extension().string(), filePathStr);
             }
             else
             {
@@ -219,7 +219,7 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
                     // See if a file matching the preview expression exists
                     for(directory_iterator dirIter(fileDir); dirIter != directory_iterator(); ++dirIter)
                     {
-                        const string& fileName = dirIter->path().filename();
+                        const string& fileName = dirIter->path().filename().string();
 
                         // Skip if no match
                         if( !fileMatchesExpression( fileName, (*iter).mPreviewExpression ) )
@@ -229,7 +229,7 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
                         {
                             if (mImageResource == NULL)
                             {
-                                mImageResource = new WFileResource("image/" + dirIter->path().extension(), dirIter->path().string());
+                                mImageResource = new WFileResource("image/" + dirIter->path().extension().string(), dirIter->path().string());
                             }
                             else
                             {

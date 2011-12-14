@@ -233,7 +233,7 @@ void ResultsBrowser::addFilesFromTree(WStandardItem *item, const std::string& ba
 
         for(directory_iterator dirIter(basePath); dirIter != directory_iterator(); ++dirIter)
         {
-            const string& fileName = dirIter->path().filename();
+            const string& fileName = dirIter->path().filename().string();
 
             boost::smatch what;
 
@@ -259,7 +259,7 @@ void ResultsBrowser::addFilesFromTree(WStandardItem *item, const std::string& ba
             else if(!is_directory(dirIter->path()) && !node.mDirectory)
             {
                 addEntry(false, depth,
-                         dirIter->path().branch_path().string(), dirIter->path().leaf(),
+                         dirIter->path().branch_path().string(), dirIter->path().leaf().string(),
                          index);
 
                 mResultFileEntries.push_back(dirIter->path().string());
@@ -338,7 +338,7 @@ void ResultsBrowser::createTarArchive()
 
     path dirPath = path(mResultsBaseDir);
     string cmdToExecute;
-    cmdToExecute = string("tar cvzf ") + tmpName + " -C " + dirPath.branch_path().string() + " " + dirPath.leaf();
+    cmdToExecute = string("tar cvzf ") + tmpName + " -C " + dirPath.branch_path().string() + " " + dirPath.leaf().string();
 
     context ctx;
     child c = launch_shell(cmdToExecute.c_str(), ctx);
@@ -370,7 +370,7 @@ void ResultsBrowser::createTarArchive()
         fclose(fp);
 
         mTarMemResource->setData(mTarBuffer, size);
-        mTarMemResource->suggestFileName(path(mResultsBaseDir).leaf() + ".tar.gz");
+        mTarMemResource->suggestFileName(path(mResultsBaseDir).leaf().string() + ".tar.gz");
 
         // Remove the temp file
         cmdToExecute = string("rm -rf ") + tmpName;

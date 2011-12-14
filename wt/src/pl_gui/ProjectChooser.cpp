@@ -128,7 +128,7 @@ void ProjectChooser::resetAll()
     {
         for(directory_iterator dirIter(userProjectDir); dirIter != directory_iterator(); ++dirIter)
         {
-            const string& extension = dirIter->path().extension();
+            const string& extension = dirIter->path().extension().string();
 
             if (extension == ".xml")
             {

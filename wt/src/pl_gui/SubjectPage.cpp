@@ -362,7 +362,7 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
         clock_gettime(CLOCK_REALTIME, &timeSpec);
 
 
-        tmpFile << path(scansToProcess[i].mScanDir).leaf() << ";"
+        tmpFile << path(scansToProcess[i].mScanDir).leaf().string() << ";"
                 << scansToProcess[i].mDicomFile << ";"
                 << "-" << date << "_" << age << "-" << curDate << "-" << timeSpec.tv_sec << timeSpec.tv_nsec << "-" << mPipelineConfigure->getOutputFileSuffix() << ";"
                 << "-" << date << "_" << age << "-" << curDate << "-" << timeSpec.tv_sec << timeSpec.tv_nsec << "-" << mPipelineConfigure->getOutputDirSuffix();
@@ -403,7 +403,7 @@ bool SubjectPage::submitForProcessing(const std::string& pipelineCommandLineStri
 
     // Create the following command line args for running pl_batch
     //  -v 10 -t <tmpfile> -T <pipelineType>
-    commandArgs = "\"-v 10 -t " + path(string(tmpName)).leaf() + " -T ";
+    commandArgs = "\"-v 10 -t " + path(string(tmpName)).leaf().string() + " -T ";
     commandArgs += mSelectScans->getCurrentPipelineAsString();
     commandArgs += "\"";
 

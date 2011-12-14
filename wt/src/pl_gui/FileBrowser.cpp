@@ -227,7 +227,7 @@ bool FileBrowser::addEntry(bool rootDir, int entryDepth,
                 {
                     dirPath = dirPath.branch_path();
                 }
-                std::string folderLeafName = path(dirPath).leaf();
+                std::string folderLeafName = path(dirPath).leaf().string();
 
                 boost::any displayData = item->data(DisplayRole);
                 if (!displayData.empty())
@@ -263,13 +263,13 @@ bool FileBrowser::addEntry(bool rootDir, int entryDepth,
                 {
                     dirPath = dirPath.branch_path();
                 }
-                std::string folderLeafName = path(dirPath).leaf();
+                std::string folderLeafName = path(dirPath).leaf().string();
 
                 bool addFolder = true;
                 for (int row = 0; row < lastItem->rowCount(); row++)
                 {
                     WStandardItem *item = lastItem->child(row);
-                    std::string folderLeafName = path(dirPath).leaf();
+                    std::string folderLeafName = path(dirPath).leaf().string();
 
                     boost::any displayData = item->data(DisplayRole);
                     if (!displayData.empty())
@@ -314,12 +314,12 @@ bool FileBrowser::addEntry(bool rootDir, int entryDepth,
             {
                 dirPath = dirPath.branch_path();
             }
-            std::string folderLeafName = path(dirPath).leaf();
+            std::string folderLeafName = path(dirPath).leaf().string();
 
             for (int row = 0; row < lastItem->rowCount(); row++)
             {
                 WStandardItem *item = lastItem->child(row);
-                std::string folderLeafName = path(dirPath).leaf();
+                std::string folderLeafName = path(dirPath).leaf().string();
 
                 boost::any displayData = item->data(DisplayRole);
                 if (!displayData.empty())

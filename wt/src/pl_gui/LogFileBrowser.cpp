@@ -191,7 +191,7 @@ void LogFileBrowser::addLogEntriesFromDir(const path& logDir, bool rootDir, int 
 
             if (stdOutFile || stdErrFile)
             {
-                std::string baseLogName = itr->path().leaf();
+                std::string baseLogName = itr->path().leaf().string();
                 std::string baseLogDir = itr->path().branch_path().string();
 
                 baseLogName.erase(baseLogName.length() - 4); // Strip the last extension
