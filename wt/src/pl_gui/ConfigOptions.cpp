@@ -59,7 +59,7 @@ ConfigOptions::ConfigOptions() :
         ("adminGroup",      value<string>(), "Admin group")
         ("anonCertificate", value<string>(), "Anonymizing certificate")
         ("jobIDPrefix",     value<string>(), "Job ID Prefix")
-        ("authentication",  value<string>(), "Authentication Style (must be 'nis' or 'htpasswd')")
+        ("authentication",  value<string>(), "Authentication Style (must be 'ssh','nis' or 'htpasswd')")
         ("htpasswdFile",    value<string>(), "htpasswd file (if authentication=htpasswd)")
         ;
 }
@@ -198,10 +198,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         }
 
 
-        mAuthenticationStyle == AUTHENTICATION_NIS; // Default: NIS
+        mAuthenticationStyle == AUTHENTICATION_SSH; // Default: NIS
         if (vm.count("authentication"))
         {
             std::string authenticationStyle = vm["authentication"].as<string>();
+            mAuthenticationStyleAsString = authenticationStyle;
 
             if (authenticationStyle == "nis")
             {
@@ -210,6 +211,10 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             else if (authenticationStyle == "htpasswd")
             {
                 mAuthenticationStyle = AUTHENTICATION_HTPASSWD;
+            }
+            else if (authenticationStyle == "ssh")
+            {
+                mAuthenticationStyle = AUTHENTICATION_SSH;
             }
             else
             {
@@ -241,8 +246,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[Admin Group:] " << mAdminGroup;
         WApplication::instance()->log("info") << "[Anonymizing Certificate:] " << mAnonCertificate;
         WApplication::instance()->log("info") << "[Job ID Prefix:] " << mJobIDPrefix;
-        WApplication::instance()->log("info") << "[Authentication:] " <<
-            ((mAuthenticationStyle == AUTHENTICATION_NIS) ? std::string("nis") : std::string("htpasswd"));
+        WApplication::instance()->log("info") << "[Authentication:] " << mAuthenticationStyleAsString;
         WApplication::instance()->log("info") << "[htpasswd File:] " << mHtpasswdFile;
         configFile.close();
     }

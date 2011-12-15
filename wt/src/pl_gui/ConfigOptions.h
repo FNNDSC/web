@@ -28,7 +28,8 @@ public:
     typedef enum
     {
         AUTHENTICATION_NIS,
-        AUTHENTICATION_HTPASSWD
+        AUTHENTICATION_HTPASSWD,
+        AUTHENTICATION_SSH
     } AuthenticationStyle;
 
     ///
@@ -135,6 +136,9 @@ private:
 
     /// Authentication style
     AuthenticationStyle mAuthenticationStyle;
+
+    /// Authentication style as string
+    std::string mAuthenticationStyleAsString;
 
     /// htpasswd File (if authentication=htpasswd)
     std::string mHtpasswdFile;

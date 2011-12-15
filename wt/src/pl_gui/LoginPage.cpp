@@ -207,6 +207,14 @@ void LoginPage::login()
         cmdToExecute = "ypmatch " + mUserNameLineEdit->text().toUTF8() + " passwd";
         cmdToExecute += "| awk -F \":\" '{ print $2 }'";
     }
+    else if (getConfigOptionsPtr()->GetAuthenticationStyle() == ConfigOptions::AUTHENTICATION_SSH)
+    {
+        // ssh - try to login to localhost
+        WApplication::instance()->log("info") << "Using SSH to login!";
+        // try to login to localhost with the given user credentials and copy the /etc/hostname file to /tmp
+        cmdToExecute = "sshpass -p '" + mPasswordLineEdit->text().toUTF8() + "' scp -o StrictHostKeyChecking=no " + mUserNameLineEdit->text().toUTF8() + "@localhost:/etc/hostname /tmp";
+
+    }
     // htpasswd - use htpasswd file specified in configuration options
     else
     {
@@ -221,36 +229,26 @@ void LoginPage::login()
     child c = launch_shell(cmdToExecute, ctx);
     boost::processes::status s = c.wait();
 
-    // Get the returned encoded password
-    stream<boost::processes::pipe_end> is(c.get_stdout());
-    std::string encodedPassword;
-
-    try
-    {
-        is >> encodedPassword;
-    }
-    catch(...)
-    {
+    if ( s.exit_status() != 0 ) {
+        // something went wrong
+        WApplication::instance()->log("info") << "Error executing: " << cmdToExecute << " and returned with exit status: " << s.exit_status();
         mFailureLabel->show();
         return;
+
     }
 
+    std::string encodedPassword;
     char *enteredEncodedPassword = NULL;
 
-    // DES
-    if ( encodedPassword.size() == 13 )
-    {
-        for (int i = 0; i < 2; i++)
-        {
-            salt[i] = encodedPassword[i];
-        }
-        // Encrypt the password using DES with OpenSSL
-        enteredEncodedPassword = DES_crypt(passwd, salt);
+    if (getConfigOptionsPtr()->GetAuthenticationStyle() == ConfigOptions::AUTHENTICATION_SSH) {
 
-    }
-    // MD5
-    else if ( encodedPassword.size() > (sizeof(salt) + 4) )
-    {
+        // SSH
+
+        // the user logged in successfully since the sshpass command returned 0
+        
+        // to use the old code, we just simulate a successful login by setting
+        // the two password hashes to the same value
+
         // The salt comes from characters 3 - 10, which is in between
         // the second and third "$"
         for (int i = 0; i < 8; i++)
@@ -259,7 +257,53 @@ void LoginPage::login()
         }
 
         // Encrypt the entered password using MD5 encrypting with OpenSSL
-        enteredEncodedPassword = md5crypt(passwd, magic, salt);
+        enteredEncodedPassword = md5crypt(passwd, magic, salt);      
+        encodedPassword = enteredEncodedPassword;
+
+        WApplication::instance()->log("info") << "Passwords adjusted!";
+
+
+    }
+    else
+    {
+
+        // Get the returned encoded password
+        stream<boost::processes::pipe_end> is(c.get_stdout());
+
+        try
+        {
+            is >> encodedPassword;
+        }
+        catch(...)
+        {
+            mFailureLabel->show();
+            return;
+        }
+
+        // DES
+        if ( encodedPassword.size() == 13 )
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                salt[i] = encodedPassword[i];
+            }
+            // Encrypt the password using DES with OpenSSL
+            enteredEncodedPassword = DES_crypt(passwd, salt);
+
+        }  
+        // MD5
+        else if ( encodedPassword.size() > (sizeof(salt) + 4) )
+        {
+            // The salt comes from characters 3 - 10, which is in between
+            // the second and third "$"
+            for (int i = 0; i < 8; i++)
+            {
+                salt[i] = encodedPassword[i+3];
+            }
+
+            // Encrypt the entered password using MD5 encrypting with OpenSSL
+            enteredEncodedPassword = md5crypt(passwd, magic, salt);
+        }
     }
 
     if (enteredEncodedPassword == NULL)
@@ -269,9 +313,11 @@ void LoginPage::login()
     }
 
     // If the passwords match, the user can login.
-    //    if (!strcmp(enteredEncodedPassword, encodedPassword.c_str()))
-    if(1)
+    if (!strcmp(enteredEncodedPassword, encodedPassword.c_str()))
     {
+
+        WApplication::instance()->log("info") << "Paswords match!";
+
         // Get the returned E-mail address
         std::string email;
         if (getConfigOptionsPtr()->GetAuthenticationStyle() == ConfigOptions::AUTHENTICATION_NIS)
