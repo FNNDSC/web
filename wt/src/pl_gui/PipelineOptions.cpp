@@ -131,7 +131,6 @@ PipelineOptions::~PipelineOptions()
 void PipelineOptions::resetAll()
 {
     std::string  currentEmail = getCurrentUserEmail();
-
     mEmailCheckBox->setChecked(true);
     mEmailUser->setText(currentEmail);
     mOutputDirSuffix->setText("");

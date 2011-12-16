@@ -331,8 +331,12 @@ void LoginPage::login()
             is >> email;
         } else {
 
-            email = "test@test.de";
+            cmdToExecute = "cat " + getConfigOptionsPtr()->GetAliasesFile() + " | grep " + mUserNameLineEdit->text().toUTF8()  + " | awk 'BEGIN { FS = \":\" } ; { print $2 }'";
+            c = launch_shell(cmdToExecute, ctx);
+            s = c.wait();
 
+            stream<boost::processes::pipe_end> is(c.get_stdout());
+            is >> email;
         }
 
         mUserLoggedIn.emit(mUserNameLineEdit->text().toUTF8(), email);

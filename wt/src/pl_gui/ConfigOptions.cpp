@@ -60,6 +60,7 @@ ConfigOptions::ConfigOptions() :
         ("anonCertificate", value<string>(), "Anonymizing certificate")
         ("jobIDPrefix",     value<string>(), "Job ID Prefix")
         ("authentication",  value<string>(), "Authentication Style (must be 'ssh','nis' or 'htpasswd')")
+        ("aliasesFile",     value<string>(), "Login to email mapping file")
         ("htpasswdFile",    value<string>(), "htpasswd file (if authentication=htpasswd)")
         ;
 }
@@ -192,6 +193,11 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
             mAnonCertificate = vm["anonCertificate"].as<string>();
         }
 
+        if (vm.count("aliasesFile"))
+        {
+            mAliasesFile = vm["aliasesFile"].as<string>();
+        }
+
         if (vm.count("jobIDPrefix"))
         {
             mJobIDPrefix = vm["jobIDPrefix"].as<string>();
@@ -246,6 +252,7 @@ bool ConfigOptions::LoadFromFile(const std::string& configPath)
         WApplication::instance()->log("info") << "[Admin Group:] " << mAdminGroup;
         WApplication::instance()->log("info") << "[Anonymizing Certificate:] " << mAnonCertificate;
         WApplication::instance()->log("info") << "[Job ID Prefix:] " << mJobIDPrefix;
+        WApplication::instance()->log("info") << "[aliases File:] " << mAliasesFile;
         WApplication::instance()->log("info") << "[Authentication:] " << mAuthenticationStyleAsString;
         WApplication::instance()->log("info") << "[htpasswd File:] " << mHtpasswdFile;
         configFile.close();

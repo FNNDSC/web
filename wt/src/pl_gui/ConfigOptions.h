@@ -70,6 +70,7 @@ public:
     const std::string& GetAnonCertificate()     const { return mAnonCertificate; }
     const std::string& GetJobIDPrefix()         const { return mJobIDPrefix; }
     const std::string& GetHtpasswdFile()        const { return mHtpasswdFile; }
+    const std::string& GetAliasesFile()         const { return mAliasesFile; }
     AuthenticationStyle GetAuthenticationStyle() const { return mAuthenticationStyle; }
 
 private:
@@ -133,6 +134,9 @@ private:
 
     /// Job ID Prefix
     std::string mJobIDPrefix;
+
+    /// Aliases File
+    std::string mAliasesFile;
 
     /// Authentication style
     AuthenticationStyle mAuthenticationStyle;
