@@ -233,7 +233,7 @@ void ResultsBrowser::addFilesFromTree(WStandardItem *item, const std::string& ba
 
         for(directory_iterator dirIter(basePath); dirIter != directory_iterator(); ++dirIter)
         {
-            const string& fileName = dirIter->path().filename().string();
+            const string fileName = dirIter->path().filename().string();
 
             boost::smatch what;
 

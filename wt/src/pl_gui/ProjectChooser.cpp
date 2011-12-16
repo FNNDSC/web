@@ -123,13 +123,11 @@ void ProjectChooser::resetAll()
 
     std::string userProjectDir = getConfigOptionsPtr()->GetProjectDir() + "/" +
                                  getCurrentUserName();
-
     try
     {
         for(directory_iterator dirIter(userProjectDir); dirIter != directory_iterator(); ++dirIter)
         {
-            const string& extension = dirIter->path().extension().string();
-
+            const string extension = dirIter->path().extension().string();
             if (extension == ".xml")
             {
                 mProjectSelectionBox->addItem(dirIter->path().string());

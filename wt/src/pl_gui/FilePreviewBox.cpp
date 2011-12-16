@@ -219,7 +219,7 @@ void FilePreviewBox::setFilePath(std::string filePathStr)
                     // See if a file matching the preview expression exists
                     for(directory_iterator dirIter(fileDir); dirIter != directory_iterator(); ++dirIter)
                     {
-                        const string& fileName = dirIter->path().filename().string();
+                        const string fileName = dirIter->path().filename().string();
 
                         // Skip if no match
                         if( !fileMatchesExpression( fileName, (*iter).mPreviewExpression ) )

@@ -29,7 +29,7 @@
   <message id="logo-image">icons/chbIntranet.gif</message>
 
   <message id="cluster-load-page">
-	<iframe src="http://durban.tch.harvard.edu/ganglia/" width="100%" height="100%"></iframe>
+	<iframe src="http://mango/zabbix/screens.php?elementid=4" width="100%" height="100%"></iframe>
   </message>
  
   <message id="project-selection">

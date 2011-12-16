@@ -329,6 +329,10 @@ void LoginPage::login()
 
             stream<boost::processes::pipe_end> is(c.get_stdout());
             is >> email;
+        } else {
+
+            email = "test@test.de";
+
         }
 
         mUserLoggedIn.emit(mUserNameLineEdit->text().toUTF8(), email);
