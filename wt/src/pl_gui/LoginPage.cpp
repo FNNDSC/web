@@ -231,7 +231,7 @@ void LoginPage::login()
 
     if ( s.exit_status() != 0 ) {
         // something went wrong
-        WApplication::instance()->log("info") << "Error executing: " << cmdToExecute << " and returned with exit status: " << s.exit_status();
+        WApplication::instance()->log("info") << "Error executing: login command, which returned with exit status: " << s.exit_status();
         mFailureLabel->show();
         return;
 
